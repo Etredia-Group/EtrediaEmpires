@@ -2,10 +2,10 @@ project(ECS)
 
 # List sources
 
-set(HEADERS "ECS.h" "world.h")
-set(SOURCES "ECS.cpp" "world.cpp")
+set(HEADERS "ecs.hpp" "api.hpp" "world.hpp")
+set(SOURCES "api.cpp" "world.cpp")
 
-list(TRANSFORM HEADERS PREPEND "include/")
+list(TRANSFORM HEADERS PREPEND "include/ee_ecs/")
 list(TRANSFORM SOURCES PREPEND "src/")
 
 # Find dependencies
@@ -13,9 +13,10 @@ find_package(EnTT CONFIG REQUIRED)
 
 # Link library
 
-add_library (ECS SHARED ${HEADERS} ${SOURCES})
+add_library(ECS SHARED ${HEADERS} ${SOURCES})
+add_library(ECS::ECS ALIAS ECS)
 
-target_link_libraries(ECS PRIVATE Economy::Economy)
+target_link_libraries(ECS PUBLIC Economy::Economy)
 target_link_libraries(ECS PRIVATE EnTT::EnTT)
 
 target_include_directories(ECS PUBLIC include/)

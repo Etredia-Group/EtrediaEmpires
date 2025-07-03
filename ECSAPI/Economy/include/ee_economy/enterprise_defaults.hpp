@@ -1,5 +1,6 @@
 #pragma once 
-#include "components/container.h"
+#include "defines.hpp"
+#include "components/container.hpp"
 
 namespace ee_ecs
 {

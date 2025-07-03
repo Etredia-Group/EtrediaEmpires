@@ -2,14 +2,14 @@
 
 # List sources
 
-set(HEADERS "defines.h" "enterprise_defaults.h" "systems.h")
-set(HEADERS_COMPONENTS "container.h" "enterprise.h" "miner.h" "producer.h" "tags.h")
+set(HEADERS "economy.hpp" "defines.hpp" "enterprise_defaults.hpp" "systems.hpp")
+set(HEADERS_COMPONENTS "container.hpp" "enterprise.hpp" "miner.hpp" "producer.hpp" "tags.hpp")
 
 set(SOURCES "Economy.cpp")
 set(SOURCES_SYSTEMS "mining.cpp")
 
-list(TRANSFORM HEADERS PREPEND "include/")
-list(TRANSFORM HEADERS_COMPONENTS PREPEND "include/components/")
+list(TRANSFORM HEADERS PREPEND "include/ee_economy/")
+list(TRANSFORM HEADERS_COMPONENTS PREPEND "include/ee_economy/components/")
 
 list(TRANSFORM SOURCES PREPEND "src/")
 list(TRANSFORM SOURCES_SYSTEMS PREPEND "src/systems/")

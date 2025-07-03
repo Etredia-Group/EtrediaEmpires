@@ -1,7 +1,4 @@
-#include "systems.h"
-#include "components/miner.h"
-#include "components/container.h"
-#include "components/enterprise.h"
+#include <ee_economy/economy.hpp>
 
 void ee_ecs::mining(entt::registry &registry)
 {

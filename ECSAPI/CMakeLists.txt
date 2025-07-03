@@ -14,3 +14,4 @@ add_subdirectory ("Economy")
 add_subdirectory ("Economy/test")
 
 add_subdirectory ("ECS")
+add_subdirectory ("ECS/test")

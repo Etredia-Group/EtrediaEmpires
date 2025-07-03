@@ -1,9 +1,6 @@
 #include <gtest/gtest.h>
-#include "components/container.h"
-#include "components/miner.h"
-#include "defines.h"
-#include "../test_conf.h"
-#include "systems.h"
+#include <ee_economy/economy.hpp>
+#include "../test_conf.hpp"
 
 TEST_F(SystemsTest, MiningNormal)
 {

@@ -1,7 +1,4 @@
-#include "world.h"
-#include "systems.h"
-#include "components/enterprise.h"
-#include "components/miner.h"
+#include <ee_ecs/ecs.hpp>
 
 void ee_ecs::world::update()
 {
@@ -34,3 +31,5 @@ void ee_ecs::world::spawn_enterprise(const bool is_building, const ACTION_TYPE a
 		break;
 	}
 }
+
+entt::registry& ee_ecs::world::get_registry() {return this->registry;}

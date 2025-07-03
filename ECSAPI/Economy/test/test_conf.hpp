@@ -1,7 +1,6 @@
-#include "components/container.h"
-#include "components/enterprise.h"
-#include "components/miner.h"
-#include "components/tags.h"
+#pragma once
+
+#include <ee_economy/economy.hpp>
 #include <entt/entt.hpp>
 #include <gtest/gtest.h>
 

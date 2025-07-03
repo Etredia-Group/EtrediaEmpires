@@ -1,6 +1,6 @@
 # List sources
 
-set(SOURCES "test_conf.h" "main.cpp" "systems/mining.cpp")
+set(SOURCES "test_conf.hpp" "main.cpp" "systems/mining.cpp")
 
 # Find dependencies
 

@@ -2,7 +2,7 @@
 
 #pragma once
 #include <unordered_map>
-#include "defines.h"
+#include "defines.hpp"
 
 namespace ee_ecs
 {

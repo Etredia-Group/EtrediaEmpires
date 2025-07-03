@@ -1,5 +1,5 @@
 #pragma once
-#include "../defines.h"
+#include "../defines.hpp"
 #include <entt/entt.hpp>
 
 namespace ee_ecs

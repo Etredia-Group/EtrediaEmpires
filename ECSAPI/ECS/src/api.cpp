@@ -1,5 +1,4 @@
-#include "ECS.h"
-#include "world.h"
+#include <ee_ecs/ecs.hpp>
 
 
 static ee_ecs::world world;
