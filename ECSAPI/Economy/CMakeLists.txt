@@ -1,0 +1,32 @@
+﻿project(Economy)
+
+# List sources
+
+set(HEADERS "defines.h" "enterprise_defaults.h" "systems.h")
+set(HEADERS_COMPONENTS "container.h" "enterprise.h" "miner.h" "producer.h" "tags.h")
+
+set(SOURCES "Economy.cpp")
+set(SOURCES_SYSTEMS "mining.cpp")
+
+list(TRANSFORM HEADERS PREPEND "include/")
+list(TRANSFORM HEADERS_COMPONENTS PREPEND "include/components/")
+
+list(TRANSFORM SOURCES PREPEND "src/")
+list(TRANSFORM SOURCES_SYSTEMS PREPEND "src/systems/")
+
+# Find dependencies
+
+find_package(EnTT CONFIG REQUIRED)
+
+# Link library
+
+add_library(Economy SHARED ${HEADERS} ${HEADERS_COMPONENTS} ${SOURCES} ${SOURCES_SYSTEMS})
+add_library(Economy::Economy ALIAS Economy)
+
+target_link_libraries(Economy PRIVATE EnTT::EnTT)
+
+target_include_directories(Economy PUBLIC include/)
+
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET Economy PROPERTY CXX_STANDARD 20)
+endif()
