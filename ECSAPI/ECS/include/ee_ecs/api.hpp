@@ -1,10 +1,10 @@
-// API to control world multithreaded processing in real time
 #pragma once
+#include "data.hpp"
 
 namespace ee_ecs
 {
 
-	void init();
+	void init(InitConfiguration config);
 	void start();
 	void stop();
 

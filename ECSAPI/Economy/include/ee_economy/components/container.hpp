@@ -2,7 +2,7 @@
 #include "../defines.hpp"
 #include <unordered_map>
 
-namespace ee_ecs
+namespace ee_economy
 {
 	struct container
 	{

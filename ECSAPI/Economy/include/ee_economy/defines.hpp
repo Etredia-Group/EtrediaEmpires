@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ee_ecs
+namespace ee_economy
 {
 	const double TOLERANCE = 0.001;
 

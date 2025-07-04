@@ -1,6 +1,6 @@
 # List sources
 
-set(SOURCES "test_conf.hpp" "main.cpp" "world.cpp")
+set(SOURCES "test_conf.hpp" "main.cpp" "world.cpp" "benchmark.cpp")
 
 # Find dependencies
 
@@ -15,6 +15,10 @@ target_link_libraries(ecs_tests PRIVATE GTest::gtest_main)
 target_link_libraries(ecs_tests PRIVATE ECS::ECS)
 
 # Test
+
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET ecs_tests PROPERTY CXX_STANDARD 20)
+endif()
 
 if (WIN32)
     add_custom_command(

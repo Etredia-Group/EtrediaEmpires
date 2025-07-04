@@ -1,7 +1,7 @@
 #pragma once
 #include <entt/entt.hpp>
 
-namespace ee_ecs
+namespace ee_economy
 {
 	struct enterprise
 	{

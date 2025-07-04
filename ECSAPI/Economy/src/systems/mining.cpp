@@ -1,6 +1,6 @@
 #include <ee_economy/economy.hpp>
 
-void ee_ecs::mining(entt::registry &registry)
+void ee_economy::mining(entt::registry &registry)
 {
 	auto miners = registry.view<enterprise, miner, container>();
 

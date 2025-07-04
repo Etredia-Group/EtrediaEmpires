@@ -16,14 +16,14 @@ struct SystemsTest : testing::Test
     {
         // Create state
         state = registry.create();
-        registry.emplace<ee_ecs::state>(state);
-        registry.emplace<ee_ecs::container>(state);
+        registry.emplace<ee_economy::state>(state);
+        registry.emplace<ee_economy::container>(state);
 
         // Create miner enterprise
         miner = registry.create();
-        registry.emplace<ee_ecs::enterprise>(miner, false, state);
-        registry.emplace<ee_ecs::miner>(miner);
-        registry.emplace<ee_ecs::container>(miner);
+        registry.emplace<ee_economy::enterprise>(miner, false, state);
+        registry.emplace<ee_economy::miner>(miner);
+        registry.emplace<ee_economy::container>(miner);
     }
 
     void TearDown()

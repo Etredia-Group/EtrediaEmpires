@@ -20,6 +20,7 @@
         },
         {
             "name": "x64-debug",
+            "hidden": true,
             "displayName": "x64 Debug",
             "inherits": "windows-base",
             "architecture": {
@@ -32,6 +33,7 @@
         },
         {
             "name": "x64-release",
+            "hidden": true,
             "displayName": "x64 Release",
             "inherits": "x64-debug",
             "cacheVariables": {
@@ -40,6 +42,7 @@
         },
         {
             "name": "x86-debug",
+            "hidden": true,
             "displayName": "x86 Debug",
             "inherits": "windows-base",
             "architecture": {
@@ -52,6 +55,7 @@
         },
         {
             "name": "x86-release",
+            "hidden": true,
             "displayName": "x86 Release",
             "inherits": "x86-debug",
             "cacheVariables": {

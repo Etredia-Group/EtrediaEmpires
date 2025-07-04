@@ -2,7 +2,7 @@
 #include "defines.hpp"
 #include "components/container.hpp"
 
-namespace ee_ecs
+namespace ee_economy
 {
 	struct enterprise_defaults
 	{

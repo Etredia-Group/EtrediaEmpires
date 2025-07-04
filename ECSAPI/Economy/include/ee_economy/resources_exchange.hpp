@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include "defines.hpp"
 
-namespace ee_ecs
+namespace ee_economy
 {
 	struct exchange_rule
 	{

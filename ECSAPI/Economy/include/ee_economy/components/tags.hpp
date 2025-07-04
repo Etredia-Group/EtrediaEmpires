@@ -1,8 +1,6 @@
 #pragma once
 
-namespace ee_ecs
+namespace ee_economy
 {
-
-	struct state {};
 
 }
