@@ -6,6 +6,7 @@ TEST_F(SystemsTest, MiningNormal)
 {
     ee_economy::container &state_container = registry.get<ee_economy::container>(state);
     ee_economy::container &miner_container = registry.get<ee_economy::container>(miner);
+    ee_economy::enterprise &miner_enterprise = registry.get<ee_economy::enterprise>(miner);
     ee_economy::miner &miner_miner = registry.get<ee_economy::miner>(miner);
     
     state_container.capacity = 15.0;
@@ -13,7 +14,7 @@ TEST_F(SystemsTest, MiningNormal)
 
     miner_container.capacity = 5.0;
     miner_miner.resource = ee_economy::RESOURCE_TYPE::COAL;
-    miner_miner.value = 0.1;
+    miner_enterprise.add_base_efficiency(0.1);
 
     ee_economy::mining(registry);
 
@@ -27,13 +28,14 @@ TEST_F(SystemsTest, MiningEmptyState)
 {
     ee_economy::container &state_container = registry.get<ee_economy::container>(state);
     ee_economy::container &miner_container = registry.get<ee_economy::container>(miner);
+    ee_economy::enterprise &miner_enterprise = registry.get<ee_economy::enterprise>(miner);
     ee_economy::miner &miner_miner = registry.get<ee_economy::miner>(miner);
     
     state_container.capacity = 15.0;
 
     miner_container.capacity = 5.0;
     miner_miner.resource = ee_economy::RESOURCE_TYPE::COAL;
-    miner_miner.value = 0.1;
+    miner_enterprise.add_base_efficiency(0.1);
 
     ee_economy::mining(registry);
 
@@ -47,6 +49,7 @@ TEST_F(SystemsTest, MiningPoorState)
 {
     ee_economy::container &state_container = registry.get<ee_economy::container>(state);
     ee_economy::container &miner_container = registry.get<ee_economy::container>(miner);
+    ee_economy::enterprise &miner_enterprise = registry.get<ee_economy::enterprise>(miner);
     ee_economy::miner &miner_miner = registry.get<ee_economy::miner>(miner);
     
     state_container.capacity = 15.0;
@@ -54,7 +57,7 @@ TEST_F(SystemsTest, MiningPoorState)
 
     miner_container.capacity = 5.0;
     miner_miner.resource = ee_economy::RESOURCE_TYPE::COAL;
-    miner_miner.value = 0.1;
+    miner_enterprise.add_base_efficiency(0.1);
 
     ee_economy::mining(registry);
 
@@ -68,6 +71,7 @@ TEST_F(SystemsTest, MiningReachCap)
 {
     ee_economy::container &state_container = registry.get<ee_economy::container>(state);
     ee_economy::container &miner_container = registry.get<ee_economy::container>(miner);
+    ee_economy::enterprise &miner_enterprise = registry.get<ee_economy::enterprise>(miner);
     ee_economy::miner &miner_miner = registry.get<ee_economy::miner>(miner);
     
     state_container.capacity = 15.0;
@@ -75,7 +79,7 @@ TEST_F(SystemsTest, MiningReachCap)
 
     miner_container.capacity = 0.05;
     miner_miner.resource = ee_economy::RESOURCE_TYPE::COAL;
-    miner_miner.value = 0.1;
+    miner_enterprise.add_base_efficiency(0.1);
 
     ee_economy::mining(registry);
 

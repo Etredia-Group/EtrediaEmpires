@@ -12,8 +12,8 @@ namespace ee_economy
 
 		void add(RESOURCE_TYPE type, double delta)
 		{
-			content[type] += delta;
-			total += delta;
+			this->content[type] += delta;
+			this->total += delta;
 		}
 	};
 }

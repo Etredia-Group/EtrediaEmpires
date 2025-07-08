@@ -7,6 +7,5 @@ namespace ee_economy
 	struct miner
 	{
 		RESOURCE_TYPE resource = RESOURCE_TYPE::NONE;
-		double value = 0.;
 	};
 }

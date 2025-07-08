@@ -15,7 +15,7 @@ TEST(WorldTest, RegisterState)
     ee_economy::container registered_container = world.get_registry().get<ee_economy::container>(state);
 
     ASSERT_EQ(registered_state.external_id, 10);
-    ASSERT_EQ(registered_container.content[ee_economy::RESOURCE_TYPE::COAL], 98.0);
+    ASSERT_DOUBLE_EQ(registered_container.content[ee_economy::RESOURCE_TYPE::COAL], 98.0);
 }
 
 TEST(WorldTest, RegisterStateDuplicate)
@@ -29,7 +29,52 @@ TEST(WorldTest, RegisterStateDuplicate)
     }, std::invalid_argument);
 }
 
-TEST(WorldTest, SpawnEnterprise)
+TEST(WorldTest, SpawnMiner)
 {
-    ASSERT_TRUE(false);
+    ee_ecs::world world;
+
+    entt::entity state = world.get_registry().create();
+    world.get_registry().emplace<ee_economy::state>(state, (short)0);
+    world.get_registry().emplace<ee_economy::container>(state, 100.0);
+
+    ee_economy::enterprise_defaults defaults = {
+        .container = {.capacity = 100.0 },
+        .resource_target = ee_economy::RESOURCE_TYPE::COAL,
+        .base_efficiency = 1.0,
+    };
+
+    entt::entity enterprise = world.spawn_enterprise(false, ee_economy::ACTION_TYPE::MINING, state, defaults);
+
+    ee_economy::enterprise registered_enterprise = world.get_registry().get<ee_economy::enterprise>(enterprise);
+    ee_economy::miner registered_action = world.get_registry().get<ee_economy::miner>(enterprise);
+    ee_economy::container registered_container = world.get_registry().get<ee_economy::container>(enterprise);
+
+    ASSERT_DOUBLE_EQ(registered_enterprise.base_efficiency, 1.0);
+    ASSERT_EQ(registered_action.resource, ee_economy::RESOURCE_TYPE::COAL);
+    ASSERT_DOUBLE_EQ(registered_container.capacity, 100.0);
+}
+
+TEST(WorldTest, SpawnDeliverer)
+{
+    ee_ecs::world world;
+
+    entt::entity state = world.get_registry().create();
+    world.get_registry().emplace<ee_economy::state>(state, (short)0);
+    world.get_registry().emplace<ee_economy::container>(state, 100.0);
+
+    ee_economy::enterprise_defaults defaults = {
+        .container = {.capacity = 100.0 },
+        .resource_target = ee_economy::RESOURCE_TYPE::COAL,
+        .base_efficiency = 1.0,
+    };
+
+    entt::entity enterprise = world.spawn_enterprise(false, ee_economy::ACTION_TYPE::DELIVERY, state, defaults);
+
+    ee_economy::enterprise registered_enterprise = world.get_registry().get<ee_economy::enterprise>(enterprise);
+    ee_economy::deliverer registered_action = world.get_registry().get<ee_economy::deliverer>(enterprise);
+    ee_economy::container registered_container = world.get_registry().get<ee_economy::container>(enterprise);
+
+    ASSERT_DOUBLE_EQ(registered_enterprise.base_efficiency, 1.0);
+    ASSERT_EQ(registered_action.resource, ee_economy::RESOURCE_TYPE::COAL);
+    ASSERT_DOUBLE_EQ(registered_container.capacity, 100.0);
 }

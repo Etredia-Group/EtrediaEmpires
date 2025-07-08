@@ -3,10 +3,11 @@
 # List sources
 
 set(HEADERS "economy.hpp" "defines.hpp" "enterprise_defaults.hpp" "systems.hpp")
-set(HEADERS_COMPONENTS "container.hpp" "enterprise.hpp" "miner.hpp" "producer.hpp" "state.hpp" "tags.hpp")
+set(HEADERS_COMPONENTS "container.hpp" "enterprise.hpp" "state.hpp" "tags.hpp"
+  "miner.hpp" "producer.hpp" "deliverer.hpp")
 
 set(SOURCES "Economy.cpp")
-set(SOURCES_SYSTEMS "mining.cpp")
+set(SOURCES_SYSTEMS "mining.cpp" "delivering.cpp")
 
 list(TRANSFORM HEADERS PREPEND "include/ee_economy/")
 list(TRANSFORM HEADERS_COMPONENTS PREPEND "include/ee_economy/components/")

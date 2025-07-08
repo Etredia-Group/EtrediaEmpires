@@ -11,6 +11,8 @@ struct SystemsTest : testing::Test
     entt::entity state;
 
     entt::entity miner;
+    entt::entity storage;
+    entt::entity deliverer;
 
     void SetUp()
     {
@@ -24,6 +26,17 @@ struct SystemsTest : testing::Test
         registry.emplace<ee_economy::enterprise>(miner, false, state);
         registry.emplace<ee_economy::miner>(miner);
         registry.emplace<ee_economy::container>(miner);
+
+        // Create storage enterprise
+        storage = registry.create();
+        registry.emplace<ee_economy::enterprise>(storage, false, state);
+        registry.emplace<ee_economy::container>(storage);
+
+        // Create delivering enterprise
+        deliverer = registry.create();
+        registry.emplace<ee_economy::enterprise>(deliverer, false, state);
+        registry.emplace<ee_economy::deliverer>(deliverer);
+        registry.emplace<ee_economy::container>(deliverer);
     }
 
     void TearDown()

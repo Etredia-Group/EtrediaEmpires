@@ -8,7 +8,8 @@ namespace ee_economy
 	{
 		container container;
 
-		RESOURCE_TYPE resource_target;
-		double base_efficiency_flat;
+		RESOURCE_TYPE resource_target = RESOURCE_TYPE::NONE;
+		double base_efficiency = 0.0;
+		double factor_efficiency = 1.0;
 	};
 }

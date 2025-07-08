@@ -18,7 +18,7 @@ struct WorldBenchmark : testing::Test
             ee_economy::enterprise_defaults miner = {
                 .container = {.capacity = 100.0},
                 .resource_target = ee_economy::RESOURCE_TYPE::GOLD,
-                .base_efficiency_flat = 1.0
+                .base_efficiency = 1.0
             };
             
             world.spawn_enterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);

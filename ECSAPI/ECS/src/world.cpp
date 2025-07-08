@@ -41,7 +41,16 @@ entt::entity ee_ecs::world::spawn_enterprise(
 {
 	entt::entity entity = this->registry.create();
 
-	this->registry.emplace<ee_economy::enterprise>(entity, is_building, state);
+	this->registry.emplace<ee_economy::enterprise>(
+		entity,
+		is_building,
+		state,
+
+		defaults.base_efficiency * defaults.factor_efficiency,
+
+		defaults.base_efficiency,
+		defaults.factor_efficiency
+	);
 
 	this->registry.emplace<ee_economy::container>(
 		entity,
@@ -54,7 +63,13 @@ entt::entity ee_ecs::world::spawn_enterprise(
 	{
 	case ee_economy::ACTION_TYPE::MINING:
 	{
-		this->registry.emplace<ee_economy::miner>(entity, defaults.resource_target, defaults.base_efficiency_flat);
+		this->registry.emplace<ee_economy::miner>(entity, defaults.resource_target);
+		break;
+	}
+
+	case ee_economy::ACTION_TYPE::DELIVERY:
+	{
+		this->registry.emplace<ee_economy::deliverer>(entity, defaults.resource_target);
 		break;
 	}
 

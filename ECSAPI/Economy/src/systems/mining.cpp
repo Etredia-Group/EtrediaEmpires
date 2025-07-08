@@ -8,10 +8,7 @@ void ee_economy::mining(entt::registry &registry)
 	{
 		container& state = registry.get<container>(enterprise.state);
 
-		if (!state.content.contains(miner.resource) || state.content[miner.resource] < TOLERANCE)
-			continue;
-
-		double mined_value = miner.value;
+		double mined_value = enterprise.efficiency;
 		if (local_storage.total + mined_value > local_storage.capacity)
 			mined_value = local_storage.capacity - local_storage.total;
 		if (mined_value > state.content[miner.resource])
