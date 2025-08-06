@@ -13,7 +13,7 @@ find_package(EnTT CONFIG REQUIRED)
 
 # Link library
 
-add_library(ECS SHARED ${HEADERS} ${SOURCES})
+add_library(ECS ${HEADERS} ${SOURCES})
 add_library(ECS::ECS ALIAS ECS)
 
 target_link_libraries(ECS PUBLIC Economy::Economy)

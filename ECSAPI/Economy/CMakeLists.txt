@@ -21,7 +21,7 @@ find_package(EnTT CONFIG REQUIRED)
 
 # Link library
 
-add_library(Economy SHARED ${HEADERS} ${HEADERS_COMPONENTS} ${SOURCES} ${SOURCES_SYSTEMS})
+add_library(Economy ${HEADERS} ${HEADERS_COMPONENTS} ${SOURCES} ${SOURCES_SYSTEMS})
 add_library(Economy::Economy ALIAS Economy)
 
 target_link_libraries(Economy PRIVATE EnTT::EnTT)
