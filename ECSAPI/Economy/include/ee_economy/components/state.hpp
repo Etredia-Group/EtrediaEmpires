@@ -1,8 +1,9 @@
 #pragma once
+#include <cstdint>
 
 namespace ee_economy
 {
     struct state {
-        short external_id = -1;
+        int16_t external_id = -1;
     };
 }

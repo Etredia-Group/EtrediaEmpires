@@ -1,5 +1,5 @@
 #pragma once
-#include "../defines.hpp"
+#include <ee_economy/economy.hpp>
 #include <entt/entt.hpp>
 
 namespace ee_economy

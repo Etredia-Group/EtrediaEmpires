@@ -9,7 +9,7 @@ struct WorldBenchmark : testing::Test
 
     void SetUp()
     {
-        for (short i = 0; i < 1000; i++)
+        for (int16_t i = 0; i < 1000; i++)
         {
             ee_economy::container resources = {.capacity = 100.0};
             resources.add(ee_economy::RESOURCE_TYPE::COAL, 100.0);

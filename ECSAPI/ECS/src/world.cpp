@@ -4,7 +4,10 @@
 
 void ee_ecs::world::update_enterprises()
 {
+	ee_economy::enterprise_routine(this->registry);
+
 	ee_economy::mining(this->registry);
+	ee_economy::delivering(this->registry);
 }
 
 void ee_ecs::world::update()
@@ -12,7 +15,7 @@ void ee_ecs::world::update()
 	this->update_enterprises();
 }
 
-entt::entity ee_ecs::world::register_state(const short id, const ee_economy::container &resources)
+entt::entity ee_ecs::world::register_state(const int16_t id, const ee_economy::container &resources)
 {
 	if (this->states_table.contains(id))
 		throw std::invalid_argument("State with this Id is already registered");
@@ -45,6 +48,7 @@ entt::entity ee_ecs::world::spawn_enterprise(
 		entity,
 		is_building,
 		state,
+		action,
 
 		defaults.base_efficiency * defaults.factor_efficiency,
 

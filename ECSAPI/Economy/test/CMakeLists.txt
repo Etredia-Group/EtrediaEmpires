@@ -1,7 +1,7 @@
 # List sources
 
 set(SOURCES "test_conf.hpp" "main.cpp"
-    "systems/mining.cpp" "systems/delivering.cpp")
+    "systems/enterprise_routine.cpp" "systems/mining.cpp" "systems/delivering.cpp")
 
 # Find dependencies
 

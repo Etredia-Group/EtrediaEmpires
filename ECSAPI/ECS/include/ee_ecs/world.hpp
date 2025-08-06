@@ -12,7 +12,7 @@ namespace ee_ecs
 
 	private:
 		entt::registry registry;
-		std::unordered_map<short, entt::entity> states_table;
+		std::unordered_map<int16_t, entt::entity> states_table;
 
 		void update_enterprises();
 
@@ -20,8 +20,8 @@ namespace ee_ecs
 		// Run every registered system
 		void update();
 
-		entt::entity register_state(const short id, const ee_economy::container &resources);
-
+		entt::entity register_state(const int16_t id, const ee_economy::container &resources);
+		
 		entt::entity spawn_enterprise(
 			const bool is_building,
 			const ee_economy::ACTION_TYPE action,

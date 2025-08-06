@@ -6,6 +6,8 @@ void ee_economy::mining(entt::registry &registry)
 
 	for (auto [entity, enterprise, miner, local_storage]: miners.each())
 	{
+		if (enterprise.is_bankrupt) continue;
+
 		container& state = registry.get<container>(enterprise.state);
 
 		double mined_value = enterprise.efficiency;

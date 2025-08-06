@@ -34,7 +34,7 @@ TEST(WorldTest, SpawnMiner)
     ee_ecs::world world;
 
     entt::entity state = world.get_registry().create();
-    world.get_registry().emplace<ee_economy::state>(state, (short)0);
+    world.get_registry().emplace<ee_economy::state>(state, (int16_t)0);
     world.get_registry().emplace<ee_economy::container>(state, 100.0);
 
     ee_economy::enterprise_defaults defaults = {
@@ -59,7 +59,7 @@ TEST(WorldTest, SpawnDeliverer)
     ee_ecs::world world;
 
     entt::entity state = world.get_registry().create();
-    world.get_registry().emplace<ee_economy::state>(state, (short)0);
+    world.get_registry().emplace<ee_economy::state>(state, (int16_t)0);
     world.get_registry().emplace<ee_economy::container>(state, 100.0);
 
     ee_economy::enterprise_defaults defaults = {

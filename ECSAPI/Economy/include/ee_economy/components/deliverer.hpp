@@ -8,7 +8,11 @@ namespace ee_economy
     {
         entt::entity from;
         entt::entity to;
-        double value = 0.0;
+        entt::entity sponsor;
+
+        double amount = 0.0;
+        double cost = 0.0;
+        double distance = 1.0;
     };
 
     struct deliverer

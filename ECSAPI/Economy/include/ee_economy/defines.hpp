@@ -1,28 +1,32 @@
 #pragma once
 
+#include <cstdint>
+
 namespace ee_economy
 {
 	const double TOLERANCE = 0.001;
 
-	enum struct ACTION_TYPE : unsigned char
+	const double BASE_FUEL_PER_KM = 1.0;
+
+	enum struct ACTION_TYPE : uint8_t
 	{
 		MINING,
 		PRODUCTION,
 		DELIVERY,
-		CONTAIN,
+		STORE,
 		DESTRUCTION,
 		BUILD,
 		TRADE
 	};
 
-	enum struct CONTAINABLE_TYPE : unsigned char
+	enum struct CONTAINABLE_TYPE : uint8_t
 	{
 		RESOURCE,
 		GOODS,
 		SERVICE
 	};
 
-	enum struct RESOURCE_TYPE : unsigned char
+	enum struct RESOURCE_TYPE : uint8_t
 	{
 		NONE,
 
