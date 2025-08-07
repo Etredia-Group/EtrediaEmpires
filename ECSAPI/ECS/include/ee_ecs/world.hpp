@@ -7,28 +7,27 @@
 
 namespace ee_ecs
 {
-	class world
+	class World
 	{
-
 	private:
 		entt::registry registry;
-		std::unordered_map<int16_t, entt::entity> states_table;
+		std::unordered_map<int16_t, entt::entity> statesTable;
 
-		void update_enterprises();
+		void updateEnterprises();
 
 	public:
 		// Run every registered system
 		void update();
 
-		entt::entity register_state(const int16_t id, const ee_economy::container &resources);
+		entt::entity registerState(const int16_t id, const ee_economy::Container &resources);
 		
-		entt::entity spawn_enterprise(
-			const bool is_building,
+		entt::entity spawnEnterprise(
+			const bool isBuilding,
 			const ee_economy::ACTION_TYPE action,
 			const entt::entity state,
-			const ee_economy::enterprise_defaults &defaults
+			const ee_economy::EnterpriseDefaults &defaults
 		);
 
-		entt::registry& get_registry();
+		entt::registry& getRegistry();
 	};
 }

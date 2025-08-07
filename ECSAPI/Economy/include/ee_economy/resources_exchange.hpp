@@ -6,18 +6,18 @@
 
 namespace ee_economy
 {
-	struct exchange_rule
+	struct ExchangeRule
 	{
-		double out_value;
+		double outValue;
 		
 		std::unordered_map<RESOURCE_TYPE, double> consume;
 	};
 
-	const std::unordered_map<RESOURCE_TYPE, exchange_rule> resources_exchange = {
+	const std::unordered_map<RESOURCE_TYPE, exchange_rule> resourcesExchange = {
 		{
 			RESOURCE_TYPE::FABRIC,
 			exchange_rule {
-				.out_value = 2.,
+				.outValue = 2.,
 				.consume = {
 					{RESOURCE_TYPE::WOOL, 3.}
 				}

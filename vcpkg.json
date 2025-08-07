@@ -1,0 +1,9 @@
+{
+	"dependencies": [
+		"entt",
+		"vulkan",
+		{"name": "sdl2", "features": ["vulkan"]},
+		"rmlui",
+		"gtest"
+	]
+}

@@ -3,7 +3,7 @@
 
 namespace ee_economy
 {
-	void enterprise_routine(entt::registry& registry);
+	void enterpriseRoutine(entt::registry& registry);
 
 	void mining(entt::registry& registry);
 	// void producing(entt::registry& registry);

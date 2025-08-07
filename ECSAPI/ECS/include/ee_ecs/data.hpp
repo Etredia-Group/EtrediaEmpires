@@ -6,19 +6,19 @@
 namespace ee_ecs
 {
 
-    struct init_configuration
+    struct InitConfiguration
 	{
-		std::unordered_map<int16_t, ee_economy::container> states;
+		std::unordered_map<int16_t, ee_economy::Container> states;
 	};
 
-	struct enterprise_info
+	struct EnterpriseInfo
 	{
-		const ee_economy::enterprise* info = nullptr;
-		const ee_economy::container* storage = nullptr;
+		const ee_economy::Enterprise* info = nullptr;
+		const ee_economy::Container* storage = nullptr;
 		std::variant<
-			const ee_economy::miner*,
-			const ee_economy::deliverer*
-		> special_info;
+			const ee_economy::Miner*,
+			const ee_economy::Deliverer*
+		> specialInfo;
 	};
 
 }

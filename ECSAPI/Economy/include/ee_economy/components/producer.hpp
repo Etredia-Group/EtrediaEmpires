@@ -2,7 +2,7 @@
 
 namespace ee_economy
 {
-	struct producer
+	struct Producer
 	{
 
 	};

@@ -5,76 +5,76 @@
 
 TEST(WorldTest, RegisterState)
 {
-    ee_ecs::world world;
+    ee_ecs::World world;
 
-    ee_economy::container res = {.capacity = 100.0};
+    ee_economy::Container res = {.capacity = 100.0};
     res.add(ee_economy::RESOURCE_TYPE::COAL, 98.0);
-    entt::entity state = world.register_state(10, res);
+    entt::entity state = world.registerState(10, res);
 
-    ee_economy::state registered_state = world.get_registry().get<ee_economy::state>(state);
-    ee_economy::container registered_container = world.get_registry().get<ee_economy::container>(state);
+    ee_economy::State registeredState = world.getRegistry().get<ee_economy::State>(state);
+    ee_economy::Container registeredContainer = world.getRegistry().get<ee_economy::Container>(state);
 
-    ASSERT_EQ(registered_state.external_id, 10);
-    ASSERT_DOUBLE_EQ(registered_container.content[ee_economy::RESOURCE_TYPE::COAL], 98.0);
+    ASSERT_EQ(registeredState.externalId, 10);
+    ASSERT_DOUBLE_EQ(registeredContainer.content[ee_economy::RESOURCE_TYPE::COAL], 98.0);
 }
 
 TEST(WorldTest, RegisterStateDuplicate)
 {
-    ee_ecs::world world;
+    ee_ecs::World world;
 
-    world.register_state(10, {});
+    world.registerState(10, {});
 
     ASSERT_THROW({
-        world.register_state(10, {});
+        world.registerState(10, {});
     }, std::invalid_argument);
 }
 
 TEST(WorldTest, SpawnMiner)
 {
-    ee_ecs::world world;
+    ee_ecs::World world;
 
-    entt::entity state = world.get_registry().create();
-    world.get_registry().emplace<ee_economy::state>(state, (int16_t)0);
-    world.get_registry().emplace<ee_economy::container>(state, 100.0);
+    entt::entity state = world.getRegistry().create();
+    world.getRegistry().emplace<ee_economy::State>(state, (int16_t)0);
+    world.getRegistry().emplace<ee_economy::Container>(state, 100.0);
 
-    ee_economy::enterprise_defaults defaults = {
+    ee_economy::EnterpriseDefaults defaults = {
         .container = {.capacity = 100.0 },
-        .resource_target = ee_economy::RESOURCE_TYPE::COAL,
-        .base_efficiency = 1.0,
+        .resourceTarget = ee_economy::RESOURCE_TYPE::COAL,
+        .baseEfficiency = 1.0,
     };
 
-    entt::entity enterprise = world.spawn_enterprise(false, ee_economy::ACTION_TYPE::MINING, state, defaults);
+    entt::entity enterprise = world.spawnEnterprise(false, ee_economy::ACTION_TYPE::MINING, state, defaults);
 
-    ee_economy::enterprise registered_enterprise = world.get_registry().get<ee_economy::enterprise>(enterprise);
-    ee_economy::miner registered_action = world.get_registry().get<ee_economy::miner>(enterprise);
-    ee_economy::container registered_container = world.get_registry().get<ee_economy::container>(enterprise);
+    ee_economy::Enterprise registeredEnterprise = world.getRegistry().get<ee_economy::Enterprise>(enterprise);
+    ee_economy::Miner registeredAction = world.getRegistry().get<ee_economy::Miner>(enterprise);
+    ee_economy::Container registeredContainer = world.getRegistry().get<ee_economy::Container>(enterprise);
 
-    ASSERT_DOUBLE_EQ(registered_enterprise.base_efficiency, 1.0);
-    ASSERT_EQ(registered_action.resource, ee_economy::RESOURCE_TYPE::COAL);
-    ASSERT_DOUBLE_EQ(registered_container.capacity, 100.0);
+    ASSERT_DOUBLE_EQ(registeredEnterprise.baseEfficiency, 1.0);
+    ASSERT_EQ(registeredAction.resource, ee_economy::RESOURCE_TYPE::COAL);
+    ASSERT_DOUBLE_EQ(registeredContainer.capacity, 100.0);
 }
 
 TEST(WorldTest, SpawnDeliverer)
 {
-    ee_ecs::world world;
+    ee_ecs::World world;
 
-    entt::entity state = world.get_registry().create();
-    world.get_registry().emplace<ee_economy::state>(state, (int16_t)0);
-    world.get_registry().emplace<ee_economy::container>(state, 100.0);
+    entt::entity state = world.getRegistry().create();
+    world.getRegistry().emplace<ee_economy::State>(state, (int16_t)0);
+    world.getRegistry().emplace<ee_economy::Container>(state, 100.0);
 
-    ee_economy::enterprise_defaults defaults = {
+    ee_economy::EnterpriseDefaults defaults = {
         .container = {.capacity = 100.0 },
-        .resource_target = ee_economy::RESOURCE_TYPE::COAL,
-        .base_efficiency = 1.0,
+        .resourceTarget = ee_economy::RESOURCE_TYPE::COAL,
+        .baseEfficiency = 1.0,
     };
 
-    entt::entity enterprise = world.spawn_enterprise(false, ee_economy::ACTION_TYPE::DELIVERY, state, defaults);
+    entt::entity enterprise = world.spawnEnterprise(false, ee_economy::ACTION_TYPE::DELIVERY, state, defaults);
 
-    ee_economy::enterprise registered_enterprise = world.get_registry().get<ee_economy::enterprise>(enterprise);
-    ee_economy::deliverer registered_action = world.get_registry().get<ee_economy::deliverer>(enterprise);
-    ee_economy::container registered_container = world.get_registry().get<ee_economy::container>(enterprise);
+    ee_economy::Enterprise registeredEnterprise = world.getRegistry().get<ee_economy::Enterprise>(enterprise);
+    ee_economy::Deliverer registeredAction = world.getRegistry().get<ee_economy::Deliverer>(enterprise);
+    ee_economy::Container registeredContainer = world.getRegistry().get<ee_economy::Container>(enterprise);
 
-    ASSERT_DOUBLE_EQ(registered_enterprise.base_efficiency, 1.0);
-    ASSERT_EQ(registered_action.resource, ee_economy::RESOURCE_TYPE::COAL);
-    ASSERT_DOUBLE_EQ(registered_container.capacity, 100.0);
+    ASSERT_DOUBLE_EQ(registeredEnterprise.baseEfficiency, 1.0);
+    ASSERT_EQ(registeredAction.resource, ee_economy::RESOURCE_TYPE::COAL);
+    ASSERT_DOUBLE_EQ(registeredContainer.capacity, 100.0);
 }

@@ -5,27 +5,27 @@
 
 struct WorldBenchmark : testing::Test
 {
-    ee_ecs::world world;
+    ee_ecs::World world;
 
     void SetUp()
     {
         for (int16_t i = 0; i < 1000; i++)
         {
-            ee_economy::container resources = {.capacity = 100.0};
+            ee_economy::Container resources = {.capacity = 100.0};
             resources.add(ee_economy::RESOURCE_TYPE::COAL, 100.0);
-            entt::entity state = world.register_state(i, resources);
+            entt::entity state = world.registerState(i, resources);
 
-            ee_economy::enterprise_defaults miner = {
+            ee_economy::EnterpriseDefaults miner = {
                 .container = {.capacity = 100.0},
-                .resource_target = ee_economy::RESOURCE_TYPE::GOLD,
-                .base_efficiency = 1.0
+                .resourceTarget = ee_economy::RESOURCE_TYPE::GOLD,
+                .baseEfficiency = 1.0
             };
             
-            world.spawn_enterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);
-            world.spawn_enterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);
-            world.spawn_enterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);
-            world.spawn_enterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);
-            world.spawn_enterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);
+            world.spawnEnterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);
+            world.spawnEnterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);
+            world.spawnEnterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);
+            world.spawnEnterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);
+            world.spawnEnterprise(false, ee_economy::ACTION_TYPE::MINING, state, miner);
         }
     }
 

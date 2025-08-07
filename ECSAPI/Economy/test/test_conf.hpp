@@ -18,25 +18,25 @@ struct SystemsTest : testing::Test
     {
         // Create state
         state = registry.create();
-        registry.emplace<ee_economy::state>(state);
-        registry.emplace<ee_economy::container>(state);
+        registry.emplace<ee_economy::State>(state);
+        registry.emplace<ee_economy::Container>(state);
 
         // Create miner enterprise
         miner = registry.create();
-        registry.emplace<ee_economy::enterprise>(miner, false, state);
-        registry.emplace<ee_economy::miner>(miner);
-        registry.emplace<ee_economy::container>(miner);
+        registry.emplace<ee_economy::Enterprise>(miner, false, state);
+        registry.emplace<ee_economy::Miner>(miner);
+        registry.emplace<ee_economy::Container>(miner);
 
         // Create storage enterprise
         storage = registry.create();
-        registry.emplace<ee_economy::enterprise>(storage, false, state);
-        registry.emplace<ee_economy::container>(storage);
+        registry.emplace<ee_economy::Enterprise>(storage, false, state);
+        registry.emplace<ee_economy::Container>(storage);
 
         // Create delivering enterprise
         deliverer = registry.create();
-        registry.emplace<ee_economy::enterprise>(deliverer, false, state);
-        registry.emplace<ee_economy::deliverer>(deliverer);
-        registry.emplace<ee_economy::container>(deliverer);
+        registry.emplace<ee_economy::Enterprise>(deliverer, false, state);
+        registry.emplace<ee_economy::Deliverer>(deliverer);
+        registry.emplace<ee_economy::Container>(deliverer);
     }
 
     void TearDown()

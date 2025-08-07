@@ -17,7 +17,7 @@ private:
 };
 
 template<typename Func, typename... Args>
-void generic_with(Func func) {
+void genericWith(Func func) {
     timer timer;
     func();
     timer.elapsed();
@@ -25,7 +25,7 @@ void generic_with(Func func) {
 
 TEST_F(WorldBenchmark, UpdateSystems)
 {
-    generic_with([&]() {
+    genericWith([&]() {
         world.update();
     });
 }

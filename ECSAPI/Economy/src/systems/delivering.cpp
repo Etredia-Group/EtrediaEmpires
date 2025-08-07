@@ -2,54 +2,54 @@
 
 void ee_economy::delivering(entt::registry &registry)
 {
-    auto deliverers = registry.view<enterprise, deliverer, container>();
+    auto deliverers = registry.view<Enterprise, Deliverer, Container>();
 
     for (auto [entity, enterprise, deliverer, storage]: deliverers.each())
     {
-        if (enterprise.is_bankrupt) continue;
+        if (enterprise.isBankrupt) continue;
 
-        for (deliver_contract &contract: deliverer.contracts)
+        for (DeliverContract &contract: deliverer.contracts)
         {
-            double paid_amount = contract.amount;
+            double paidAmount = contract.amount;
             
             if (contract.cost > 0)
             {
-                ee_economy::enterprise &sponsor = registry.get<ee_economy::enterprise>(contract.sponsor);
+                Enterprise &sponsor = registry.get<Enterprise>(contract.sponsor);
                 
-                double cost_per_one = contract.cost / contract.amount;
+                double costPerOne = contract.cost / contract.amount;
                 double payment = contract.cost;
 
-                if (payment > sponsor.total_money)
+                if (payment > sponsor.totalMoney)
                 {
-                    payment = (int)(sponsor.total_money / cost_per_one) * cost_per_one;
-                    paid_amount = payment / cost_per_one;
+                    payment = (int)(sponsor.totalMoney / costPerOne) * costPerOne;
+                    paidAmount = payment / costPerOne;
                 }
-                sponsor.set_money(sponsor.total_money - payment);
-                enterprise.set_money(enterprise.total_money + payment);
+                sponsor.setMoney(sponsor.totalMoney - payment);
+                enterprise.setMoney(enterprise.totalMoney + payment);
                 contract.cost -= payment;
             }
 
-            container &from_storage = registry.get<container>(contract.from);
-            container &to_storage = registry.get<container>(contract.to);
+            Container &fromStorage = registry.get<Container>(contract.from);
+            Container &toStorage = registry.get<Container>(contract.to);
 
-            double deliver_value = enterprise.efficiency;
+            double deliverValue = enterprise.efficiency;
             if (contract.amount < enterprise.efficiency)
-                deliver_value = contract.amount;
-            if (to_storage.total + deliver_value > to_storage.capacity)
-                deliver_value = to_storage.capacity - to_storage.total;
-            if (deliver_value > from_storage.content[deliverer.resource])
-                deliver_value = from_storage.content[deliverer.resource];
-            if (deliver_value > paid_amount)
-                deliver_value = paid_amount;
-            if (deliver_value < 0.0)
-                deliver_value = 0.0;
+                deliverValue = contract.amount;
+            if (toStorage.total + deliverValue > toStorage.capacity)
+                deliverValue = toStorage.capacity - toStorage.total;
+            if (deliverValue > fromStorage.content[deliverer.resource])
+                deliverValue = fromStorage.content[deliverer.resource];
+            if (deliverValue > paidAmount)
+                deliverValue = paidAmount;
+            if (deliverValue < 0.0)
+                deliverValue = 0.0;
 
-            to_storage.add(deliverer.resource, deliver_value);
-            from_storage.add(deliverer.resource, -deliver_value);
-            contract.amount -= deliver_value;
+            toStorage.add(deliverer.resource, deliverValue);
+            fromStorage.add(deliverer.resource, -deliverValue);
+            contract.amount -= deliverValue;
         }
 
-        std::erase_if(deliverer.contracts, [](const deliver_contract &contract) {
+        std::erase_if(deliverer.contracts, [](const DeliverContract &contract) {
             return contract.amount <= 0.0;
         });
     }

@@ -5,9 +5,9 @@
 
 namespace ee_economy
 {
-	struct enterprise
+	struct Enterprise
 	{
-		bool is_building = false;
+		bool isBuilding = false;
 		entt::entity state;
 		ACTION_TYPE action = ACTION_TYPE::STORE;
 
@@ -17,39 +17,39 @@ namespace ee_economy
 		* Production - 
 		*/
 		double efficiency = 0.;
-		double base_efficiency = 0.;
-		double factor_efficiency = 1.;
+		double baseEfficiency = 0.;
+		double factorEfficiency = 1.;
 
-		std::vector<entt::entity> links_from;
-		std::vector<entt::entity> links_to;
+		std::vector<entt::entity> linksFrom;
+		std::vector<entt::entity> linksTo;
 
-		uint16_t staff_size = 1;
+		uint16_t staffSize = 1;
 		
 		// This can be splitted in percents between bank enterprises in future
-		double total_money = 0;
+		double totalMoney = 0;
 		double salary = 0;
-		bool is_bankrupt = false;
+		bool isBankrupt = false;
 
-		void set_money(double value)
+		void setMoney(double value)
 		{
-			total_money = value;
+			totalMoney = value;
 		}
 
-		inline void update_efficiency()
+		inline void updateEfficiency()
 		{
-			this->efficiency = this->base_efficiency * this->factor_efficiency;
+			this->efficiency = this->baseEfficiency * this->factorEfficiency;
 		}
 
-		void set_base_efficiency(double value)
+		void setBaseEfficiency(double value)
 		{
-			this->base_efficiency = value;
-			update_efficiency();
+			this->baseEfficiency = value;
+			updateEfficiency();
 		}
 
-		void set_factor_efficiency(double value)
+		void setFactorEfficiency(double value)
 		{
-			this->factor_efficiency = value;
-			update_efficiency();
+			this->factorEfficiency = value;
+			updateEfficiency();
 		}
 	};
 }

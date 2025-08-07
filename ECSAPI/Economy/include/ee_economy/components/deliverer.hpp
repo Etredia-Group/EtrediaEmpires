@@ -4,7 +4,7 @@
 
 namespace ee_economy
 {
-    struct deliver_contract
+    struct DeliverContract
     {
         entt::entity from;
         entt::entity to;
@@ -15,10 +15,10 @@ namespace ee_economy
         double distance = 1.0;
     };
 
-    struct deliverer
+    struct Deliverer
     {
         RESOURCE_TYPE resource = RESOURCE_TYPE::NONE;
 
-        std::vector<deliver_contract> contracts;
+        std::vector<DeliverContract> contracts;
     };
 }

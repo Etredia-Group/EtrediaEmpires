@@ -4,7 +4,7 @@
 
 namespace ee_economy
 {
-	struct miner
+	struct Miner
 	{
 		RESOURCE_TYPE resource = RESOURCE_TYPE::NONE;
 	};

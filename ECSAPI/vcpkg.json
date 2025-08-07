@@ -1,6 +1,0 @@
-{
-	"dependencies": [
-		"entt",
-		"gtest"
-	]
-}

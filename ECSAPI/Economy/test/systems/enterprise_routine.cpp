@@ -4,26 +4,26 @@
 
 TEST_F(SystemsTest, RoutineNormal)
 {
-    ee_economy::enterprise &miner_enterprise = registry.get<ee_economy::enterprise>(miner);
-    miner_enterprise.set_money(1000000000.0);
-    miner_enterprise.salary = 100000.0;
-    miner_enterprise.staff_size = 10;
+    ee_economy::Enterprise &minerEnterprise = registry.get<ee_economy::Enterprise>(miner);
+    minerEnterprise.setMoney(1000000000.0);
+    minerEnterprise.salary = 100000.0;
+    minerEnterprise.staffSize = 10;
 
-    ee_economy::enterprise_routine(registry);
+    ee_economy::enterpriseRoutine(registry);
 
-    ASSERT_DOUBLE_EQ(miner_enterprise.total_money, 999000000.0);
-    ASSERT_FALSE(miner_enterprise.is_bankrupt);
+    ASSERT_DOUBLE_EQ(minerEnterprise.totalMoney, 999000000.0);
+    ASSERT_FALSE(minerEnterprise.isBankrupt);
 }
 
 TEST_F(SystemsTest, RoutineBankruptcy)
 {
-    ee_economy::enterprise &miner_enterprise = registry.get<ee_economy::enterprise>(miner);
-    miner_enterprise.set_money(1000000.0);
-    miner_enterprise.salary = 100000.0;
-    miner_enterprise.staff_size = 11;
+    ee_economy::Enterprise &minerEnterprise = registry.get<ee_economy::Enterprise>(miner);
+    minerEnterprise.setMoney(1000000.0);
+    minerEnterprise.salary = 100000.0;
+    minerEnterprise.staffSize = 11;
 
-    ee_economy::enterprise_routine(registry);
+    ee_economy::enterpriseRoutine(registry);
 
-    ASSERT_DOUBLE_EQ(miner_enterprise.total_money, 0.0);
-    ASSERT_TRUE(miner_enterprise.is_bankrupt);
+    ASSERT_DOUBLE_EQ(minerEnterprise.totalMoney, 0.0);
+    ASSERT_TRUE(minerEnterprise.isBankrupt);
 }

@@ -1,20 +1,20 @@
 #include <ee_economy/economy.hpp>
 
-void ee_economy::enterprise_routine(entt::registry &registry)
+void ee_economy::enterpriseRoutine(entt::registry &registry)
 {
-    auto enterprises = registry.view<enterprise>();
+    auto enterprises = registry.view<Enterprise>();
 
     for (auto [entity, enterprise]: enterprises.each())
     {
-        double salary_debt = enterprise.salary * enterprise.staff_size;
-        if (enterprise.total_money < salary_debt)
+        double salaryDebt = enterprise.salary * enterprise.staffSize;
+        if (enterprise.totalMoney < salaryDebt)
         {
-            enterprise.is_bankrupt = true;
-            enterprise.set_money(0.0);
+            enterprise.isBankrupt = true;
+            enterprise.setMoney(0.0);
         }
         else
         {
-            enterprise.set_money(enterprise.total_money - salary_debt);
+            enterprise.setMoney(enterprise.totalMoney - salaryDebt);
         }
     }
 }

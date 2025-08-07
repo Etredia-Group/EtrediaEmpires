@@ -21,13 +21,13 @@ find_package(EnTT CONFIG REQUIRED)
 
 # Link library
 
-add_library(Economy ${HEADERS} ${HEADERS_COMPONENTS} ${SOURCES} ${SOURCES_SYSTEMS})
-add_library(Economy::Economy ALIAS Economy)
+add_library(${PROJECT_NAME} ${HEADERS} ${HEADERS_COMPONENTS} ${SOURCES} ${SOURCES_SYSTEMS})
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-target_link_libraries(Economy PRIVATE EnTT::EnTT)
+target_link_libraries(${PROJECT_NAME} PRIVATE EnTT::EnTT)
 
-target_include_directories(Economy PUBLIC include/)
+target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET Economy PROPERTY CXX_STANDARD 20)
+  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 endif()

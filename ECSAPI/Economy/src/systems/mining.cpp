@@ -2,21 +2,21 @@
 
 void ee_economy::mining(entt::registry &registry)
 {
-	auto miners = registry.view<enterprise, miner, container>();
+	auto miners = registry.view<Enterprise, Miner, Container>();
 
-	for (auto [entity, enterprise, miner, local_storage]: miners.each())
+	for (auto [entity, enterprise, miner, localStorage]: miners.each())
 	{
-		if (enterprise.is_bankrupt) continue;
+		if (enterprise.isBankrupt) continue;
 
-		container& state = registry.get<container>(enterprise.state);
+		Container& state = registry.get<Container>(enterprise.state);
 
-		double mined_value = enterprise.efficiency;
-		if (local_storage.total + mined_value > local_storage.capacity)
-			mined_value = local_storage.capacity - local_storage.total;
-		if (mined_value > state.content[miner.resource])
-			mined_value = state.content[miner.resource];
+		double minedValue = enterprise.efficiency;
+		if (localStorage.total + minedValue > localStorage.capacity)
+			minedValue = localStorage.capacity - localStorage.total;
+		if (minedValue > state.content[miner.resource])
+			minedValue = state.content[miner.resource];
 
-		local_storage.add(miner.resource, mined_value);
-		state.add(miner.resource, -mined_value);
+		localStorage.add(miner.resource, minedValue);
+		state.add(miner.resource, -minedValue);
 	}
 }

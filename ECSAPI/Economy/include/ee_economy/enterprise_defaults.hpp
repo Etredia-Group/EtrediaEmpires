@@ -4,12 +4,12 @@
 
 namespace ee_economy
 {
-	struct enterprise_defaults
+	struct EnterpriseDefaults
 	{
-		container container;
+		Container container;
 
-		RESOURCE_TYPE resource_target = RESOURCE_TYPE::NONE;
-		double base_efficiency = 0.0;
-		double factor_efficiency = 1.0;
+		RESOURCE_TYPE resourceTarget = RESOURCE_TYPE::NONE;
+		double baseEfficiency = 0.0;
+		double factorEfficiency = 1.0;
 	};
 }

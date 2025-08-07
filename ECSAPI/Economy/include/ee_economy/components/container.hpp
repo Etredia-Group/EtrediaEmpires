@@ -4,7 +4,7 @@
 
 namespace ee_economy
 {
-	struct container
+	struct Container
 	{
 		double capacity = 0.;
 		double total = 0.;

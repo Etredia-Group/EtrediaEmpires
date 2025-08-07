@@ -2,61 +2,61 @@
 #include <ee_ecs/ecs.hpp>
 #include <stdexcept>
 
-void ee_ecs::world::update_enterprises()
+void ee_ecs::World::updateEnterprises()
 {
-	ee_economy::enterprise_routine(this->registry);
+	ee_economy::enterpriseRoutine(this->registry);
 
 	ee_economy::mining(this->registry);
 	ee_economy::delivering(this->registry);
 }
 
-void ee_ecs::world::update()
+void ee_ecs::World::update()
 {
-	this->update_enterprises();
+	this->updateEnterprises();
 }
 
-entt::entity ee_ecs::world::register_state(const int16_t id, const ee_economy::container &resources)
+entt::entity ee_ecs::World::registerState(const int16_t id, const ee_economy::Container &resources)
 {
-	if (this->states_table.contains(id))
+	if (this->statesTable.contains(id))
 		throw std::invalid_argument("State with this Id is already registered");
 
 	entt::entity entity = this->registry.create();
 
-	this->registry.emplace<ee_economy::state>(entity, id);
-	this->registry.emplace<ee_economy::container>(
+	this->registry.emplace<ee_economy::State>(entity, id);
+	this->registry.emplace<ee_economy::Container>(
 		entity,
 		resources.capacity,
 		resources.total,
 		resources.content
 	);
 
-	this->states_table[id] = entity;
+	this->statesTable[id] = entity;
 
 	return entity;
 }
 
-entt::entity ee_ecs::world::spawn_enterprise(
-	const bool is_building,
+entt::entity ee_ecs::World::spawnEnterprise(
+	const bool isBuilding,
 	const ee_economy::ACTION_TYPE action,
 	const entt::entity state,
-	const ee_economy::enterprise_defaults &defaults
+	const ee_economy::EnterpriseDefaults &defaults
 )
 {
 	entt::entity entity = this->registry.create();
 
-	this->registry.emplace<ee_economy::enterprise>(
+	this->registry.emplace<ee_economy::Enterprise>(
 		entity,
-		is_building,
+		isBuilding,
 		state,
 		action,
 
-		defaults.base_efficiency * defaults.factor_efficiency,
+		defaults.baseEfficiency * defaults.factorEfficiency,
 
-		defaults.base_efficiency,
-		defaults.factor_efficiency
+		defaults.baseEfficiency,
+		defaults.factorEfficiency
 	);
 
-	this->registry.emplace<ee_economy::container>(
+	this->registry.emplace<ee_economy::Container>(
 		entity,
 		defaults.container.capacity,
 		defaults.container.total,
@@ -67,13 +67,13 @@ entt::entity ee_ecs::world::spawn_enterprise(
 	{
 	case ee_economy::ACTION_TYPE::MINING:
 	{
-		this->registry.emplace<ee_economy::miner>(entity, defaults.resource_target);
+		this->registry.emplace<ee_economy::Miner>(entity, defaults.resourceTarget);
 		break;
 	}
 
 	case ee_economy::ACTION_TYPE::DELIVERY:
 	{
-		this->registry.emplace<ee_economy::deliverer>(entity, defaults.resource_target);
+		this->registry.emplace<ee_economy::Deliverer>(entity, defaults.resourceTarget);
 		break;
 	}
 
@@ -84,4 +84,4 @@ entt::entity ee_ecs::world::spawn_enterprise(
 	return entity;
 }
 
-entt::registry& ee_ecs::world::get_registry() {return this->registry;}
+entt::registry& ee_ecs::World::getRegistry() {return this->registry;}

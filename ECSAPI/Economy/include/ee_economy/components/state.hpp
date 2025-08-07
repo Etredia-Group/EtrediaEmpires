@@ -3,7 +3,7 @@
 
 namespace ee_economy
 {
-    struct state {
-        int16_t external_id = -1;
+    struct State {
+        int16_t externalId = -1;
     };
 }

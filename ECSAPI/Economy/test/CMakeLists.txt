@@ -1,3 +1,5 @@
+project(economy_tests)
+
 # List sources
 
 set(SOURCES "test_conf.hpp" "main.cpp"
@@ -11,14 +13,14 @@ find_package(GTest CONFIG REQUIRED)
 
 include(GoogleTest)
 
-add_executable(economy_tests ${SOURCES})
-target_link_libraries(economy_tests PRIVATE GTest::gtest_main)
-target_link_libraries(economy_tests PRIVATE Economy::Economy)
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_link_libraries(${PROJECT_NAME} PRIVATE GTest::gtest_main)
+target_link_libraries(${PROJECT_NAME} PRIVATE Economy::Economy)
 
 # Test
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET economy_tests PROPERTY CXX_STANDARD 20)
+  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 endif()
 
-gtest_discover_tests(economy_tests)
+gtest_discover_tests(${PROJECT_NAME})

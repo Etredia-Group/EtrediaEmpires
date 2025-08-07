@@ -2,13 +2,13 @@
 #include <ee_ecs/ecs.hpp>
 
 
-static ee_ecs::world world_instance;
+static ee_ecs::World worldInstance;
 
-void ee_ecs::init(ee_ecs::init_configuration config)
+void ee_ecs::init(ee_ecs::InitConfiguration config)
 {
 	for (auto& [id, container]: config.states)
     {
-        world_instance.register_state(id, container);
+        worldInstance.registerState(id, container);
     }
 }
 
@@ -18,24 +18,24 @@ void ee_ecs::start()
 }
 
 template<typename T>
-    const std::vector<ee_ecs::enterprise_info> ee_ecs::get_all_enterprises()
+    const std::vector<ee_ecs::EnterpriseInfo> ee_ecs::getAllEnterprises()
 {
-    std::vector<enterprise_info> result;
+    std::vector<EnterpriseInfo> result;
     //TODO: REPLACE VIEWS WITH GROUPS!
-    auto enterprises = world_instance.get_registry().group<>(entt::get<
-        ee_economy::enterprise,
-        ee_economy::container,
+    auto enterprises = worldInstance.getRegistry().group<>(entt::get<
+        ee_economy::Enterprise,
+        ee_economy::Container,
         T
     >);
     result.reserve(enterprises.size_hint()); 
 
     for (auto [entity, enterprise, container, action]: enterprises.each())
     {
-        enterprise_info eninfo;
+        EnterpriseInfo eninfo;
         eninfo.info = &enterprise;
         
         eninfo.storage = &container;
-        eninfo.special_info = &action;
+        eninfo.specialInfo = &action;
 
         result.push_back(eninfo);
     }
