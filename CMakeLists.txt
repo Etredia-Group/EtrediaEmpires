@@ -8,8 +8,9 @@ endif()
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project ("EtrediaEmpires")
+project (EtrediaEmpires)
 
-add_subdirectory ("p7lib")
-add_subdirectory ("ECSAPI")
-add_subdirectory ("frontend")
+add_subdirectory(utils)
+add_subdirectory (p7lib)
+add_subdirectory (ECSAPI)
+add_subdirectory (frontend)

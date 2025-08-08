@@ -1,5 +1,6 @@
 {
 	"dependencies": [
+		"boost-lockfree",
 		"entt",
 		"vulkan",
 		{"name": "sdl2", "features": ["vulkan"]},

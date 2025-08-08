@@ -13,14 +13,15 @@ project (EEfrontend)
 
 # List sources
 
-#set(HEADERS "RmlVulkanInterface.hpp")
-set(SOURCES "main.cpp")
+set(HEADERS "Renderer.hpp")
+set(SOURCES "main.cpp" "Renderer.cpp")
 
-#list(TRANSFORM HEADERS PREPEND "include/")
+list(TRANSFORM HEADERS PREPEND "include/")
 list(TRANSFORM SOURCES PREPEND "src/")
 
 # Find dependencies
 
+find_package(Boost REQUIRED COMPONENTS lockfree)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(RmlUi CONFIG REQUIRED)
@@ -29,6 +30,9 @@ find_package(RmlUi CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
+target_link_libraries(${PROJECT_NAME} PUBLIC utils)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::lockfree)
 target_link_libraries(${PROJECT_NAME} PRIVATE p7)
 target_link_libraries(
   ${PROJECT_NAME}
