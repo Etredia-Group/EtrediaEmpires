@@ -1,0 +1,13 @@
+<rml>
+
+<head>
+    <link type="text/css" href="../base.rcss" />
+</head>
+
+<body>
+    <div>
+        <p>Hello World!</p>
+    </div>
+</body>
+
+</rml>

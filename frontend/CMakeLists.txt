@@ -41,19 +41,6 @@ target_link_libraries(
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
-
-set(RMLUI_BACKEND_PATH ${RmlUi_SOURCE_DIR}/Backends) # Link SDL Vulkan backend for RmlUi
-add_library(rmlui_backend_SDL_VK INTERFACE)
-target_sources(rmlui_backend_SDL_VK INTERFACE
-	${RMLUI_BACKEND_PATH}/RmlUi_Platform_SDL.cpp
-	${RMLUI_BACKEND_PATH}/RmlUi_Renderer_VK.cpp
-)
-target_include_directories(rmlui_backend_SDL_VK INTERFACE ${RMLUI_BACKEND_PATH})
-target_compile_definitions(rmlui_backend_SDL_VK INTERFACE
-	RMLUI_SDL_VERSION_MAJOR=2
-	RMLUI_NUM_MSAA_SAMPLES=4
-	RMLUI_VK_CUSTOM_LOADER=<vulkan/vulkan.h>
-)
 target_link_libraries(${PROJECT_NAME} PRIVATE RmlUi::RmlUi)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
@@ -61,3 +48,32 @@ target_include_directories(${PROJECT_NAME} PUBLIC include/)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 endif()
+
+# Compile options
+if (APP_VERSION)
+  string(REPLACE "." ";" APP_VERSION_LIST ${APP_VERSION})
+  list(GET APP_VERSION_LIST 0 MAJOR_VERSION)
+  list(GET APP_VERSION_LIST 1 MINOR_VERSION)
+  list(GET APP_VERSION_LIST 2 PATCH_VERSION)
+  target_compile_definitions(${PROJECT_NAME}
+    PRIVATE APP_VERSION
+    PRIVATE MAJOR_VERSION=${MAJOR_VERSION}
+    PRIVATE MINOR_VERSION=${MINOR_VERSION}
+    PRIVATE PATCH_VERSION=${PATCH_VERSION}
+  )
+endif()
+
+if (VALIDATION_LAYER)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE VALIDATION_LAYER_ON)
+endif()
+
+# Set a symbolic link so executable can find the /assets folder
+set(link_src "${CMAKE_SOURCE_DIR}/assets")
+set(link_dst "${CMAKE_CURRENT_BINARY_DIR}/assets")
+add_custom_command( 
+    TARGET ${PROJECT_NAME} 
+    POST_BUILD COMMAND ${CMAKE_COMMAND} 
+        -E create_symlink ${link_src} ${link_dst} 
+    DEPENDS ${link_dst} 
+    COMMENT "symbolic link ${link_src} => ${link_dst}" 
+)

@@ -1,14 +1,8 @@
 #include "Logger.h"
 #include <SDL2/SDL.h>
 
+#include "compile_config.hpp"
 #include "Renderer.hpp"
-
-
-#ifdef _DEBUG
-	#define P7_SINK L"/P7.Sink=Console"
-#else
-	#define P7_SINK L"/P7.Sink=FileTxt"
-#endif
 
 IP7_Trace* Logger::trace;
 
@@ -20,11 +14,13 @@ int SDL_main(int argc, char **argv)
 	Logger::trace = P7_Create_Trace(p7client, L"TC 1");
 	Logger::trace->Register_Thread(L"Main", 0);
 
+	LOG(INFO, "Etredia Empires, v%d.%d.%d", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION);
+
 	// Setup SDL
 	bool quit = false;
 	SDL_Event event;
 
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER);
 
 	SDL_Window *window = SDL_CreateWindow(
 		"Etredia Empires",
@@ -34,6 +30,7 @@ int SDL_main(int argc, char **argv)
 		600,
 		SDL_WINDOW_VULKAN
 	);
+	SDL_StopTextInput();
 
 	if (!window)
 	{
@@ -49,12 +46,13 @@ int SDL_main(int argc, char **argv)
 	// Process SDL events
 	while(!quit)
 	{
-		SDL_WaitEvent(&event);
+		SDL_PollEvent(&event);
 
 		switch(event.type)
 		{
 			case SDL_QUIT:
 			{
+				SDL_RestoreWindow(window);
 				quit = true;
 				break;
 			}
@@ -65,8 +63,9 @@ int SDL_main(int argc, char **argv)
 				{
 					case SDL_WINDOWEVENT_RESIZED:
 					{
-						//TODO: move to renderer
-						//uiContext->SetDimensions(Rml::Vector2i(event.window.data1, event.window.data2));
+						renderer.screenWidth.store(event.window.data1);
+						renderer.screenHeight.store(event.window.data2);
+						renderer.Request(RenderCommand::RESIZE_WINDOW);
 						break;
 					}
 				}
@@ -74,12 +73,12 @@ int SDL_main(int argc, char **argv)
 				break;
 			}
 		}
-
 	}
 
 	// Free memory
 	LOG(INFO, "Exit...");
-	renderer.Stop(); while(renderer.isRunning) {/* */}
+	renderer.Shutdown(); while(renderer.isRunning.load());
+	SDL_DestroyWindow(window);
 	SDL_Quit();
 	Logger::trace->Unregister_Thread(0);
 	Logger::trace->Release();
