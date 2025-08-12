@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include <allocator.hpp>
 #include <exception>
+#include <set>
 
 Renderer::Renderer(SDL_Window *window) : isRunning(false)
 {
@@ -74,6 +75,11 @@ void Renderer::InitVulkan()
 	if (vkResult != VK_SUCCESS)
 		LOG(CRITICAL, "Vulkan is not instantiated! Code: %d", vkResult);
 	else LOG(INFO, "Vulkan is instantiated");
+
+	// Create surface
+	if ( !SDL_Vulkan_CreateSurface(window, vulkan, &surface) )
+		LOG(CRITICAL, "Failed to create SDL Vulkan surface. %hs", SDL_GetError());
+	else LOG(INFO, "SDL Vulkan surface created");
 }
 
 void Renderer::SetupDevice()
@@ -140,22 +146,32 @@ void Renderer::SetupDevice()
 		for (const VkQueueFamilyProperties &familyProps : queueFamiliesProperties)
 		{
 			if (familyProps.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-			{
 				queueFamiliesBuffer.graphics = i;
-				queueFamiliesBuffer.presence = i;
-			}
 
-			//TODO: if (vkGetPhysicalDeviceSurfaceSupportKHR(gpu, i, surface, value))
+			if (
+				queueFamiliesBuffer.graphics != queueFamiliesBuffer.present ||
+				queueFamiliesBuffer.graphics == QUEUE_FAMILY_NO_VALUE
+			)
+			{
+				VkBool32 presentSupport = VK_FALSE;
+				vkResult = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
+				if (vkResult != VK_SUCCESS)
+					LOG(WARNING, "Failed to check surface present support. Code: %d", vkResult);
+				if (presentSupport)
+					queueFamiliesBuffer.present = i;
+			}
 
 			i++;
 		}
 
 		if (
-			!queueFamiliesBuffer.graphics.has_value() ||
-			!queueFamiliesBuffer.presence.has_value()
+			queueFamiliesBuffer.graphics == QUEUE_FAMILY_NO_VALUE ||
+			queueFamiliesBuffer.present == QUEUE_FAMILY_NO_VALUE
 		)
 			continue;
 
+		if (queueFamiliesBuffer.graphics == queueFamiliesBuffer.present)
+			priority += GPU_GRAPHICS_WITH_PRESENT_PRIORITY;
 		
 		if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 			priority += GPU_DISCRETE_PRIORITY;
@@ -174,14 +190,25 @@ void Renderer::SetupDevice()
 		return;
 	}
 
-	// Create queues
-	VkDeviceQueueCreateInfo graphicsQueueCreateConfig {
-		.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-		.pNext = nullptr,
-		.queueFamilyIndex = queueFamilies.graphics.value(),
-		.queueCount = 1,
-		.pQueuePriorities = &defaultQueuePriority
+	// Define queues
+	std::vector<VkDeviceQueueCreateInfo> queuesCreateConfigs;
+	std::set<uint32_t> uniqueQueueFamilies = {
+		queueFamilies.graphics,
+		queueFamilies.present
 	};
+
+	for (uint32_t queueFamily : uniqueQueueFamilies)
+	{
+		VkDeviceQueueCreateInfo queueCreateConfig {
+			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+			.pNext = nullptr,
+			.queueFamilyIndex = queueFamily,
+			.queueCount = 1,
+			.pQueuePriorities = &defaultQueuePriority
+		};
+
+		queuesCreateConfigs.push_back(queueCreateConfig);
+	}
 
 	// Create logical device
 	std::vector<const char*> deviceExtensions = {
@@ -191,8 +218,8 @@ void Renderer::SetupDevice()
 	VkDeviceCreateInfo deviceInfo = {
 		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 		.pNext = nullptr,
-		.queueCreateInfoCount = 1,
-		.pQueueCreateInfos = &graphicsQueueCreateConfig,
+		.queueCreateInfoCount = static_cast<uint32_t>(queuesCreateConfigs.size()),
+		.pQueueCreateInfos = queuesCreateConfigs.data(),
 		.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
 		.ppEnabledExtensionNames = deviceExtensions.data(),
 		.pEnabledFeatures = &enabledFeatures,
@@ -204,7 +231,11 @@ void Renderer::SetupDevice()
 		LOG(CRITICAL, "Failed to create logical device on %hs. Code: %d", deviceProperties.deviceName, vkResult);
 		return;
 	}
-	else LOG(INFO, "%hs is selected for render", deviceProperties.deviceName);
+	else LOG(INFO, "%hs is selected for render with %d priority score", deviceProperties.deviceName, best_priority);
+
+	// Save queues descriptor
+	vkGetDeviceQueue(device, queueFamilies.graphics, 0, &queues.graphics);
+	vkGetDeviceQueue(device, queueFamilies.present, 0, &queues.present);
 }
 
 void Renderer::Start()
@@ -288,6 +319,7 @@ void Renderer::Request(RenderCommand::Type type)
 void Renderer::Release()
 {
 	vkDestroyDevice(device, nullptr);
+	vkDestroySurfaceKHR(vulkan, surface, nullptr);
 	vkDestroyInstance(vulkan, nullptr);
 
     LOG(INFO, "Renderer is released");
