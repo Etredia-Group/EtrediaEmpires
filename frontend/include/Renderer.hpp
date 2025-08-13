@@ -1,6 +1,7 @@
 #pragma once
 #include <thread>
 #include <atomic>
+#include <cstdint>
 #include <Boost/lockfree/spsc_queue.hpp>
 
 #include <SDL2/SDL.h>
@@ -17,6 +18,7 @@
 // GPU properties priority for selection
 #define GPU_DISCRETE_PRIORITY 1000
 #define GPU_GRAPHICS_WITH_PRESENT_PRIORITY 500
+#define GPU_B8G8R8_SRGB_PRIORITY 10
 
 #define QUEUE_FAMILY_NO_VALUE UINT32_MAX
 
@@ -44,6 +46,17 @@ struct QueuesBundle
     VkQueue present;
 };
 
+struct SurfaceInfo
+{
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> availableFormats;
+    std::vector<VkPresentModeKHR> availablePresentModes;
+
+    VkSurfaceFormatKHR format;
+    VkPresentModeKHR presentMode;
+    VkExtent2D extent;
+};
+
 class Renderer
 {
 private:
@@ -56,6 +69,10 @@ private:
     VkSurfaceKHR surface;
     VkPhysicalDevice gpu;
     VkDevice device;
+    VkSwapchainKHR swapchain;
+    std::vector<VkImage> frames;
+
+    SurfaceInfo surfaceInfo;
     QueueFamiliesBundle queueFamilies;
     QueuesBundle queues;
     const float defaultQueuePriority = 1.0f;
@@ -66,6 +83,7 @@ private:
     
     void InitVulkan();
     void SetupDevice();
+    void SetupSwapchain();
 
     void Threading();
     void Loop();

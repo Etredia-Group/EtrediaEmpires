@@ -5,6 +5,7 @@
 #include "Renderer.hpp"
 #include "Logger.h"
 #include <allocator.hpp>
+#include <algorithm>
 #include <exception>
 #include <set>
 
@@ -84,7 +85,7 @@ void Renderer::InitVulkan()
 
 void Renderer::SetupDevice()
 {
-	// Select physical device and queue families
+	// Find physical devices
 	VkResult vkResult;
 	uint32_t devicesCount = 0;
 	vkResult = vkEnumeratePhysicalDevices(vulkan, &devicesCount, nullptr);
@@ -112,6 +113,7 @@ void Renderer::SetupDevice()
 		LOG(INFO, "Found %d Vulkan compatible physical devices.", devices.size());
 	}
 
+	// Filter and select device
 	gpu = VK_NULL_HANDLE;
 	VkPhysicalDeviceProperties deviceProperties {};
 	VkPhysicalDeviceFeatures deviceFeatures {};
@@ -121,6 +123,7 @@ void Renderer::SetupDevice()
 	{
 		uint32_t priority = 1;
 
+		// Check device features and properties
 		vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
 
 		if (deviceFeatures.wideLines) enabledFeatures.wideLines = VK_TRUE; else continue;
@@ -128,6 +131,7 @@ void Renderer::SetupDevice()
 
 		vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
 
+		// Check queue families
 		uint32_t queueFamiliesCount = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(
 			physicalDevice,
@@ -156,7 +160,7 @@ void Renderer::SetupDevice()
 				VkBool32 presentSupport = VK_FALSE;
 				vkResult = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
 				if (vkResult != VK_SUCCESS)
-					LOG(WARNING, "Failed to check surface present support. Code: %d", vkResult);
+					LOG(WARNING, "Failed to check surface present support. Code: %d. Device: %hs", vkResult, deviceProperties.deviceName);
 				if (presentSupport)
 					queueFamiliesBuffer.present = i;
 			}
@@ -170,17 +174,86 @@ void Renderer::SetupDevice()
 		)
 			continue;
 
+		// Check surface info
+		SurfaceInfo surfaceInfoBuffer {};
+
+		uint32_t surfaceFormatsCount = 0;
+		vkResult = vkGetPhysicalDeviceSurfaceFormatsKHR(
+			physicalDevice,
+			surface,
+			&surfaceFormatsCount,
+			nullptr
+		);
+		if (vkResult != VK_SUCCESS)
+			LOG(WARNING, "Failed to get surface formats number. Code: %d. Device: %hs", vkResult, deviceProperties.deviceName);
+		surfaceInfoBuffer.availableFormats.resize(surfaceFormatsCount);
+		vkResult = vkGetPhysicalDeviceSurfaceFormatsKHR(
+			physicalDevice,
+			surface,
+			&surfaceFormatsCount,
+			surfaceInfoBuffer.availableFormats.data()
+		);
+		if (vkResult != VK_SUCCESS)
+			LOG(WARNING, "Failed to get surface formats. Code: %d. Device: %hs", vkResult, deviceProperties.deviceName);
+
+		uint32_t presentModesCount = 0;
+		vkResult = vkGetPhysicalDeviceSurfacePresentModesKHR(
+			physicalDevice,
+			surface,
+			&presentModesCount,
+			nullptr
+		);
+		if (vkResult != VK_SUCCESS)
+			LOG(WARNING, "Failed to get surface present modes number. Code: %d. Device: %hs", vkResult, deviceProperties.deviceName);
+		surfaceInfoBuffer.availablePresentModes.resize(presentModesCount);
+		vkResult = vkGetPhysicalDeviceSurfacePresentModesKHR(
+			physicalDevice,
+			surface,
+			&surfaceFormatsCount,
+			surfaceInfoBuffer.availablePresentModes.data()
+		);
+		if (vkResult != VK_SUCCESS)
+			LOG(WARNING, "Failed to get surface present modes. Code: %d. Device: %hs", vkResult, deviceProperties.deviceName);
+
+		if (
+			surfaceInfoBuffer.availableFormats.empty() ||
+			surfaceInfoBuffer.availablePresentModes.empty()
+		)
+			continue;
+
+		// Rate and select physical device
 		if (queueFamiliesBuffer.graphics == queueFamiliesBuffer.present)
 			priority += GPU_GRAPHICS_WITH_PRESENT_PRIORITY;
 		
 		if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 			priority += GPU_DISCRETE_PRIORITY;
 
+		for (VkSurfaceFormatKHR format : surfaceInfoBuffer.availableFormats)
+		{
+			surfaceInfoBuffer.format = format;
+			if (format.format == VK_FORMAT_B8G8R8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+			{
+				priority += GPU_B8G8R8_SRGB_PRIORITY;
+				break;
+			}
+		}
+
+		surfaceInfoBuffer.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+		for (VkPresentModeKHR presentMode : surfaceInfoBuffer.availablePresentModes)
+		{
+			if (presentMode == VK_PRESENT_MODE_FIFO_RELAXED_KHR)
+			{
+				surfaceInfoBuffer.presentMode = presentMode;
+				break;
+			}
+		}
+
 		if (priority > best_priority)
 		{
 			best_priority = priority;
 			gpu = physicalDevice;
 			queueFamilies = queueFamiliesBuffer;
+			surfaceInfo = surfaceInfoBuffer;
 		}
 	}
 
@@ -212,7 +285,7 @@ void Renderer::SetupDevice()
 
 	// Create logical device
 	std::vector<const char*> deviceExtensions = {
-		"VK_KHR_swapchain"
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 
 	VkDeviceCreateInfo deviceInfo = {
@@ -238,6 +311,64 @@ void Renderer::SetupDevice()
 	vkGetDeviceQueue(device, queueFamilies.present, 0, &queues.present);
 }
 
+void Renderer::SetupSwapchain()
+{
+	VkResult vkResult;
+	vkResult = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, surface, &surfaceInfo.capabilities);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to get surface capabilities. Code: %d", vkResult);
+
+	int width = 0, height = 0;
+	SDL_Vulkan_GetDrawableSize(window, &width, &height);
+	
+	// Clamp extent
+	surfaceInfo.extent.width = (std::max)(
+		surfaceInfo.capabilities.minImageExtent.width,
+		(std::min)(surfaceInfo.capabilities.maxImageExtent.width, static_cast<uint32_t>(width))
+	);
+	surfaceInfo.extent.height = (std::max)(
+		surfaceInfo.capabilities.minImageExtent.height,
+		(std::min)(surfaceInfo.capabilities.maxImageExtent.height, static_cast<uint32_t>(height))
+	);
+
+	uint32_t minImagesCount = surfaceInfo.capabilities.minImageCount + 1;
+	// Clamp min images count
+	if (surfaceInfo.capabilities.maxImageCount > 0 && minImagesCount > surfaceInfo.capabilities.maxImageCount)
+		minImagesCount = surfaceInfo.capabilities.maxImageCount;
+
+	VkSwapchainCreateInfoKHR swapchainCreateConfig {
+		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+		.pNext = nullptr,
+		.surface = surface,
+		.minImageCount = minImagesCount,
+		.imageFormat = surfaceInfo.format.format,
+		.imageColorSpace = surfaceInfo.format.colorSpace,
+		.imageExtent = surfaceInfo.extent,
+		.imageArrayLayers = 1,
+		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		.preTransform = surfaceInfo.capabilities.currentTransform,
+		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+		.presentMode = surfaceInfo.presentMode,
+		.clipped = VK_TRUE,
+		.oldSwapchain = VK_NULL_HANDLE
+	};
+
+	if (queueFamilies.graphics != queueFamilies.present)
+	{
+		uint32_t queueFamiliesShare[] = {queueFamilies.graphics, queueFamilies.present};
+		swapchainCreateConfig.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		swapchainCreateConfig.queueFamilyIndexCount = 2;
+		swapchainCreateConfig.pQueueFamilyIndices = queueFamiliesShare;
+	}
+	else
+		swapchainCreateConfig.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	vkResult = vkCreateSwapchainKHR(device, &swapchainCreateConfig, nullptr, &swapchain);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to create swapchain. Code: %d", vkResult);
+	else LOG(INFO, "Swapchain is created");
+}
+
 void Renderer::Start()
 {
 	if (isRunning) throw std::exception("Renderer can be started only once");
@@ -256,6 +387,7 @@ void Renderer::Threading()
 	
 	InitVulkan();
 	SetupDevice();
+	SetupSwapchain();
 
     Loop();
 
@@ -318,6 +450,7 @@ void Renderer::Request(RenderCommand::Type type)
 
 void Renderer::Release()
 {
+	vkDestroySwapchainKHR(device, swapchain, nullptr);
 	vkDestroyDevice(device, nullptr);
 	vkDestroySurfaceKHR(vulkan, surface, nullptr);
 	vkDestroyInstance(vulkan, nullptr);
