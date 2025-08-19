@@ -71,6 +71,7 @@ private:
     VkDevice device;
     VkSwapchainKHR swapchain;
     std::vector<VkImage> frames;
+    std::vector<VkImageView> frameViews;
 
     SurfaceInfo surfaceInfo;
     QueueFamiliesBundle queueFamilies;

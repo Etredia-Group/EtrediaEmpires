@@ -331,16 +331,16 @@ void Renderer::SetupSwapchain()
 		(std::min)(surfaceInfo.capabilities.maxImageExtent.height, static_cast<uint32_t>(height))
 	);
 
-	uint32_t minImagesCount = surfaceInfo.capabilities.minImageCount + 1;
+	uint32_t imagesCount = surfaceInfo.capabilities.minImageCount + 1;
 	// Clamp min images count
-	if (surfaceInfo.capabilities.maxImageCount > 0 && minImagesCount > surfaceInfo.capabilities.maxImageCount)
-		minImagesCount = surfaceInfo.capabilities.maxImageCount;
+	if (surfaceInfo.capabilities.maxImageCount > 0 && imagesCount > surfaceInfo.capabilities.maxImageCount)
+		imagesCount = surfaceInfo.capabilities.maxImageCount;
 
 	VkSwapchainCreateInfoKHR swapchainCreateConfig {
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 		.pNext = nullptr,
 		.surface = surface,
-		.minImageCount = minImagesCount,
+		.minImageCount = imagesCount,
 		.imageFormat = surfaceInfo.format.format,
 		.imageColorSpace = surfaceInfo.format.colorSpace,
 		.imageExtent = surfaceInfo.extent,
@@ -367,6 +367,45 @@ void Renderer::SetupSwapchain()
 	if (vkResult != VK_SUCCESS)
 		LOG(CRITICAL, "Failed to create swapchain. Code: %d", vkResult);
 	else LOG(INFO, "Swapchain is created");
+
+	vkResult = vkGetSwapchainImagesKHR(device, swapchain, &imagesCount, nullptr);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to get frames number. Code: %d", vkResult);
+	frames.resize(imagesCount);
+	vkResult = vkGetSwapchainImagesKHR(device, swapchain, &imagesCount, frames.data());
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to get frames descriptors. Code: %d", vkResult);
+	else LOG(INFO, "Frames are ready");
+
+	frameViews.resize(imagesCount);
+	for (size_t i = 0; i < frames.size(); i++)
+	{
+		VkImageViewCreateInfo frameViewConfig {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+			.pNext = nullptr,
+			.image = frames[i],
+			.viewType = VK_IMAGE_VIEW_TYPE_2D,
+			.format = surfaceInfo.format.format,
+			.components = {
+				.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+				.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+				.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+				.a = VK_COMPONENT_SWIZZLE_IDENTITY
+			},
+			.subresourceRange = {
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1
+			}
+		};
+
+		vkResult = vkCreateImageView(device, &frameViewConfig, nullptr, &frameViews[i]);
+		if (vkResult != VK_SUCCESS)
+			LOG(CRITICAL, "Failed to create image view for frame. Code: %d", vkResult);
+	}
+	LOG(INFO, "Frame views are ready.");
 }
 
 void Renderer::Start()
@@ -450,6 +489,11 @@ void Renderer::Request(RenderCommand::Type type)
 
 void Renderer::Release()
 {
+	for (VkImageView frameView : frameViews)
+	{
+		vkDestroyImageView(device, frameView, nullptr);
+	}
+
 	vkDestroySwapchainKHR(device, swapchain, nullptr);
 	vkDestroyDevice(device, nullptr);
 	vkDestroySurfaceKHR(vulkan, surface, nullptr);
