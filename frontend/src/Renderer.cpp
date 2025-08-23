@@ -1,4 +1,4 @@
-#if !APP_VERSION
+#ifndef APP_VERSION
 #include "compile_config.hpp"
 #endif
 
@@ -410,9 +410,13 @@ void Renderer::SetupSwapchain()
 
 void Renderer::Start()
 {
-	if (isRunning) throw std::exception("Renderer can be started only once");
+	if (isRunning)
+	{
+		LOG(CRITICAL, "Renderer can be started only once");
+		throw std::exception("Renderer can be started only once");
+	}
 
-    isRunning = true;
+    isRunning.store(true);
     renderThread = std::jthread([this](std::stop_token stop) {
         this->stoken = &stop;
         Threading();
@@ -482,7 +486,7 @@ void Renderer::Request(const RenderCommand &command)
 	commands.push(command);
 }
 
-void Renderer::Request(RenderCommand::Type type)
+void Renderer::Request(const RenderCommand::Type &type)
 {
 	commands.push(RenderCommand {.type = type});
 }

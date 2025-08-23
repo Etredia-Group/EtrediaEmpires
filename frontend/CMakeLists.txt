@@ -13,8 +13,8 @@ project (EEfrontend)
 
 # List sources
 
-set(HEADERS "Renderer.hpp")
-set(SOURCES "main.cpp" "Renderer.cpp")
+set(HEADERS "Renderer.hpp" "FileSystem.hpp" "compile_config.hpp" "AssetManager.hpp" "AssetData.hpp")
+set(SOURCES "main.cpp" "Renderer.cpp" "FileSystem.cpp" "AssetManager.cpp" "AssetData.cpp")
 
 list(TRANSFORM HEADERS PREPEND "include/")
 list(TRANSFORM SOURCES PREPEND "src/")

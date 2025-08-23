@@ -59,9 +59,23 @@ struct SurfaceInfo
 
 class Renderer
 {
+public:
+    std::atomic<bool> isRunning;
+    std::atomic<int> screenWidth, screenHeight;
+
+    Renderer(SDL_Window *window);
+    ~Renderer();
+    
+    void Start();
+    void Shutdown();
+
+    void Request(const RenderCommand &command);
+    void Request(const RenderCommand::Type &type);
+
 private:
     std::stop_token *stoken;
     std::jthread renderThread;
+    boost::lockfree::spsc_queue<RenderCommand, boost::lockfree::capacity<512>> commands;
 
     SDL_Window *window;
 
@@ -79,8 +93,6 @@ private:
     const float defaultQueuePriority = 1.0f;
 
     Rml::Context *uiContext;
-
-    boost::lockfree::spsc_queue<RenderCommand, boost::lockfree::capacity<512>> commands;
     
     void InitVulkan();
     void SetupDevice();
@@ -91,16 +103,4 @@ private:
     void ProcessCommand(const RenderCommand &command);
     void Release();
 
-public:
-    std::atomic<bool> isRunning;
-    std::atomic<int> screenWidth, screenHeight;
-
-    Renderer(SDL_Window *window);
-    ~Renderer();
-    
-    void Start();
-    void Shutdown();
-
-    void Request(const RenderCommand &command);
-    void Request(RenderCommand::Type type);
 };

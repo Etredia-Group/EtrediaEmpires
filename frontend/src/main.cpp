@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 
 #include "compile_config.hpp"
+#include "AssetManager.hpp"
 #include "Renderer.hpp"
 
 IP7_Trace* Logger::trace;
@@ -38,6 +39,10 @@ int SDL_main(int argc, char **argv)
 		LOG(CRITICAL, "SDL Window fails: %hs", SDL_GetError());
 	}
 	else LOG(INFO, "SDL Window created");
+
+	// Setup assets
+	AssetManager assetManager;
+	assetManager.Start();
 
 	// Setup Renderer
 	Renderer renderer(window);
@@ -78,6 +83,7 @@ int SDL_main(int argc, char **argv)
 	// Free memory
 	LOG(INFO, "Exit...");
 	renderer.Shutdown(); while(renderer.isRunning.load());
+	assetManager.Shutdown(); while(assetManager.isRunning.load());
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	Logger::trace->Unregister_Thread(0);
