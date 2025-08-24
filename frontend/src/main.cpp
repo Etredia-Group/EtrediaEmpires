@@ -43,6 +43,7 @@ int SDL_main(int argc, char **argv)
 	// Setup assets
 	AssetManager assetManager;
 	assetManager.Start();
+	assetManager.LoadShaders();
 
 	// Setup Renderer
 	Renderer renderer(window);

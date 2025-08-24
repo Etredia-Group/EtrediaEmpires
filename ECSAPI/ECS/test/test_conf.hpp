@@ -11,12 +11,12 @@ struct WorldBenchmark : testing::Test
     {
         for (int16_t i = 0; i < 1000; i++)
         {
-            ee_economy::Container resources = {.capacity = 100.0};
+            ee_economy::Container resources {.capacity = 100.0};
             resources.add(ee_economy::RESOURCE_TYPE::COAL, 100.0);
             entt::entity state = world.registerState(i, resources);
 
-            ee_economy::EnterpriseDefaults miner = {
-                .container = {.capacity = 100.0},
+            ee_economy::EnterpriseDefaults miner {
+                .container {.capacity = 100.0},
                 .resourceTarget = ee_economy::RESOURCE_TYPE::GOLD,
                 .baseEfficiency = 1.0
             };

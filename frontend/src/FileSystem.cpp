@@ -1,15 +1,24 @@
 #include "FileSystem.hpp"
 #include "Logger.h"
 #include "allocator.hpp"
+#include <stdexcept>
+
+IFileSystem::~IFileSystem()
+{
+    for (FileHandle* handle : activeFiles)
+        Deallocate(handle);
+    for (FileHandle* handle : failedFiles)
+        Deallocate(handle);
+}
 
 #ifdef _WIN32
 
 FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const uint32_t flags)
 {
-    FileHandle result;
+    FileHandle* result = Allocate<FileHandle>();
 
     #ifndef NDEBUG
-    result.debugPath = path;
+    result->debugPath = path;
     #endif
 
     DWORD createFileMode = 0;
@@ -33,78 +42,126 @@ FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const uint
     {
         LOG(ERROR, "Failed to open file %s. Error: %d", path.c_str(), GetLastError());
         failedFiles.push_back(result);
-        return failedFiles[result.id];
+        return *result;
     }
 
-    result.win32Handle = file;
-    result.size = GetFileSize(file, NULL);
-    if (result.size == INVALID_FILE_SIZE)
+    result->win32Handle = file;
+    result->size = GetFileSize(file, NULL);
+    if (result->size == INVALID_FILE_SIZE)
         LOG(ERROR, "Failed to get size of file %s. Error: %d", path.c_str(), GetLastError());
 
     if (freeFileSlots.size() > 0)
     {
-        activeFiles[freeFileSlots.back()] = result;
-        result.id = freeFileSlots.back();
+        size_t pos = freeFileSlots.back();
+        result->id = pos;
+        activeFiles[pos] = result;
         freeFileSlots.pop_back();
     }
     else
     {
+        result->id = activeFiles.size();
         activeFiles.push_back(result);
-        result.id = activeFiles.size() - 1;
     }
 
-    return activeFiles[result.id];
+    return *result;
 }
 
 void NativeFileSystem::ReadAsync(FileHandle &file, const uint32_t bufferSize, const uint32_t flags)
 {
-    file.overlapped = {};
+    file.overlapped = {
+        .hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr)
+    };
     file.buffer = AllocateArray<uint8_t>(bufferSize);
 
-    ReadFile(
+    BOOL isSync = ReadFile(
         file.win32Handle,
         file.buffer,
         bufferSize,
         NULL,
         &file.overlapped
     );
+
+    if (isSync || GetLastError() != ERROR_IO_PENDING)
+        LOG(ERROR, "File reading is synchronious while asynchronious is awaited");
 }
 
 bool NativeFileSystem::PollReady(FileHandle &file)
 {
-    DWORD transferredSize = 0L;
-    BOOL status = GetOverlappedResult(
-        file.win32Handle,
-        &file.overlapped,
-        &transferredSize,
-        FALSE
-    );
-    if (!status && GetLastError() != ERROR_IO_INCOMPLETE)
-    {
-        LOG(ERROR, "Error in file status. Code: %d", GetLastError());
-        return false;
-    }
+    // DWORD transferredSize = 0L;
+    // BOOL status = GetOverlappedResult(
+    //     file.win32Handle,
+    //     &file.overlapped,
+    //     &transferredSize,
+    //     FALSE
+    // );
+    
+    // DWORD error = GetLastError();
+    // if (!status && error != ERROR_IO_INCOMPLETE)
+    // {
+    //     LOG(CRITICAL, "Error in reading file status. Code: %d", error);
+    //     throw std::runtime_error("Error in reading file status");
+    // }
 
-    if (file.size == transferredSize)
-    {
-        file.data = file.buffer;
-    }
-    else
-    {
-        /* TODO: reserve size for data, shift and move */
-    }
-    file.buffer = nullptr;
+    // if (file.size == transferredSize)
+    // {
+    //     file.data = file.buffer;
+    // }
+    // else
+    // {
+    //     /* TODO: reserve size for data, shift and move */
+    // }
+    // file.buffer = nullptr;
 
-    return status;
+    DWORD status = WaitForSingleObject(file.overlapped.hEvent, 0);
+
+    switch (status)
+    {
+        case WAIT_OBJECT_0:
+        {
+            if (file.size == file.bufferSize)
+            {
+                file.data = file.buffer;
+            }
+            else
+            {
+                /* TODO: reserve size for data, shift and move */
+            }
+
+            break;
+        }
+
+        case WAIT_ABANDONED:
+        case WAIT_TIMEOUT:
+            return false;
+
+        default:
+        {
+            LOG(CRITICAL, "Failed to get file status. Error: %d", GetLastError());
+            throw std::runtime_error("Failed to get file status");
+        }
+    }
+    
+    return true;
 }
 
-void NativeFileSystem::Close(const FileHandle &file)
+void NativeFileSystem::Close(FileHandle &file)
 {
-    DeallocateArray(file.buffer);
-    DeallocateArray(file.data);
+    if (file.buffer != nullptr)
+    {
+        DeallocateArray(file.buffer);
+        file.buffer = nullptr;
+    }
+    if (file.data != nullptr)
+    {
+        DeallocateArray(file.data);
+        file.data = nullptr;
+    }
 
-    CloseHandle(file.win32Handle);
-    activeFiles[file.id].win32Handle = INVALID_HANDLE_VALUE;
+    if (file.win32Handle != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(file.win32Handle);
+        file.win32Handle = INVALID_HANDLE_VALUE;
+    }
     freeFileSlots.push_back(file.id);
 }
 

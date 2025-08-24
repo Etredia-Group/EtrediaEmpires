@@ -1,6 +1,7 @@
 #include "AssetManager.hpp"
 #include "allocator.hpp"
 #include "Logger.h"
+#include <stdexcept>
 
 AssetInfo::AssetInfo(void *resource)
 {
@@ -81,7 +82,7 @@ void AssetManager::Request(const AssetStreamCommand::Type &type)
 
 void AssetManager::LoadAsync(AssetInfo::Type type, const std::filesystem::path &path)
 {
-    AssetStreamCommand command = {
+    AssetStreamCommand command {
         .type = AssetStreamCommand::LOAD,
         .targetPath = path,
         .targetType = type
@@ -92,7 +93,7 @@ void AssetManager::LoadAsync(AssetInfo::Type type, const std::filesystem::path &
 AssetHandle& AssetManager::Find(const std::filesystem::path &path)
 {
     std::atomic<void*> result;
-    AssetStreamCommand command = {
+    AssetStreamCommand command {
         .type = AssetStreamCommand::FIND,
         .targetPath = path,
         .out = &result
@@ -104,7 +105,7 @@ AssetHandle& AssetManager::Find(const std::filesystem::path &path)
 
 void AssetManager::Start()
 {
-    if (isRunning) throw std::exception("Asset Streaming can be started only once");
+    if (isRunning) throw std::logic_error("Asset Streaming can be started only once");
 
     isRunning.store(true);
     streamingThread = std::jthread([this](std::stop_token stop) {
@@ -156,7 +157,7 @@ void AssetManager::Loop()
                 //TODO: functions for each type
                 switch (asset.type)
                 {
-                    case AssetInfo::SHADER:
+                    case AssetInfo::MATERIAL:
                     {
                         break;
                     }
@@ -166,6 +167,7 @@ void AssetManager::Loop()
                         break;
                     }
 
+                    case AssetInfo::SHADER:
                     case AssetInfo::BINARY:
                     default:
                     {
@@ -176,8 +178,13 @@ void AssetManager::Loop()
                     }
                 }
 
-                asset.isReady.store(true);
+                entry.fileOwner->Close(*entry.file);
+#ifndef NDEBUG
+                auto path = entry.file->debugPath.c_str();
+                LOG(INFO, "Asset loaded: [%s]", path);
+#endif
                 entry.file = nullptr;
+                asset.isReady.store(true);
             }
         }
 
@@ -192,7 +199,7 @@ void AssetManager::ProcessCommand(AssetStreamCommand &command)
 	{
 		case AssetStreamCommand::LOAD:
         {
-            LOG(INFO, "LOAD command");
+            LOG(INFO, "LOAD command: [%s]", command.targetPath.c_str());
 
             /* TODO: process path to select FS */
             /* TODO: select between async load and sync job task */
@@ -202,7 +209,7 @@ void AssetManager::ProcessCommand(AssetStreamCommand &command)
 
             diskSystem->ReadAsync(file, static_cast<uint32_t>(file.size), FILE_READ_SEQUENTIAL);
             
-            AssetHandle handle;
+            AssetHandle* handle = Allocate<AssetHandle>();
             AssetInfo asset(nullptr);
             asset.type = command.targetType;
             
@@ -218,11 +225,11 @@ void AssetManager::ProcessCommand(AssetStreamCommand &command)
                 activeAssets.push_back(std::move(asset));
                 assetPos = activeAssets.size() - 1;
             }
-            handle.id = assetPos;
+            handle->id = assetPos;
             assetsMapping[command.targetPath] = handle;
 
-            AssetLoadingEntry loadingEntry = {
-                .handle = handle,
+            AssetLoadingEntry loadingEntry {
+                .handle = *handle,
                 .file = &file,
                 .fileOwner = diskSystem
             };
@@ -234,12 +241,12 @@ void AssetManager::ProcessCommand(AssetStreamCommand &command)
 
         case AssetStreamCommand::FIND:
         {
-            std::unordered_map<std::filesystem::path, AssetHandle>::iterator mapping = assetsMapping.find(command.targetPath);
+            std::unordered_map<std::filesystem::path, AssetHandle*>::iterator mapping = assetsMapping.find(command.targetPath);
             
             if (mapping == assetsMapping.end())
                 break;
 
-            command.out->store(&mapping->second);
+            command.out->store(mapping->second);
 
             command.type = AssetStreamCommand::COMPLETED;
             break;
@@ -280,6 +287,20 @@ void AssetManager::Release()
     }
     activeAssets.clear();
 
+    for (auto &mapping : assetsMapping)
+        Deallocate(mapping.second);
+    assetsMapping.clear();
+
     LOG(INFO, "Asset Streaming is released");
     isRunning.store(false);
+}
+
+void AssetManager::LoadShaders()
+{
+    std::filesystem::path shadersRoot = "assets/shaders";
+    for (const std::filesystem::directory_entry &entry : std::filesystem::directory_iterator(shadersRoot))
+    {
+        if (entry.is_directory()) continue;
+        LoadAsync(AssetInfo::SHADER, entry.path());
+    }
 }

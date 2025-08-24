@@ -6,8 +6,8 @@
 #include "Logger.h"
 #include <allocator.hpp>
 #include <algorithm>
-#include <exception>
 #include <set>
+#include <stdexcept>
 
 Renderer::Renderer(SDL_Window *window) : isRunning(false)
 {
@@ -228,7 +228,7 @@ void Renderer::SetupDevice()
 		if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 			priority += GPU_DISCRETE_PRIORITY;
 
-		for (VkSurfaceFormatKHR format : surfaceInfoBuffer.availableFormats)
+		for (const VkSurfaceFormatKHR &format : surfaceInfoBuffer.availableFormats)
 		{
 			surfaceInfoBuffer.format = format;
 			if (format.format == VK_FORMAT_B8G8R8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
@@ -239,7 +239,7 @@ void Renderer::SetupDevice()
 		}
 
 		surfaceInfoBuffer.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-		for (VkPresentModeKHR presentMode : surfaceInfoBuffer.availablePresentModes)
+		for (const VkPresentModeKHR &presentMode : surfaceInfoBuffer.availablePresentModes)
 		{
 			if (presentMode == VK_PRESENT_MODE_FIFO_RELAXED_KHR)
 			{
@@ -265,7 +265,7 @@ void Renderer::SetupDevice()
 
 	// Define queues
 	std::vector<VkDeviceQueueCreateInfo> queuesCreateConfigs;
-	std::set<uint32_t> uniqueQueueFamilies = {
+	std::set<uint32_t> uniqueQueueFamilies {
 		queueFamilies.graphics,
 		queueFamilies.present
 	};
@@ -284,11 +284,11 @@ void Renderer::SetupDevice()
 	}
 
 	// Create logical device
-	std::vector<const char*> deviceExtensions = {
+	std::vector<const char*> deviceExtensions {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 
-	VkDeviceCreateInfo deviceInfo = {
+	VkDeviceCreateInfo deviceInfo {
 		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 		.pNext = nullptr,
 		.queueCreateInfoCount = static_cast<uint32_t>(queuesCreateConfigs.size()),
@@ -355,7 +355,7 @@ void Renderer::SetupSwapchain()
 
 	if (queueFamilies.graphics != queueFamilies.present)
 	{
-		uint32_t queueFamiliesShare[] = {queueFamilies.graphics, queueFamilies.present};
+		uint32_t queueFamiliesShare[] {queueFamilies.graphics, queueFamilies.present};
 		swapchainCreateConfig.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		swapchainCreateConfig.queueFamilyIndexCount = 2;
 		swapchainCreateConfig.pQueueFamilyIndices = queueFamiliesShare;
@@ -386,13 +386,13 @@ void Renderer::SetupSwapchain()
 			.image = frames[i],
 			.viewType = VK_IMAGE_VIEW_TYPE_2D,
 			.format = surfaceInfo.format.format,
-			.components = {
+			.components {
 				.r = VK_COMPONENT_SWIZZLE_IDENTITY,
 				.g = VK_COMPONENT_SWIZZLE_IDENTITY,
 				.b = VK_COMPONENT_SWIZZLE_IDENTITY,
 				.a = VK_COMPONENT_SWIZZLE_IDENTITY
 			},
-			.subresourceRange = {
+			.subresourceRange {
 				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 				.baseMipLevel = 0,
 				.levelCount = 1,
@@ -413,7 +413,7 @@ void Renderer::Start()
 	if (isRunning)
 	{
 		LOG(CRITICAL, "Renderer can be started only once");
-		throw std::exception("Renderer can be started only once");
+		throw std::logic_error("Renderer can be started only once");
 	}
 
     isRunning.store(true);
@@ -493,7 +493,7 @@ void Renderer::Request(const RenderCommand::Type &type)
 
 void Renderer::Release()
 {
-	for (VkImageView frameView : frameViews)
+	for (VkImageView &frameView : frameViews)
 	{
 		vkDestroyImageView(device, frameView, nullptr);
 	}

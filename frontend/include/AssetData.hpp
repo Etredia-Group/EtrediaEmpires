@@ -13,3 +13,4 @@ struct AssetBinary : AssetData
     AssetBinary(uint8_t* &source, size_t sourceSize);
     ~AssetBinary();
 };
+typedef AssetBinary AssetShader;

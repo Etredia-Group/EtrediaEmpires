@@ -7,7 +7,7 @@ TEST(WorldTest, RegisterState)
 {
     ee_ecs::World world;
 
-    ee_economy::Container res = {.capacity = 100.0};
+    ee_economy::Container res {.capacity = 100.0};
     res.add(ee_economy::RESOURCE_TYPE::COAL, 98.0);
     entt::entity state = world.registerState(10, res);
 
@@ -37,8 +37,8 @@ TEST(WorldTest, SpawnMiner)
     world.getRegistry().emplace<ee_economy::State>(state, (int16_t)0);
     world.getRegistry().emplace<ee_economy::Container>(state, 100.0);
 
-    ee_economy::EnterpriseDefaults defaults = {
-        .container = {.capacity = 100.0 },
+    ee_economy::EnterpriseDefaults defaults {
+        .container {.capacity = 100.0 },
         .resourceTarget = ee_economy::RESOURCE_TYPE::COAL,
         .baseEfficiency = 1.0,
     };
@@ -62,8 +62,8 @@ TEST(WorldTest, SpawnDeliverer)
     world.getRegistry().emplace<ee_economy::State>(state, (int16_t)0);
     world.getRegistry().emplace<ee_economy::Container>(state, 100.0);
 
-    ee_economy::EnterpriseDefaults defaults = {
-        .container = {.capacity = 100.0 },
+    ee_economy::EnterpriseDefaults defaults {
+        .container {.capacity = 100.0 },
         .resourceTarget = ee_economy::RESOURCE_TYPE::COAL,
         .baseEfficiency = 1.0,
     };

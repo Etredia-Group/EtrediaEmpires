@@ -27,6 +27,7 @@ public:
         BINARY,
 
         SHADER,
+        MATERIAL,
         IMAGE
     } type = BINARY; 
 
@@ -82,6 +83,8 @@ public:
     void Request(const AssetStreamCommand &command);
     void Request(const AssetStreamCommand::Type &type);
 
+    void LoadShaders();
+    
     void LoadAsync(AssetInfo::Type type, const std::filesystem::path &path);
     AssetHandle& Find(const std::filesystem::path &path);
     void Redirect(AssetHandle &handle, void *resource);
@@ -96,7 +99,7 @@ private:
     IFileSystem *diskSystem;
 
     std::vector<AssetInfo> activeAssets;
-    std::unordered_map<std::filesystem::path, AssetHandle> assetsMapping;
+    std::unordered_map<std::filesystem::path, AssetHandle*> assetsMapping;
     std::vector<size_t> freeAssetSlots;
     std::vector<AssetLoadingEntry> loadingEntries;
 
@@ -111,7 +114,7 @@ private:
 template <Asset T> T& AssetManager::Get(const AssetHandle &handle)
 {
     std::atomic<void*> result;
-    AssetStreamCommand command = {
+    AssetStreamCommand command {
         .type = AssetStreamCommand::GET,
         .target = handle,
         .out = &result

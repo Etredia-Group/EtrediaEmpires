@@ -46,11 +46,13 @@ public:
     virtual FileHandle& Open(const std::filesystem::path &path, const uint32_t flags) = 0;
     virtual void ReadAsync(FileHandle &file, const uint32_t bufferSize, const uint32_t flags) = 0;
     virtual bool PollReady(FileHandle &file) = 0;
-    virtual void Close(const FileHandle &file) = 0;
+    virtual void Close(FileHandle &file) = 0;
+
+    ~IFileSystem();
 
 protected:
-    std::vector<FileHandle> activeFiles;
-    std::vector<FileHandle> failedFiles;
+    std::vector<FileHandle*> activeFiles;
+    std::vector<FileHandle*> failedFiles;
     std::vector<size_t> freeFileSlots;
 };
 
@@ -60,7 +62,7 @@ public:
     FileHandle& Open(const std::filesystem::path &path, const uint32_t flags) override;
     void ReadAsync(FileHandle &file, const uint32_t bufferSize, uint32_t flags) override;
     bool PollReady(FileHandle &file) override;
-    void Close(const FileHandle &file) override;
+    void Close(FileHandle &file) override;
 
 private:
 
