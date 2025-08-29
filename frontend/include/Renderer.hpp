@@ -9,6 +9,8 @@
 #include <vulkan/vulkan.hpp>
 #include <RmlUi/Core.h>
 
+#include "PipelineFactory.hpp"
+
 #ifdef VALIDATION_LAYER_ON
     #define VALIDATION_LAYER "VK_LAYER_KHRONOS_validation"
 #else
@@ -63,7 +65,7 @@ public:
     std::atomic<bool> isRunning;
     std::atomic<int> screenWidth, screenHeight;
 
-    Renderer(SDL_Window *window);
+    Renderer(SDL_Window *window, const AssetMaterial& baseMaterial);
     ~Renderer();
     
     void Start();
@@ -91,6 +93,8 @@ private:
     QueueFamiliesBundle queueFamilies;
     QueuesBundle queues;
     const float defaultQueuePriority = 1.0f;
+    const AssetMaterial &baseMaterial;
+    PipelineFactory *pipelineFactory;
 
     Rml::Context *uiContext;
     

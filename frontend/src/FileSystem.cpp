@@ -1,7 +1,6 @@
 #include "FileSystem.hpp"
 #include "Logger.h"
 #include "allocator.hpp"
-#include <stdexcept>
 
 IFileSystem::~IFileSystem()
 {
@@ -72,6 +71,7 @@ void NativeFileSystem::ReadAsync(FileHandle &file, const uint32_t bufferSize, co
         .hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr)
     };
     file.buffer = AllocateArray<uint8_t>(bufferSize);
+    file.bufferSize = bufferSize;
 
     BOOL isSync = ReadFile(
         file.win32Handle,
@@ -87,31 +87,6 @@ void NativeFileSystem::ReadAsync(FileHandle &file, const uint32_t bufferSize, co
 
 bool NativeFileSystem::PollReady(FileHandle &file)
 {
-    // DWORD transferredSize = 0L;
-    // BOOL status = GetOverlappedResult(
-    //     file.win32Handle,
-    //     &file.overlapped,
-    //     &transferredSize,
-    //     FALSE
-    // );
-    
-    // DWORD error = GetLastError();
-    // if (!status && error != ERROR_IO_INCOMPLETE)
-    // {
-    //     LOG(CRITICAL, "Error in reading file status. Code: %d", error);
-    //     throw std::runtime_error("Error in reading file status");
-    // }
-
-    // if (file.size == transferredSize)
-    // {
-    //     file.data = file.buffer;
-    // }
-    // else
-    // {
-    //     /* TODO: reserve size for data, shift and move */
-    // }
-    // file.buffer = nullptr;
-
     DWORD status = WaitForSingleObject(file.overlapped.hEvent, 0);
 
     switch (status)
@@ -121,6 +96,7 @@ bool NativeFileSystem::PollReady(FileHandle &file)
             if (file.size == file.bufferSize)
             {
                 file.data = file.buffer;
+                file.buffer = nullptr;
             }
             else
             {
@@ -137,7 +113,7 @@ bool NativeFileSystem::PollReady(FileHandle &file)
         default:
         {
             LOG(CRITICAL, "Failed to get file status. Error: %d", GetLastError());
-            throw std::runtime_error("Failed to get file status");
+            return false;
         }
     }
     

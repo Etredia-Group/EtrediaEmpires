@@ -1,6 +1,8 @@
 {
 	"dependencies": [
 		"boost-lockfree",
+		"xxhash",
+		"nlohmann-json",
 		"entt",
 		"vulkan",
 		{"name": "sdl2", "features": ["vulkan"]},

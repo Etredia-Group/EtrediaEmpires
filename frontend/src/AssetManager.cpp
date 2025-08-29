@@ -1,7 +1,11 @@
+#include "compile_config.hpp"
 #include "AssetManager.hpp"
 #include "allocator.hpp"
 #include "Logger.h"
 #include <stdexcept>
+#include <xxhash.h>
+#include <cstring>
+
 
 AssetInfo::AssetInfo(void *resource)
 {
@@ -10,6 +14,7 @@ AssetInfo::AssetInfo(void *resource)
 }
 
 AssetInfo::AssetInfo(AssetInfo&& other) noexcept :
+    type(other.type),
     resourceAddress(other.resourceAddress)
 {
     isReady.store(other.isReady.load(std::memory_order_relaxed), std::memory_order_relaxed);
@@ -22,6 +27,7 @@ AssetInfo& AssetInfo::operator=(AssetInfo&& other) noexcept
 {
     if (this != &other)
     {
+        type = other.type;
         resourceAddress = other.resourceAddress;
         isReady.store(other.isReady.load(std::memory_order_relaxed), std::memory_order_relaxed);
 
@@ -33,7 +39,7 @@ AssetInfo& AssetInfo::operator=(AssetInfo&& other) noexcept
 
 void AssetManager::Redirect(AssetHandle &handle, void* resource)
 {
-    AssetInfo &asset = activeAssets[handle.id];
+    AssetInfo &asset = activeAssets[handle.slot];
     if (asset.resourceAddress == nullptr)
     {
         LOG(WARNING, "Attempt to redirect empty handle");
@@ -52,12 +58,12 @@ void AssetManager::Redirect(AssetHandle &handle, void* resource)
 
 void AssetManager::Free(AssetHandle &handle)
 {
-    AssetInfo &asset = activeAssets[handle.id];
+    AssetInfo &asset = activeAssets[handle.slot];
     Redirect(handle, nullptr);
     Deallocate(asset.resourceAddress);
     asset.resourceAddress = nullptr;
 
-    freeAssetSlots.push_back(handle.id);
+    freeAssetSlots.push_back(handle.slot);
 }
 
 AssetManager::AssetManager()
@@ -96,6 +102,18 @@ AssetHandle& AssetManager::Find(const std::filesystem::path &path)
     AssetStreamCommand command {
         .type = AssetStreamCommand::FIND,
         .targetPath = path,
+        .out = &result
+    };
+    Request(command);
+    while (command.out->load() == nullptr);
+    return *reinterpret_cast<AssetHandle*>(command.out->load());
+}
+AssetHandle& AssetManager::Find(const uint32_t &id)
+{
+    std::atomic<void*> result;
+    AssetStreamCommand command {
+        .type = AssetStreamCommand::FIND,
+        .targetId = id,
         .out = &result
     };
     Request(command);
@@ -152,13 +170,26 @@ void AssetManager::Loop()
             bool isReady = entry.fileOwner->PollReady(*entry.file);
             if (isReady)
             {
-                AssetInfo& asset = activeAssets[entry.handle.id];
+                AssetInfo& asset = activeAssets[entry.handle.slot];
 
-                //TODO: functions for each type
                 switch (asset.type)
                 {
+                    case AssetInfo::SHADER:
+                    {
+                        AssetShader* shader = Allocate<AssetShader>(entry.file->data, entry.file->size);
+                        shadersStorage.push_back(shader);
+                        Redirect(entry.handle, shadersStorage.back());
+                        break;
+                    }
+
                     case AssetInfo::MATERIAL:
                     {
+                        AssetMaterial* material = Allocate<AssetMaterial>();
+                        if (entry.file->size < sizeof(AssetMaterial))
+                            LOG(CRITICAL, "File size is less than needed for material");
+                        std::memcpy(material, entry.file->data, sizeof(AssetMaterial));
+                        materialsStorage.push_back(material);
+                        Redirect(entry.handle, materialsStorage.back());
                         break;
                     }
 
@@ -167,11 +198,10 @@ void AssetManager::Loop()
                         break;
                     }
 
-                    case AssetInfo::SHADER:
                     case AssetInfo::BINARY:
                     default:
                     {
-                        AssetBinary* data = new AssetBinary(entry.file->data, entry.file->size);
+                        AssetBinary* data = Allocate<AssetBinary>(entry.file->data, entry.file->size);
                         binaryStorage.push_back(data);
                         Redirect(entry.handle, binaryStorage.back());
                         break;
@@ -180,8 +210,7 @@ void AssetManager::Loop()
 
                 entry.fileOwner->Close(*entry.file);
 #ifndef NDEBUG
-                auto path = entry.file->debugPath.c_str();
-                LOG(INFO, "Asset loaded: [%s]", path);
+                LOG(INFO, "Asset loaded: [%hs]", entry.file->debugPath.generic_u8string().c_str());
 #endif
                 entry.file = nullptr;
                 asset.isReady.store(true);
@@ -199,7 +228,7 @@ void AssetManager::ProcessCommand(AssetStreamCommand &command)
 	{
 		case AssetStreamCommand::LOAD:
         {
-            LOG(INFO, "LOAD command: [%s]", command.targetPath.c_str());
+            LOG(INFO, "LOAD command: [%hs]", command.targetPath.generic_u8string().c_str());
 
             /* TODO: process path to select FS */
             /* TODO: select between async load and sync job task */
@@ -225,8 +254,12 @@ void AssetManager::ProcessCommand(AssetStreamCommand &command)
                 activeAssets.push_back(std::move(asset));
                 assetPos = activeAssets.size() - 1;
             }
-            handle->id = assetPos;
-            assetsMapping[command.targetPath] = handle;
+            handle->slot = assetPos;
+            auto assetPath = command.targetPath.generic_u8string();
+            uint32_t assetId = assetsIdMapping[command.targetPath] =
+                XXH32(assetPath.data(), assetPath.size(), ASSETS_HASH_SPACE);
+            handle->id = assetId;
+            assetsMapping[assetId] = handle;
 
             AssetLoadingEntry loadingEntry {
                 .handle = *handle,
@@ -241,12 +274,21 @@ void AssetManager::ProcessCommand(AssetStreamCommand &command)
 
         case AssetStreamCommand::FIND:
         {
-            std::unordered_map<std::filesystem::path, AssetHandle*>::iterator mapping = assetsMapping.find(command.targetPath);
+            uint32_t id = command.targetId;
+            if (id == INVALID_ASSET_ID)
+            {
+                std::unordered_map<std::filesystem::path, uint32_t>::iterator idMapping = assetsIdMapping.find(command.targetPath);
+                if (idMapping == assetsIdMapping.end())
+                    break;
+                id = idMapping->second;
+            }
+
+            std::unordered_map<uint32_t, AssetHandle*>::iterator assetMapping = assetsMapping.find(id);
             
-            if (mapping == assetsMapping.end())
+            if (assetMapping == assetsMapping.end())
                 break;
 
-            command.out->store(mapping->second);
+            command.out->store(assetMapping->second);
 
             command.type = AssetStreamCommand::COMPLETED;
             break;
@@ -254,12 +296,12 @@ void AssetManager::ProcessCommand(AssetStreamCommand &command)
 
         case AssetStreamCommand::GET:
         {
-            if (activeAssets.size() <= command.target.id)
+            if (activeAssets.size() <= command.target.slot)
                 break;
-            if (!activeAssets[command.target.id].isReady)
+            if (!activeAssets[command.target.slot].isReady)
                 break;
 
-            command.out->store(activeAssets[command.target.id].resourceAddress->resource);
+            command.out->store(activeAssets[command.target.slot].resourceAddress->resource);
 
             command.type = AssetStreamCommand::COMPLETED;
             break;
@@ -290,6 +332,20 @@ void AssetManager::Release()
     for (auto &mapping : assetsMapping)
         Deallocate(mapping.second);
     assetsMapping.clear();
+
+    //TODO: ClrearStorage(&storage);
+    for (AssetBinary* &resource : binaryStorage)
+    {
+        if (resource != nullptr)
+            Deallocate(resource);
+    }
+    binaryStorage.clear();
+    for (AssetShader* &resource : shadersStorage)
+    {
+        if (resource != nullptr)
+            Deallocate(resource);
+    }
+    shadersStorage.clear();
 
     LOG(INFO, "Asset Streaming is released");
     isRunning.store(false);

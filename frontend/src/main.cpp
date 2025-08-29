@@ -2,8 +2,7 @@
 #include <SDL2/SDL.h>
 
 #include "compile_config.hpp"
-#include "AssetManager.hpp"
-#include "Renderer.hpp"
+#include "Engine.hpp"
 
 IP7_Trace* Logger::trace;
 
@@ -46,8 +45,14 @@ int SDL_main(int argc, char **argv)
 	assetManager.LoadShaders();
 
 	// Setup Renderer
-	Renderer renderer(window);
+	assetManager.LoadAsync(AssetInfo::MATERIAL, "assets/materials/helloworld.mat");
+	AssetHandle baseMaterialHandle = assetManager.Find("assets/materials/helloworld.mat");
+	Renderer renderer(window, assetManager.Get<AssetMaterial>(baseMaterialHandle));
 	renderer.Start();
+
+	//Setup Engine
+	Engine::assetManager = &assetManager;
+	Engine::renderer = &renderer;
 
 	// Process SDL events
 	while(!quit)

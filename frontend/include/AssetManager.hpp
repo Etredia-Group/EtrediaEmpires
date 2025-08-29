@@ -7,7 +7,10 @@
 #include <filesystem>
 #include <thread>
 #include <atomic>
+#include <cstdint>
 #include <Boost/lockfree/spsc_queue.hpp>
+
+#define INVALID_ASSET_ID UINT32_MAX
 
 struct AssetAddress
 {
@@ -16,7 +19,8 @@ struct AssetAddress
 
 struct AssetHandle
 {
-    size_t id = 0;
+    size_t slot = 0;
+    uint32_t id = 0;
 };
 
 class AssetInfo
@@ -64,6 +68,7 @@ struct AssetStreamCommand
     } type = NONE;
 
     AssetHandle target;
+    uint32_t targetId = INVALID_ASSET_ID;
     std::filesystem::path targetPath;
     AssetInfo::Type targetType = AssetInfo::BINARY;
     std::atomic<void*>* out;
@@ -87,6 +92,7 @@ public:
     
     void LoadAsync(AssetInfo::Type type, const std::filesystem::path &path);
     AssetHandle& Find(const std::filesystem::path &path);
+    AssetHandle& Find(const uint32_t &id);
     void Redirect(AssetHandle &handle, void *resource);
     template <Asset T> T& Get(const AssetHandle &handle);
     void Free(AssetHandle &handle);
@@ -99,11 +105,14 @@ private:
     IFileSystem *diskSystem;
 
     std::vector<AssetInfo> activeAssets;
-    std::unordered_map<std::filesystem::path, AssetHandle*> assetsMapping;
+    std::unordered_map<std::filesystem::path, uint32_t> assetsIdMapping;
+    std::unordered_map<uint32_t, AssetHandle*> assetsMapping;
     std::vector<size_t> freeAssetSlots;
     std::vector<AssetLoadingEntry> loadingEntries;
 
     std::vector<AssetBinary*> binaryStorage;
+    std::vector<AssetShader*> shadersStorage;
+    std::vector<AssetMaterial*> materialsStorage;
 
     void Threading();
     void Loop();

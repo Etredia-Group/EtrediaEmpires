@@ -9,7 +9,9 @@
 #include <set>
 #include <stdexcept>
 
-Renderer::Renderer(SDL_Window *window) : isRunning(false)
+Renderer::Renderer(SDL_Window *window, const AssetMaterial &baseMaterial) :
+	isRunning(false),
+	baseMaterial(baseMaterial)
 {
     this->window = window;
 }
@@ -431,6 +433,7 @@ void Renderer::Threading()
 	InitVulkan();
 	SetupDevice();
 	SetupSwapchain();
+	pipelineFactory = Allocate<PipelineFactory>(baseMaterial, device, surfaceInfo.extent, surfaceInfo.format.format);
 
     Loop();
 
@@ -493,6 +496,8 @@ void Renderer::Request(const RenderCommand::Type &type)
 
 void Renderer::Release()
 {
+	Deallocate(pipelineFactory);
+
 	for (VkImageView &frameView : frameViews)
 	{
 		vkDestroyImageView(device, frameView, nullptr);

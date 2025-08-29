@@ -13,8 +13,8 @@ project (EEfrontend)
 
 # List sources
 
-set(HEADERS "Renderer.hpp" "FileSystem.hpp" "compile_config.hpp" "AssetManager.hpp" "AssetData.hpp")
-set(SOURCES "main.cpp" "Renderer.cpp" "FileSystem.cpp" "AssetManager.cpp" "AssetData.cpp")
+set(HEADERS "Engine.hpp" "Renderer.hpp" "FileSystem.hpp" "compile_config.hpp" "AssetManager.hpp" "AssetData.hpp" "PipelineFactory.hpp")
+set(SOURCES "main.cpp" "Engine.cpp" "Renderer.cpp" "FileSystem.cpp" "AssetManager.cpp" "AssetData.cpp" "PipelineFactory.cpp")
 
 list(TRANSFORM HEADERS PREPEND "include/")
 list(TRANSFORM SOURCES PREPEND "src/")
@@ -22,6 +22,7 @@ list(TRANSFORM SOURCES PREPEND "src/")
 # Find dependencies
 
 find_package(Boost REQUIRED COMPONENTS lockfree)
+find_package(xxHash CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(RmlUi CONFIG REQUIRED)
@@ -33,6 +34,7 @@ add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PUBLIC utils)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::lockfree)
+target_link_libraries(${PROJECT_NAME} PRIVATE xxHash::xxhash)
 target_link_libraries(${PROJECT_NAME} PRIVATE p7)
 target_link_libraries(
   ${PROJECT_NAME}

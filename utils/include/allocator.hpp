@@ -1,8 +1,9 @@
 #pragma once
+#include <utility>
 
-template<typename T> T* Allocate()
+template<typename T, typename... Args> T* Allocate(Args&&... args)
 {
-    return new T();
+    return new T(std::forward<Args>(args)...);
 }
 
 template<typename T> void Deallocate(T* obj)

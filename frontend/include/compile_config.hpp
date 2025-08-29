@@ -11,3 +11,5 @@
 	#define MINOR_VERSION 0
 	#define PATCH_VERSION 0
 #endif
+
+#define ASSETS_HASH_SPACE 0
