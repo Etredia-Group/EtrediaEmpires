@@ -85,9 +85,6 @@ public:
     void Start();
     void Shutdown();
 
-    void Request(const AssetStreamCommand &command);
-    void Request(const AssetStreamCommand::Type &type);
-
     void LoadShaders();
     
     void LoadAsync(AssetInfo::Type type, const std::filesystem::path &path);
@@ -115,6 +112,8 @@ private:
     std::vector<AssetMaterial*> materialsStorage;
 
     void Threading();
+    void Request(const AssetStreamCommand &command);
+    void Request(const AssetStreamCommand::Type &type);
     void Loop();
     void ProcessCommand(AssetStreamCommand &command);
     void Release();

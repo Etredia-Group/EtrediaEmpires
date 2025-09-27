@@ -8,7 +8,13 @@
 
 using json = nlohmann::json;
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AssetMaterial, vertexShader, fragmentShader)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+    AssetMaterial,
+    vertexShaderAssetID,
+    fragmentShaderAssetID,
+    renderType,
+    renderStage
+)
 
 int main(int argc, char **argv)
 {
@@ -32,15 +38,17 @@ int main(int argc, char **argv)
 
         json data = json::parse(fin);
 
-        for (const char *link : {
-            "vertexShader",
-            "fragmentShader"
-        })
+        for (auto &[key, value] : data.items())
         {
-            std::filesystem::path linkPath = data[link];
+            if (
+                !key.ends_with("AssetID") &&
+                !key.ends_with("Type")
+            ) continue;
+
+            std::filesystem::path linkPath = data[key];
             auto linkPath8 = linkPath.generic_u8string();
             uint32_t assetId = XXH32(linkPath8.data(), linkPath8.size(), 0);
-            data[link] = assetId;
+            data[key] = assetId;
         }
 
         AssetMaterial material = data.get<AssetMaterial>();

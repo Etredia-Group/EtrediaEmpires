@@ -1,0 +1,6 @@
+{
+    "vertexShaderAssetID": "assets/shaders/helloworld.vert.spv",
+    "fragmentShaderAssetID": "assets/shaders/helloworld.frag.spv",
+    "renderType": "base",
+    "renderStage": 0
+}

@@ -1,4 +1,0 @@
-{
-    "vertexShader": "assets/shaders/helloworld.vert.spv",
-    "fragmentShader": "assets/shaders/helloworld.frag.spv"
-}

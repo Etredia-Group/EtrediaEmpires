@@ -2,6 +2,7 @@
 #include "AssetData.hpp"
 #include <vulkan/vulkan.hpp>
 #include <vector>
+#include <unordered_map>
 
 #define PIPELINE_CREATE_NEW 0
 #define PIPELINE_CREATE_DERIVED (1 << 0)
@@ -25,11 +26,6 @@ struct PipelineConfig
 	VkRect2D defaultScissors;
 	std::vector<VkDynamicState> dynamicStates;
 
-	std::vector<VkAttachmentDescription> colorAttachmentConfigs;
-	std::vector<VkAttachmentReference> colorAttachmentRefs;
-	std::vector<VkSubpassDescription> subpassConfigs;
-	VkRenderPassCreateInfo renderPassConfig;
-
 	VkGraphicsPipelineCreateInfo pipelineConfig;
 
 	PipelineConfig Copy() const;
@@ -39,26 +35,26 @@ struct Pipeline
 {
 	VkPipeline instance;
 	VkPipelineLayout layout;
-	VkRenderPass renderPass;
+	VkViewport viewport;
+	VkRect2D scissors;
 };
 
 class PipelineFactory
 {
 public:
-	PipelineFactory(const AssetMaterial &baseMaterial, VkDevice &device, VkExtent2D &surfaceExtent, VkFormat &surfaceFormat);
+	PipelineFactory(const AssetMaterial &baseMaterial, const VkRenderPass &baseRenderPass, VkDevice &device, VkExtent2D &surfaceExtent);
 	~PipelineFactory();
 
-	PipelineConfig &Request(const AssetMaterial &material, uint32_t flags);
+	Pipeline& Get(const AssetMaterial &material);
+	void Create(const AssetMaterial &material, const VkRenderPass &renderPass, const uint32_t &flags);
 
 private:
 	PipelineConfig basePipelineConfig;
 
 	Pipeline basePipeline;
-	std::vector<Pipeline> pipelines;
+	std::unordered_map<const AssetMaterial*, Pipeline> pipelines;
 
 	VkDevice &device;
 	VkExtent2D &surfaceExtent;
-	VkFormat &surfaceFormat;
 
-	void Create(const AssetMaterial &material, uint32_t flags);
 };

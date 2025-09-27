@@ -25,6 +25,8 @@ struct AssetShader : AssetData
 
 struct AssetMaterial : AssetData
 {
-    uint32_t vertexShader;
-    uint32_t fragmentShader;
+    uint32_t vertexShaderAssetID;
+    uint32_t fragmentShaderAssetID;
+    uint32_t renderType;
+    uint32_t renderStage;
 };

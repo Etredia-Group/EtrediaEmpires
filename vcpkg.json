@@ -5,7 +5,7 @@
 		"nlohmann-json",
 		"entt",
 		"vulkan",
-		{"name": "sdl2", "features": ["vulkan"]},
+		"glfw3",
 		"rmlui",
 		"gtest"
 	]

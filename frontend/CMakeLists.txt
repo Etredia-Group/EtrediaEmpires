@@ -23,7 +23,7 @@ list(TRANSFORM SOURCES PREPEND "src/")
 
 find_package(Boost REQUIRED COMPONENTS lockfree)
 find_package(xxHash CONFIG REQUIRED)
-find_package(SDL2 CONFIG REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(RmlUi CONFIG REQUIRED)
 
@@ -36,12 +36,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC utils)
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::lockfree)
 target_link_libraries(${PROJECT_NAME} PRIVATE xxHash::xxhash)
 target_link_libraries(${PROJECT_NAME} PRIVATE p7)
-target_link_libraries(
-  ${PROJECT_NAME}
-  PRIVATE
-  $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
-  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} PRIVATE RmlUi::RmlUi)
 

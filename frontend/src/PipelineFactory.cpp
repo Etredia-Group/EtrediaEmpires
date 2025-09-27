@@ -10,13 +10,6 @@ PipelineConfig PipelineConfig::Copy() const
     copy.viewportStateConfig.pScissors = &copy.defaultScissors;
     copy.dynamicStateConfig.pDynamicStates = copy.dynamicStates.data();
     copy.colorBlendConfig.pAttachments = copy.colorBlendAttachmentConfigs.data();
-    copy.renderPassConfig.pAttachments = copy.colorAttachmentConfigs.data();
-    copy.renderPassConfig.pSubpasses = copy.subpassConfigs.data();
-    for (VkSubpassDescription &config : copy.subpassConfigs)
-    {
-      config.pColorAttachments = copy.colorAttachmentRefs.data();
-    }
-
     copy.pipelineConfig.pVertexInputState = &copy.vertexInputConfig;
     copy.pipelineConfig.pInputAssemblyState = &copy.inputAssemblyConfig;
     copy.pipelineConfig.pViewportState = &copy.viewportStateConfig;
@@ -29,10 +22,16 @@ PipelineConfig PipelineConfig::Copy() const
     return copy;
 }
 
-PipelineFactory::PipelineFactory(const AssetMaterial &baseMaterial, VkDevice &device, VkExtent2D &surfaceExtent, VkFormat &surfaceFormat) :
-    device(device), surfaceExtent(surfaceExtent), surfaceFormat(surfaceFormat)
+PipelineFactory::PipelineFactory(
+    const AssetMaterial &baseMaterial,
+    const VkRenderPass &baseRenderPass,
+    VkDevice &device,
+    VkExtent2D &surfaceExtent
+) :
+    device(device), surfaceExtent(surfaceExtent)
 {
     basePipelineConfig.dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+    basePipelineConfig.dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
 
     basePipelineConfig.colorBlendAttachmentConfigs.push_back({
         .blendEnable = VK_TRUE,
@@ -43,27 +42,6 @@ PipelineFactory::PipelineFactory(const AssetMaterial &baseMaterial, VkDevice &de
         .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
         .alphaBlendOp = VK_BLEND_OP_ADD,
         .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-    });
-
-    basePipelineConfig.colorAttachmentConfigs.push_back({
-		.format = surfaceFormat,
-		.samples = VK_SAMPLE_COUNT_1_BIT, // TODO: Multisampling
-		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-	});
-    basePipelineConfig.colorAttachmentRefs.push_back({
-		.attachment = 0,
-		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-	});
-
-    basePipelineConfig.subpassConfigs.push_back({
-        .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-		.colorAttachmentCount = static_cast<uint32_t>(basePipelineConfig.colorAttachmentRefs.size()),
-		.pColorAttachments = basePipelineConfig.colorAttachmentRefs.data()
     });
 
     basePipelineConfig.vertexInputConfig = {
@@ -152,15 +130,6 @@ PipelineFactory::PipelineFactory(const AssetMaterial &baseMaterial, VkDevice &de
         .pAttachments = basePipelineConfig.colorBlendAttachmentConfigs.data(),
     };
 
-    basePipelineConfig.renderPassConfig = {
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-        .pNext = nullptr,
-        .attachmentCount = static_cast<uint32_t>(basePipelineConfig.colorAttachmentConfigs.size()),
-        .pAttachments = basePipelineConfig.colorAttachmentConfigs.data(),
-        .subpassCount = static_cast<uint32_t>(basePipelineConfig.subpassConfigs.size()),
-        .pSubpasses = basePipelineConfig.subpassConfigs.data()
-    };
-
     basePipelineConfig.pipelineConfig = {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .pNext = nullptr,
@@ -172,17 +141,23 @@ PipelineFactory::PipelineFactory(const AssetMaterial &baseMaterial, VkDevice &de
         .pDepthStencilState = nullptr,
         .pColorBlendState = &basePipelineConfig.colorBlendConfig,
         .pDynamicState = &basePipelineConfig.dynamicStateConfig,
-        .subpass = 0,
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = -1
     };
 
     LOG(INFO, "Creating base material pipeline...");
-    Create(baseMaterial, PIPELINE_CREATE_NEW);
+    Create(baseMaterial, baseRenderPass, PIPELINE_CREATE_NEW);
     LOG(INFO, "Base material pipeline created");
 }
 
-void PipelineFactory::Create(const AssetMaterial &material, uint32_t flags)
+Pipeline& PipelineFactory::Get(const AssetMaterial &material)
+{
+    if (pipelines.contains(&material))
+        return pipelines[&material];
+    else return basePipeline;
+}
+
+void PipelineFactory::Create(const AssetMaterial &material, const VkRenderPass &renderPass, const uint32_t &flags)
 {
     Pipeline newPipeline {};
     Pipeline *result = &basePipeline;
@@ -208,11 +183,6 @@ void PipelineFactory::Create(const AssetMaterial &material, uint32_t flags)
     if (vkResult != VK_SUCCESS)
         LOG(CRITICAL, "Failed to create pipeline layout");
     config->pipelineConfig.layout = result->layout;
-
-    vkResult = vkCreateRenderPass(device, &config->renderPassConfig, nullptr, &result->renderPass);
-    if (vkResult != VK_SUCCESS)
-        LOG(CRITICAL, "Failed to create render pass");
-    config->pipelineConfig.renderPass = result->renderPass;
     
     // Configure shaders
     AssetHandle shaderHandle;
@@ -224,7 +194,7 @@ void PipelineFactory::Create(const AssetMaterial &material, uint32_t flags)
 
     // Vertex
     VkShaderModule vertexModule;
-    shaderHandle = Engine::assetManager->Find(material.vertexShader);
+    shaderHandle = Engine::assetManager->Find(material.vertexShaderAssetID);
     shader = &Engine::assetManager->Get<AssetShader>(shaderHandle);
     shaderModuleCreateConfig = {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -246,7 +216,7 @@ void PipelineFactory::Create(const AssetMaterial &material, uint32_t flags)
 
     // Fragment
     VkShaderModule fragmentModule;
-    shaderHandle = Engine::assetManager->Find(material.fragmentShader);
+    shaderHandle = Engine::assetManager->Find(material.fragmentShaderAssetID);
     shader = &Engine::assetManager->Get<AssetShader>(shaderHandle);
     shaderModuleCreateConfig = {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -268,6 +238,8 @@ void PipelineFactory::Create(const AssetMaterial &material, uint32_t flags)
 
     config->pipelineConfig.stageCount = static_cast<uint32_t>(stagesConfigs.size());
     config->pipelineConfig.pStages = stagesConfigs.data();
+    config->pipelineConfig.renderPass = renderPass;
+    config->pipelineConfig.subpass = material.renderStage;
 
     vkResult = vkCreateGraphicsPipelines(
         device,
@@ -281,7 +253,10 @@ void PipelineFactory::Create(const AssetMaterial &material, uint32_t flags)
         LOG(CRITICAL, "Failed to create pipeline");
 
     if (flags & PIPELINE_CREATE_DERIVED)
-        pipelines.push_back(newPipeline);
+        pipelines[&material] = newPipeline;
+
+    result->viewport = config->defaultViewport;
+    result->scissors = config->defaultScissors;
 
     vkDestroyShaderModule(device, vertexModule, nullptr);
     vkDestroyShaderModule(device, fragmentModule, nullptr);
@@ -291,11 +266,9 @@ PipelineFactory::~PipelineFactory()
 {
     vkDestroyPipeline(device, basePipeline.instance, nullptr);
     vkDestroyPipelineLayout(device, basePipeline.layout, nullptr);
-    vkDestroyRenderPass(device, basePipeline.renderPass, nullptr);
-    for (Pipeline &pipeline : pipelines)
+    for (auto &item : pipelines)
     {
-        vkDestroyPipeline(device, pipeline.instance, nullptr);
-        vkDestroyPipelineLayout(device, pipeline.layout, nullptr);
-        vkDestroyRenderPass(device, pipeline.renderPass, nullptr);
+        vkDestroyPipeline(device, item.second.instance, nullptr);
+        vkDestroyPipelineLayout(device, item.second.layout, nullptr);
     }
 }

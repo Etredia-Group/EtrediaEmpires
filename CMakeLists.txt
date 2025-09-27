@@ -10,7 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project (EtrediaEmpires)
 
-add_subdirectory(materials)
+add_subdirectory(sdk/materials)
 add_subdirectory(utils)
 add_subdirectory (p7lib)
 add_subdirectory (ECSAPI)
