@@ -16,6 +16,7 @@ bool operator < (const RenderObject& lhs, const RenderObject& rhs)
 
 Renderer::Renderer(GLFWwindow *window, const AssetMaterial &baseMaterial) :
 	isRunning(false),
+	isDrawing(false),
 	baseMaterial(baseMaterial)
 {
     this->window = window;
@@ -417,6 +418,13 @@ void Renderer::SetupSwapchain()
 
 void Renderer::RecreateSwapchain()
 {
+	if (screenWidth.load() == 0 || screenHeight.load() == 0)
+	{
+		isDrawing.store(false);
+		return;
+	}
+	else isDrawing.store(true);
+
 	vkDeviceWaitIdle(device);
 	ReleaseSwapchain();
 
@@ -558,6 +566,8 @@ void Renderer::SetupBuffers()
 
 void Renderer::Draw()
 {
+	if (!isDrawing.load()) return;
+
 	VkResult vkResult;
 	uint32_t imageIndex = 0;
 
@@ -731,6 +741,7 @@ void Renderer::Start()
 	}
 
     isRunning.store(true);
+	isDrawing.store(true);
     renderThread = std::jthread([this](std::stop_token stop) {
         this->stoken = &stop;
         Threading();
@@ -801,6 +812,9 @@ void Renderer::ProcessCommand(const RenderCommand &command)
 		case RenderCommand::RESIZE_WINDOW:
 		{
 			LOG(INFO, "RESIZE_WINDOW command");
+
+			RecreateSwapchain();
+
 			break;
 		}
 
@@ -866,3 +880,6 @@ void Renderer::Release()
     LOG(INFO, "Renderer is released");
     isRunning.store(false);
 }
+
+bool Renderer::GetThreadStatus() { return isRunning.load(); }
+bool Renderer::GetDrawStatus() { return isDrawing.load(); }

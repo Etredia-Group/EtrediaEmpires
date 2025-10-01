@@ -41,6 +41,10 @@ int main(int argc, char **argv)
 	//Setup Engine
 	Engine::assetManager = &assetManager;
 	Engine::renderer = &renderer;
+	
+	glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
+		Engine::renderer->ResizeWindow(width, height);
+	});
 
 	// Test render obj
 	RenderObject triangle {
@@ -59,7 +63,7 @@ int main(int argc, char **argv)
 
 	// Free memory
 	LOG(INFO, "Exit...");
-	renderer.Shutdown(); while(renderer.isRunning.load());
+	renderer.Shutdown(); while(renderer.GetThreadStatus());
 	assetManager.Shutdown(); while(assetManager.isRunning.load());
 	glfwDestroyWindow(window);
 	glfwTerminate();

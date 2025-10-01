@@ -131,19 +131,23 @@ struct SurfaceInfo
 class Renderer
 {
 public:
-    std::atomic<bool> isRunning;
-    std::atomic<int> screenWidth, screenHeight;
-
     Renderer(GLFWwindow *window, const AssetMaterial& baseMaterial);
     ~Renderer();
     
     void Start();
     void Shutdown();
+    
+    bool GetThreadStatus();
+    bool GetDrawStatus();
 
     void RegisterObjects(RenderObject* objects, size_t size);
     void ResizeWindow(int width, int height);
 
 private:
+    std::atomic<bool> isRunning;
+    std::atomic<bool> isDrawing;
+    std::atomic<int> screenWidth, screenHeight;
+
     std::stop_token *stoken;
     std::jthread renderThread;
     boost::lockfree::spsc_queue<RenderCommand, boost::lockfree::capacity<512>> commands;
