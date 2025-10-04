@@ -6,6 +6,7 @@
 		"entt",
 		"vulkan",
 		"glfw3",
+		"glm",
 		"rmlui",
 		"gtest"
 	]

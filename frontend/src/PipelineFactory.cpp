@@ -22,14 +22,13 @@ PipelineConfig PipelineConfig::Copy() const
     return copy;
 }
 
-PipelineFactory::PipelineFactory(
-    const AssetMaterial &baseMaterial,
-    const VkRenderPass &baseRenderPass,
-    VkDevice &device,
-    VkExtent2D &surfaceExtent
-) :
-    device(device), surfaceExtent(surfaceExtent)
+PipelineFactory::PipelineFactory(const PipelineBinding &binding) :
+    device(*binding.device),
+    surfaceExtent(*binding.surfaceExtent), 
+    vertexBindingConfig(*binding.vertexBindingConfig)
 {
+    this->binding = binding;
+
     basePipelineConfig.dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
     basePipelineConfig.dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
 
@@ -47,10 +46,10 @@ PipelineFactory::PipelineFactory(
     basePipelineConfig.vertexInputConfig = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .pNext = nullptr,
-        .vertexBindingDescriptionCount = 0,
-        .pVertexBindingDescriptions = nullptr,
-        .vertexAttributeDescriptionCount = 0,
-        .pVertexAttributeDescriptions = nullptr
+        .vertexBindingDescriptionCount = 1,
+        .pVertexBindingDescriptions = &vertexBindingConfig,
+        .vertexAttributeDescriptionCount = binding.vertexAttributesCount,
+        .pVertexAttributeDescriptions = binding.vertexAttributesConfig
     };
 
     basePipelineConfig.inputAssemblyConfig = {
@@ -146,7 +145,7 @@ PipelineFactory::PipelineFactory(
     };
 
     LOG(INFO, "Creating base material pipeline...");
-    Create(baseMaterial, baseRenderPass, PIPELINE_CREATE_NEW);
+    Create(*binding.baseMaterial, *binding.baseRenderPass, PIPELINE_CREATE_NEW);
     LOG(INFO, "Base material pipeline created");
 }
 

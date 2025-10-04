@@ -7,6 +7,19 @@
 #define PIPELINE_CREATE_NEW 0
 #define PIPELINE_CREATE_DERIVED (1 << 0)
 
+struct PipelineBinding
+{
+	const AssetMaterial *baseMaterial;
+
+	const VkRenderPass *baseRenderPass;
+	const VkDevice *device;
+	const VkExtent2D *surfaceExtent;
+
+	const VkVertexInputBindingDescription *vertexBindingConfig;
+	uint32_t vertexAttributesCount;
+	const VkVertexInputAttributeDescription *vertexAttributesConfig;
+};
+
 struct PipelineConfig
 {
 	VkPipelineVertexInputStateCreateInfo vertexInputConfig;
@@ -42,19 +55,22 @@ struct Pipeline
 class PipelineFactory
 {
 public:
-	PipelineFactory(const AssetMaterial &baseMaterial, const VkRenderPass &baseRenderPass, VkDevice &device, VkExtent2D &surfaceExtent);
+	PipelineFactory(const PipelineBinding &binding);
 	~PipelineFactory();
 
 	Pipeline& Get(const AssetMaterial &material);
 	void Create(const AssetMaterial &material, const VkRenderPass &renderPass, const uint32_t &flags);
 
 private:
+	PipelineBinding binding;
 	PipelineConfig basePipelineConfig;
 
 	Pipeline basePipeline;
 	std::unordered_map<const AssetMaterial*, Pipeline> pipelines;
 
-	VkDevice &device;
-	VkExtent2D &surfaceExtent;
+	const VkDevice &device;
+	const VkExtent2D &surfaceExtent;
+
+	const VkVertexInputBindingDescription &vertexBindingConfig;
 
 };

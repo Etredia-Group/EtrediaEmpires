@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 	assetManager.LoadAsync(AssetInfo::MATERIAL, "assets/materials/helloworld.mat");
 	AssetHandle baseMaterialHandle = assetManager.Find("assets/materials/helloworld.mat");
 	AssetMaterial baseMaterial = assetManager.Get<AssetMaterial>(baseMaterialHandle);
-	Renderer renderer(window, baseMaterial);
+	Renderer renderer(window, baseMaterial, 1000000); //TODO: buffer sizes
 	renderer.Start();
 
 	//Setup Engine
@@ -49,11 +49,30 @@ int main(int argc, char **argv)
 	// Test render obj
 	RenderObject triangle {
 		.transforms = {{.x = 0, .y = 0}},
-		.mesh = {.vertexCount = 3},
+		.mesh = {
+			.vertices = {
+				{.pos = {-0.5f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
+				{.pos = {0.0f, 0.5f}, .color = {0.0f, 0.0f, 0.0f}},
+				{.pos = {-1.0f, 0.5f}, .color = {1.0f, 1.0f, 1.0f}}
+			}
+		},
 
 		.material = baseMaterial,
 	};
-	renderer.RegisterObjects(&triangle, 1);
+	RenderObject triangle2 {
+		.transforms = {{.x = 0, .y = 0}},
+		.mesh = {
+			.vertices = {
+				{.pos = {0.0f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
+				{.pos = {0.5f, 0.5f}, .color = {0.0f, 1.0f, 0.0f}},
+				{.pos = {-0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}}
+			}
+		},
+
+		.material = baseMaterial,
+	};
+	RenderObject objs[] = {triangle, triangle2};
+	renderer.RegisterObjects(objs, 2);
 
 	// Process GLFW events
 	while(!glfwWindowShouldClose(window))
