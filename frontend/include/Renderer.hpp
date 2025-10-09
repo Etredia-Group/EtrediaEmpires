@@ -33,6 +33,9 @@
 #define RENDER_PASS_BASE 438461662
 #define RENDER_PASS_GUI
 
+#define INDICES_SIZE uint16_t
+#define INDICES_SIZE_VK VK_INDEX_TYPE_UINT16
+
 struct Transform
 {
     float x = 0.0f, y = 0.0f;
@@ -114,7 +117,9 @@ template<typename T> struct GPU_Buffer
 struct Mesh
 {
     size_t verticesBufferPosition = 0;
+    size_t indicesBufferPosition = 0;
     std::vector<GPU_Vertex> vertices;
+    std::vector<INDICES_SIZE> indices;
 };
 
 struct RenderObject
@@ -140,7 +145,7 @@ struct RenderCommand
         NONE,
 
         REGISTER_OBJECTS,
-        RESIZE_WINDOW, //STORE screenHeight and screenWidth BEFORE request
+        RESIZE_WINDOW,
         SHUTDOWN
     } type = NONE;
 
@@ -220,7 +225,7 @@ struct SurfaceInfo
 class Renderer
 {
 public:
-    Renderer(GLFWwindow *window, const AssetMaterial& baseMaterial, const size_t &vertexBufferSize);
+    Renderer(GLFWwindow *window, const AssetMaterial& baseMaterial, const size_t &vertexBufferSize, const size_t &indexBufferSize);
     ~Renderer();
     
     void Start();
@@ -252,11 +257,17 @@ private:
     VkCommandPool graphicsCommandPool = nullptr;
     VkCommandPool transferCommandPool = nullptr;
     VkDeviceMemory worldVerticesMemory;
+    VkDeviceMemory worldIndicesMemory;
     VkDeviceMemory stagingWorldVerticesMemory;
+    VkDeviceMemory stagingWorldIndicesMemory;
     VkDeviceMemory uiVerticesMemory;
+    VkDeviceMemory uiIndicesMemory;
     VkBuffer worldVertices;
+    VkBuffer worldIndices;
     VkBuffer stagingWorldVertices;
+    VkBuffer stagingWorldIndices;
     VkBuffer uiVertices;
+    VkBuffer uiIndices;
     std::vector<VkCommandBuffer> graphicsCommandBuffers;
     std::vector<VkCommandBuffer> transferCommandBuffers;
     std::vector<VkImage> frames;
@@ -276,12 +287,15 @@ private:
     size_t currentFrame = 0;
 
     GPU_Buffer<GPU_Vertex> worldVerticesBinded;
+    GPU_Buffer<INDICES_SIZE> worldIndicesBinded;
     GPU_Buffer<GPU_Vertex> uiVerticesBinded;
+    GPU_Buffer<INDICES_SIZE> uiIndicesBinded;
 
     const float DEFAULT_QUEUE_PRIORITY = 1.0f;
     const AssetMaterial &baseMaterial;
     const size_t MAX_FRAMES_IN_FLIGHT = 2;
     const size_t VERTEX_BUFFER_SIZE;
+    const size_t INDEX_BUFFER_SIZE;
 
     std::set<RenderObject> objects;
 

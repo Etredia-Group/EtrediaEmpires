@@ -13,14 +13,17 @@ bool operator < (const RenderObject& lhs, const RenderObject& rhs)
 {
 	if (&lhs.material != &rhs.material)
 		return &lhs.material < &rhs.material;
+	else if (lhs.isUI != rhs.isUI)
+		return lhs.isUI < rhs.isUI;
 	else return lhs.engineId < rhs.engineId;
 }
 
-Renderer::Renderer(GLFWwindow *window, const AssetMaterial &baseMaterial, const size_t &vertexBufferSize) :
+Renderer::Renderer(GLFWwindow *window, const AssetMaterial &baseMaterial, const size_t &vertexBufferSize, const size_t &indexBufferSize) :
 	isRunning(false),
 	isDrawing(false),
 	baseMaterial(baseMaterial),
-	VERTEX_BUFFER_SIZE(vertexBufferSize)
+	VERTEX_BUFFER_SIZE(vertexBufferSize),
+	INDEX_BUFFER_SIZE(indexBufferSize)
 {
     this->window = window;
 	int width = -1, height = -1;
@@ -556,6 +559,18 @@ void Renderer::SetupObjectsBuffers()
 	if (vkResult != VK_SUCCESS)
 		LOG(CRITICAL, "Failed to create buffer for world vertices. Code: %d", vkResult);
 
+	VkBufferCreateInfo worldIndexBufferConfig {
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext = nullptr,
+		.size = sizeof(INDICES_SIZE) * INDEX_BUFFER_SIZE,
+		.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+	};
+	worldIndicesBinded.size = INDEX_BUFFER_SIZE;
+	vkResult = vkCreateBuffer(device, &worldIndexBufferConfig, nullptr, &worldIndices);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to create buffer for world indices. Code: %d", vkResult);
+
 	VkBufferCreateInfo stagingWorldVertexBufferConfig {
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 		.pNext = nullptr,
@@ -566,6 +581,17 @@ void Renderer::SetupObjectsBuffers()
 	vkResult = vkCreateBuffer(device, &stagingWorldVertexBufferConfig, nullptr, &stagingWorldVertices);
 	if (vkResult != VK_SUCCESS)
 		LOG(CRITICAL, "Failed to create buffer for staging world vertices. Code: %d", vkResult);
+
+		VkBufferCreateInfo stagingWorldIndexBufferConfig {
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext = nullptr,
+		.size = sizeof(INDICES_SIZE) * INDEX_BUFFER_SIZE,
+		.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+	};
+	vkResult = vkCreateBuffer(device, &stagingWorldIndexBufferConfig, nullptr, &stagingWorldIndices);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to create buffer for staging world indices. Code: %d", vkResult);
 
 	VkBufferCreateInfo uiVertexBufferConfig {
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -579,12 +605,31 @@ void Renderer::SetupObjectsBuffers()
 	if (vkResult != VK_SUCCESS)
 		LOG(CRITICAL, "Failed to create buffer for UI vertices. Code: %d", vkResult);
 
+	VkBufferCreateInfo uiIndexBufferConfig {
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext = nullptr,
+		.size = sizeof(INDICES_SIZE) * INDEX_BUFFER_SIZE,
+		.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+	};
+	uiIndicesBinded.size = INDEX_BUFFER_SIZE;
+	vkResult = vkCreateBuffer(device, &uiIndexBufferConfig, nullptr, &uiIndices);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to create buffer for UI indices. Code: %d", vkResult);
+
 	VkMemoryRequirements worldMemoryRequirements;
 	vkGetBufferMemoryRequirements(device, worldVertices, &worldMemoryRequirements);
 	VkMemoryRequirements stagingWorldMemoryRequirements;
 	vkGetBufferMemoryRequirements(device, stagingWorldVertices, &stagingWorldMemoryRequirements);
 	VkMemoryRequirements uiMemoryRequirements;
 	vkGetBufferMemoryRequirements(device, uiVertices, &uiMemoryRequirements);
+
+	VkMemoryRequirements worldIdMemoryRequirements;
+	vkGetBufferMemoryRequirements(device, worldIndices, &worldIdMemoryRequirements);
+	VkMemoryRequirements stagingWorldIdMemoryRequirements;
+	vkGetBufferMemoryRequirements(device, stagingWorldIndices, &stagingWorldIdMemoryRequirements);
+	VkMemoryRequirements uiIdMemoryRequirements;
+	vkGetBufferMemoryRequirements(device, uiIndices, &uiIdMemoryRequirements);
 
 	VkPhysicalDeviceMemoryProperties memoryProps;
 	vkGetPhysicalDeviceMemoryProperties(gpu, &memoryProps);
@@ -618,16 +663,34 @@ void Renderer::SetupObjectsBuffers()
 		.allocationSize = worldMemoryRequirements.size,
 		.memoryTypeIndex = optimizedMemTypeIndex
 	};
+	VkMemoryAllocateInfo allocateWorldIndices {
+		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+		.pNext = nullptr,
+		.allocationSize = worldIdMemoryRequirements.size,
+		.memoryTypeIndex = optimizedMemTypeIndex
+	};
 	VkMemoryAllocateInfo allocateStagingWorldVertices {
 		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 		.pNext = nullptr,
 		.allocationSize = stagingWorldMemoryRequirements.size,
 		.memoryTypeIndex = cpuAccessMemTypeIndex
 	};
+	VkMemoryAllocateInfo allocateStagingWorldIndices {
+		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+		.pNext = nullptr,
+		.allocationSize = stagingWorldIdMemoryRequirements.size,
+		.memoryTypeIndex = cpuAccessMemTypeIndex
+	};
 	VkMemoryAllocateInfo allocateUiVertices {
 		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 		.pNext = nullptr,
 		.allocationSize = uiMemoryRequirements.size,
+		.memoryTypeIndex = cpuAccessMemTypeIndex
+	};
+	VkMemoryAllocateInfo allocateUiIndices {
+		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+		.pNext = nullptr,
+		.allocationSize = uiIdMemoryRequirements.size,
 		.memoryTypeIndex = cpuAccessMemTypeIndex
 	};
 
@@ -642,6 +705,17 @@ void Renderer::SetupObjectsBuffers()
 	if (vkResult != VK_SUCCESS)
 		LOG(CRITICAL, "Failed to allocate GPU memory for UI vertices. Code: %d", vkResult);
 
+	vkResult = vkAllocateMemory(device, &allocateWorldIndices, nullptr, &worldIndicesMemory);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to allocate GPU memory for world indices. Code: %d", vkResult);
+	vkResult = vkAllocateMemory(
+		device, &allocateStagingWorldIndices, nullptr, &stagingWorldIndicesMemory);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to allocate GPU memory for staging world indices. Code: %d", vkResult);
+	vkResult = vkAllocateMemory(device, &allocateUiIndices, nullptr, &uiIndicesMemory);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to allocate GPU memory for UI indices. Code: %d", vkResult);
+
 	vkResult = vkBindBufferMemory(device, worldVertices, worldVerticesMemory, 0);
 	if (vkResult != VK_SUCCESS)
 		LOG(CRITICAL, "Failed to bind GPU memory for world vertices. Code: %d", vkResult);
@@ -651,6 +725,16 @@ void Renderer::SetupObjectsBuffers()
 	vkResult = vkBindBufferMemory(device, uiVertices, uiVerticesMemory, 0);
 	if (vkResult != VK_SUCCESS)
 		LOG(CRITICAL, "Failed to bind GPU memory for UI vertices. Code: %d", vkResult);
+
+	vkResult = vkBindBufferMemory(device, worldIndices, worldIndicesMemory, 0);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to bind GPU memory for world indices. Code: %d", vkResult);
+	vkResult = vkBindBufferMemory(device, stagingWorldIndices, stagingWorldIndicesMemory, 0);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to bind GPU memory for staging world indices. Code: %d", vkResult);
+	vkResult = vkBindBufferMemory(device, uiIndices, uiIndicesMemory, 0);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to bind GPU memory for UI indices. Code: %d", vkResult);
 
 	vkResult = vkMapMemory(
 		device,
@@ -664,6 +748,16 @@ void Renderer::SetupObjectsBuffers()
 		LOG(CRITICAL, "Failed to map staging world vertices buffer to CPU");
 	vkResult = vkMapMemory(
 		device,
+		stagingWorldIndicesMemory,
+		0,
+		stagingWorldIndexBufferConfig.size,
+		0,
+		reinterpret_cast<void**>(&(worldIndicesBinded.data))
+	);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to map staging world indices buffer to CPU");
+	vkResult = vkMapMemory(
+		device,
 		uiVerticesMemory,
 		0,
 		uiVertexBufferConfig.size,
@@ -672,9 +766,21 @@ void Renderer::SetupObjectsBuffers()
 	);
 	if (vkResult != VK_SUCCESS)
 		LOG(CRITICAL, "Failed to map UI buffer vertices to CPU");
+	vkResult = vkMapMemory(
+		device,
+		uiIndicesMemory,
+		0,
+		uiIndexBufferConfig.size,
+		0,
+		reinterpret_cast<void**>(&(uiIndicesBinded.data))
+	);
+	if (vkResult != VK_SUCCESS)
+		LOG(CRITICAL, "Failed to map staging UI indices buffer to CPU");
 
 	memset(worldVerticesBinded.data, 0, stagingWorldVertexBufferConfig.size);
 	memset(uiVerticesBinded.data, 0, uiVertexBufferConfig.size);
+	memset(worldIndicesBinded.data, 0, stagingWorldIndexBufferConfig.size);
+	memset(uiIndicesBinded.data, 0, uiIndexBufferConfig.size);
 }
 
 void Renderer::SetupRenderBuffers()
@@ -836,26 +942,42 @@ void Renderer::Draw()
 		}
 
 		std::vector<VkBuffer> vertexBuffers;
+		VkBuffer indexBuffer;
 		vertexBuffers.reserve(1);
 		if (object.isUI)
+		{
 			vertexBuffers.push_back(uiVertices);
+			indexBuffer = uiIndices;
+		}
 		else
+		{
 			vertexBuffers.push_back(worldVertices);
-		VkDeviceSize offsets[] = {object.mesh.verticesBufferPosition};
+			indexBuffer = worldIndices;
+		}
+
+		VkDeviceSize vertexOffsets[] = {object.mesh.verticesBufferPosition};
+		VkDeviceSize indexOffset = object.mesh.indicesBufferPosition;
 		vkCmdBindVertexBuffers(
 			graphicsCommandBuffers[currentFrame],
 			0,
 			1,
 			vertexBuffers.data(),
-			offsets
+			vertexOffsets
+		);
+		vkCmdBindIndexBuffer(
+			graphicsCommandBuffers[currentFrame],
+			indexBuffer,
+			indexOffset,
+			INDICES_SIZE_VK
 		);
 
-		vkCmdDraw(
+		vkCmdDrawIndexed(
 			graphicsCommandBuffers[currentFrame],
-			static_cast<uint32_t>(object.mesh.vertices.size()),
+			static_cast<uint32_t>(object.mesh.indices.size()),
 			static_cast<uint32_t>(object.transforms.size()),
+			0,
 			0, // TODO: batching
-			0 // TODO: batching
+			0 // TODO: batching 
 		);
 	}
 
@@ -867,9 +989,7 @@ void Renderer::Draw()
 	VkSemaphore waitSemaphores[] = {imageAvailable[currentFrame]};
 	VkSemaphore signalSemaphores[] = {renderFinished[currentFrame]};
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-	//drawConfig.submitConfig.pWaitSemaphores = &imageAvailable[currentFrame];
 	drawConfig.submitConfig.pWaitSemaphores = waitSemaphores;
-	//drawConfig.submitConfig.pSignalSemaphores = &renderFinished[currentFrame];
 	drawConfig.submitConfig.pSignalSemaphores =signalSemaphores;
 	drawConfig.submitConfig.pCommandBuffers = &graphicsCommandBuffers[currentFrame];
 	drawConfig.submitConfig.pWaitDstStageMask = waitStages;
@@ -882,10 +1002,8 @@ void Renderer::Draw()
 	if (vkResult != VK_SUCCESS)
 		LOG(ERROR, "Failed to submit render commands. Code: %d", vkResult);
 
-	//drawConfig.presentConfig.pWaitSemaphores = &renderFinished[currentFrame];
 	drawConfig.presentConfig.pWaitSemaphores = signalSemaphores;
 	VkSwapchainKHR swapChains[] = {swapchain};
-	//drawConfig.presentConfig.pSwapchains = &swapchain;
 	drawConfig.presentConfig.pSwapchains = swapChains;
 	drawConfig.presentConfig.pImageIndices = &imageIndex;
 	vkResult = vkQueuePresentKHR(queues.present, &drawConfig.presentConfig);
@@ -1025,6 +1143,7 @@ void Renderer::Init()
 	SetupObjectsBuffers();
 	SetupRenderBuffers();
 	CopyBuffer(stagingWorldVertices, 0, worldVertices, worldVerticesBinded.size * worldVerticesBinded.ELEMENT_SIZE);
+	CopyBuffer(stagingWorldIndices, 0, worldIndices, worldIndicesBinded.size * worldIndicesBinded.ELEMENT_SIZE);
 	SetupSync();
 }
 
@@ -1076,6 +1195,19 @@ void Renderer::ProcessCommand(const RenderCommand &command)
 					worldVertices,
 					object.mesh.vertices.size() * worldVerticesBinded.ELEMENT_SIZE
 				);
+
+				size_t indicesPos = worldIndicesBinded.Write(
+					object.mesh.indices.data(),
+					object.mesh.indices.size()
+				) * worldIndicesBinded.ELEMENT_SIZE;
+				object.mesh.indicesBufferPosition = indicesPos;
+				CopyBuffer(
+					stagingWorldIndices,
+					indicesPos,
+					worldIndices,
+					object.mesh.indices.size() * worldIndicesBinded.ELEMENT_SIZE
+				);
+
 				objects.insert(object);
 			}
 
@@ -1144,9 +1276,17 @@ void Renderer::Release()
 	vkDestroyBuffer(device, stagingWorldVertices, nullptr);
 	vkDestroyBuffer(device, uiVertices, nullptr);
 
+	vkDestroyBuffer(device, worldIndices, nullptr);
+	vkDestroyBuffer(device, stagingWorldIndices, nullptr);
+	vkDestroyBuffer(device, uiIndices, nullptr);
+
 	vkFreeMemory(device, worldVerticesMemory, nullptr);
 	vkFreeMemory(device, stagingWorldVerticesMemory, nullptr);
 	vkFreeMemory(device, uiVerticesMemory, nullptr);
+	
+	vkFreeMemory(device, worldIndicesMemory, nullptr);
+	vkFreeMemory(device, stagingWorldIndicesMemory, nullptr);
+	vkFreeMemory(device, uiIndicesMemory, nullptr);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{

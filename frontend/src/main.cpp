@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 	assetManager.LoadAsync(AssetInfo::MATERIAL, "assets/materials/helloworld.mat");
 	AssetHandle baseMaterialHandle = assetManager.Find("assets/materials/helloworld.mat");
 	AssetMaterial baseMaterial = assetManager.Get<AssetMaterial>(baseMaterialHandle);
-	Renderer renderer(window, baseMaterial, 1000000); //TODO: buffer sizes
+	Renderer renderer(window, baseMaterial, 1000000, 1000000); //TODO: buffer sizes
 	renderer.Start();
 
 	//Setup Engine
@@ -51,27 +51,30 @@ int main(int argc, char **argv)
 		.transforms = {{.x = 0, .y = 0}},
 		.mesh = {
 			.vertices = {
-				{.pos = {-0.5f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
+				{.pos = {-0.5f, -0.5f}, .color = {0.0f, 0.0f, 0.0f}},
 				{.pos = {0.0f, 0.5f}, .color = {0.0f, 0.0f, 0.0f}},
-				{.pos = {-1.0f, 0.5f}, .color = {1.0f, 1.0f, 1.0f}}
-			}
+				{.pos = {-1.0f, 0.5f}, .color = {0.0f, 0.0f, 0.0f}}
+			},
+			.indices = {0, 1, 2}
 		},
 
 		.material = baseMaterial,
 	};
-	RenderObject triangle2 {
+	RenderObject rect {
 		.transforms = {{.x = 0, .y = 0}},
 		.mesh = {
 			.vertices = {
-				{.pos = {0.0f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
-				{.pos = {0.5f, 0.5f}, .color = {0.0f, 1.0f, 0.0f}},
-				{.pos = {-0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}}
-			}
+				{.pos = {-0.5f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
+				{.pos = {0.5f, -0.5f}, .color = {0.0f, 1.0f, 0.0f}},
+				{.pos = {0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}},
+				{.pos = {-0.5f, 0.5f}, .color = {0.0f, 0.0f, 0.0f}}
+			},
+			.indices = { 0, 1, 2, 2, 3, 0}
 		},
 
 		.material = baseMaterial,
 	};
-	RenderObject objs[] = {triangle, triangle2};
+	RenderObject objs[] = {triangle, rect};
 	renderer.RegisterObjects(objs, 2);
 
 	// Process GLFW events
