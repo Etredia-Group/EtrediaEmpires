@@ -38,6 +38,10 @@ struct PipelineConfig
 	VkViewport defaultViewport;
 	VkRect2D defaultScissors;
 	std::vector<VkDynamicState> dynamicStates;
+	
+	std::vector<VkDescriptorSetLayoutBinding> uniforms;
+	int vertexBindingsCount, fragmentBindingsCount;
+	VkDescriptorSetLayoutCreateInfo uniformsConfig;
 
 	VkGraphicsPipelineCreateInfo pipelineConfig;
 
@@ -48,6 +52,7 @@ struct Pipeline
 {
 	VkPipeline instance;
 	VkPipelineLayout layout;
+	VkDescriptorSetLayout uniformsLayout;
 	VkViewport viewport;
 	VkRect2D scissors;
 };

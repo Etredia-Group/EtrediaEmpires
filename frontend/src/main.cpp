@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 
 	// Test render obj
 	RenderObject triangle {
-		.transforms = {{.x = 0, .y = 0}},
+		.transforms = {{.pos = {0.0f, 0.0f, 0.0f}}},
 		.mesh = {
 			.vertices = {
 				{.pos = {-0.5f, -0.5f}, .color = {0.0f, 0.0f, 0.0f}},
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 		.material = baseMaterial,
 	};
 	RenderObject rect {
-		.transforms = {{.x = 0, .y = 0}},
+		.transforms = {{.pos = {0.0f, 0.0f, 0.0f}}},
 		.mesh = {
 			.vertices = {
 				{.pos = {-0.5f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},

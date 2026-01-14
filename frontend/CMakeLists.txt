@@ -13,11 +13,12 @@ project (EEfrontend)
 
 # List sources
 
-set(HEADERS "Engine.hpp" "Renderer.hpp" "FileSystem.hpp" "compile_config.hpp" "AssetManager.hpp" "AssetData.hpp" "PipelineFactory.hpp")
-set(SOURCES "main.cpp" "Engine.cpp" "Renderer.cpp" "FileSystem.cpp" "AssetManager.cpp" "AssetData.cpp" "PipelineFactory.cpp")
-
-list(TRANSFORM HEADERS PREPEND "include/")
-list(TRANSFORM SOURCES PREPEND "src/")
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
+    "src/*.cpp"
+    "src/*.c"
+    "include/*.hpp"
+    "include/*.h"
+)
 
 # Find dependencies
 
@@ -30,7 +31,7 @@ find_package(RmlUi CONFIG REQUIRED)
 
 # Link library
 
-add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC utils)
 

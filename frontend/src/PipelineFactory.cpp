@@ -10,6 +10,7 @@ PipelineConfig PipelineConfig::Copy() const
     copy.viewportStateConfig.pScissors = &copy.defaultScissors;
     copy.dynamicStateConfig.pDynamicStates = copy.dynamicStates.data();
     copy.colorBlendConfig.pAttachments = copy.colorBlendAttachmentConfigs.data();
+    copy.uniformsConfig.pBindings = copy.uniforms.data();
     copy.pipelineConfig.pVertexInputState = &copy.vertexInputConfig;
     copy.pipelineConfig.pInputAssemblyState = &copy.inputAssemblyConfig;
     copy.pipelineConfig.pViewportState = &copy.viewportStateConfig;
@@ -42,6 +43,20 @@ PipelineFactory::PipelineFactory(const PipelineBinding &binding) :
         .alphaBlendOp = VK_BLEND_OP_ADD,
         .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
     });
+
+    basePipelineConfig.uniforms.push_back({
+        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .descriptorCount = 1,
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+        .pImmutableSamplers = nullptr
+    }); // GPU_GlobalUBO
+
+    basePipelineConfig.uniforms.push_back({
+        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .descriptorCount = 1,
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+        .pImmutableSamplers = nullptr
+    }); // GPU_TransformUBO
 
     basePipelineConfig.vertexInputConfig = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -89,11 +104,16 @@ PipelineFactory::PipelineFactory(const PipelineBinding &binding) :
         .pDynamicStates = basePipelineConfig.dynamicStates.data()
     };
 
+    basePipelineConfig.uniformsConfig = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .bindingCount = static_cast<uint32_t>(basePipelineConfig.uniforms.size()),
+        .pBindings = basePipelineConfig.uniforms.data()
+    };
+
     basePipelineConfig.pipelineLayoutConfig = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .pNext = nullptr,
-        .setLayoutCount = 0, //TODO: vector
-        .pSetLayouts = nullptr,
+        .setLayoutCount = 1,
         .pushConstantRangeCount = 0,
         .pPushConstantRanges = nullptr
     };
@@ -158,6 +178,8 @@ Pipeline& PipelineFactory::Get(const AssetMaterial &material)
 
 void PipelineFactory::Create(const AssetMaterial &material, const VkRenderPass &renderPass, const uint32_t &flags)
 {
+    VkResult vkResult;
+
     Pipeline newPipeline {};
     Pipeline *result = &basePipeline;
     
@@ -172,16 +194,6 @@ void PipelineFactory::Create(const AssetMaterial &material, const VkRenderPass &
         result = &newPipeline;
         config->pipelineConfig.basePipelineHandle = basePipeline.instance;
     }
-
-    VkResult vkResult = vkCreatePipelineLayout(
-        device,
-        &config->pipelineLayoutConfig,
-        nullptr,
-        &result->layout
-    );
-    if (vkResult != VK_SUCCESS)
-        LOG(CRITICAL, "Failed to create pipeline layout");
-    config->pipelineConfig.layout = result->layout;
     
     // Configure shaders
     AssetHandle shaderHandle;
@@ -213,6 +225,13 @@ void PipelineFactory::Create(const AssetMaterial &material, const VkRenderPass &
         .pSpecializationInfo = nullptr
     });
 
+    VkDescriptorSetLayoutBinding baseBinding {
+        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .descriptorCount = 1,
+        .pImmutableSamplers = nullptr
+    };
+    baseBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
     // Fragment
     VkShaderModule fragmentModule;
     shaderHandle = Engine::assetManager->Find(material.fragmentShaderAssetID);
@@ -234,6 +253,26 @@ void PipelineFactory::Create(const AssetMaterial &material, const VkRenderPass &
         .pName = "main",
         .pSpecializationInfo = nullptr
     });
+
+    baseBinding.binding = 0;
+    baseBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    //
+
+    vkResult = vkCreateDescriptorSetLayout(device, &config->uniformsConfig, nullptr, &result->uniformsLayout);
+    if (vkResult != VK_SUCCESS)
+        LOG(CRITICAL, "Failed to create uniforms layout");
+    config->pipelineLayoutConfig.pSetLayouts = &result->uniformsLayout;
+
+    vkResult = vkCreatePipelineLayout(
+        device,
+        &config->pipelineLayoutConfig,
+        nullptr,
+        &result->layout
+    );
+    if (vkResult != VK_SUCCESS)
+        LOG(CRITICAL, "Failed to create pipeline layout");
+    config->pipelineConfig.layout = result->layout;
 
     config->pipelineConfig.stageCount = static_cast<uint32_t>(stagesConfigs.size());
     config->pipelineConfig.pStages = stagesConfigs.data();
@@ -265,9 +304,11 @@ PipelineFactory::~PipelineFactory()
 {
     vkDestroyPipeline(device, basePipeline.instance, nullptr);
     vkDestroyPipelineLayout(device, basePipeline.layout, nullptr);
+    vkDestroyDescriptorSetLayout(device, basePipeline.uniformsLayout, nullptr);
     for (auto &item : pipelines)
     {
         vkDestroyPipeline(device, item.second.instance, nullptr);
         vkDestroyPipelineLayout(device, item.second.layout, nullptr);
+        vkDestroyDescriptorSetLayout(device, item.second.uniformsLayout, nullptr);
     }
 }

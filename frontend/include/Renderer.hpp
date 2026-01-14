@@ -2,14 +2,14 @@
 #include <thread>
 #include <atomic>
 #include <cstdint>
-#include <array>
 #include <vector>
 #include <set>
 #include <Boost/lockfree/spsc_queue.hpp>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
+
+#include "GPU_Types/GPU_BaseTypes.hpp"
 
 #include "PipelineFactory.hpp"
 
@@ -18,10 +18,6 @@
 #else
     #define VALIDATION_LAYER
 #endif
-
-#define ATTRIBUTE_FORMAT_VEC2 VK_FORMAT_R32G32_SFLOAT
-#define ATTRIBUTE_FORMAT_VEC3 VK_FORMAT_R32G32B32_SFLOAT
-#define ATTRIBUTE_FORMAT_VEC4 VK_FORMAT_R32G32B32A32_SFLOAT
 
 // GPU properties priority for selection
 #define GPU_DISCRETE_PRIORITY 1000
@@ -36,84 +32,6 @@
 #define INDICES_SIZE uint16_t
 #define INDICES_SIZE_VK VK_INDEX_TYPE_UINT16
 
-struct Transform
-{
-    float x = 0.0f, y = 0.0f;
-    float scaleX = 1.0f, scaleY = 1.0f, scaleZ = 1.0f;
-};
-
-struct GPU_Vertex
-{
-    glm::vec2 pos;
-    glm::vec3 color;
-
-    static std::array<VkVertexInputAttributeDescription, 2> GetAttributes()
-    {
-        VkVertexInputAttributeDescription posAttribute = {
-            .location = 0,
-            .binding = 0,
-            .format = ATTRIBUTE_FORMAT_VEC2,
-            .offset = offsetof(GPU_Vertex, pos)
-        };
-        VkVertexInputAttributeDescription colorAttribute = {
-            .location = 1,
-            .binding = 0,
-            .format = ATTRIBUTE_FORMAT_VEC3,
-            .offset = offsetof(GPU_Vertex, color)
-        };
-
-        return {posAttribute, colorAttribute};
-    }
-};
-
-struct GPU_BufferSlot
-{
-    size_t position;
-    size_t size;
-};
-
-//TODO: move methods definition to the end of file
-template<typename T> struct GPU_Buffer
-{
-    T *data;
-    size_t size;
-    const size_t ELEMENT_SIZE;
-    std::vector<GPU_BufferSlot> freeSlots;
-
-    GPU_Buffer() : ELEMENT_SIZE(sizeof(T)) {freeSlots.push_back({.position = 0, .size = size});}
-
-    GPU_BufferSlot* FindFreeSlot(size_t size)
-    {
-        for (auto i = freeSlots.rbegin(); i != freeSlots.rend(); i++)
-        {
-            if (i->size >= size)
-                return &(*i);
-        }
-        return nullptr;
-    }
-
-    size_t Write(const T *elements, size_t elementsCount)
-    {
-        GPU_BufferSlot *slot = FindFreeSlot(elementsCount);
-        if (slot == nullptr) return 0;
-
-        memcpy(data + slot->position, elements, elementsCount * ELEMENT_SIZE);
-        
-        slot->size -= elementsCount;
-        slot->position += elementsCount;
-        if (slot->size == 0)
-            freeSlots.pop_back();
-
-        return slot->position - elementsCount;
-    }
-
-    // void Clear(GPU_BufferSlot range)
-    // {
-    //     freeSlots.push_back(range);
-    //     //TODO: insert sorted by pos and combine intersections
-    // }
-};
-
 struct Mesh
 {
     size_t verticesBufferPosition = 0;
@@ -122,19 +40,27 @@ struct Mesh
     std::vector<INDICES_SIZE> indices;
 };
 
+struct MaterialParams
+{
+    VkDescriptorSet descriptors;
+    //TODO: push-constants
+
+    void Set(const char** param, const char** property = nullptr);
+};
+
 struct RenderObject
 {
     uint32_t engineId = UINT32_MAX;
 
     // Multiple transforms for batching
-    std::vector<Transform> transforms;
+    std::vector<GPU_Transform> transforms;
     uint8_t depth = 0;
     Mesh mesh;
     bool isUI = false;
     //TODO: texture
 
     AssetMaterial &material;
-    //TODO: materialParams (uniforms)
+    MaterialParams materialParams;
 };
 bool operator < (const RenderObject& lhs, const RenderObject& rhs);
 
@@ -268,6 +194,10 @@ private:
     VkBuffer stagingWorldIndices;
     VkBuffer uiVertices;
     VkBuffer uiIndices;
+    std::vector<VkDeviceMemory> worldUniformsMemory;
+    std::vector<VkBuffer> worldUniforms;
+    std::vector<VkDeviceMemory> uiUniformsMemory;
+    std::vector<VkBuffer> uiUniforms;
     std::vector<VkCommandBuffer> graphicsCommandBuffers;
     std::vector<VkCommandBuffer> transferCommandBuffers;
     std::vector<VkImage> frames;

@@ -29,4 +29,10 @@ struct AssetMaterial : AssetData
     uint32_t fragmentShaderAssetID;
     uint32_t renderType;
     uint32_t renderStage;
+
+    // Vertex shader params
+    // <param id:value>
+
+    // Fragment shader params
+    // <param id:value>
 };
