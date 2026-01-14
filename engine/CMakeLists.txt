@@ -8,7 +8,7 @@ endif()
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project (EEfrontend)
+project (engine)
 
 
 # List sources
@@ -25,9 +25,6 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 find_package(Boost REQUIRED COMPONENTS lockfree)
 find_package(xxHash CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
-find_package(Vulkan REQUIRED)
-find_package(RmlUi CONFIG REQUIRED)
 
 # Link library
 
@@ -39,9 +36,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Boost::lockfree)
 target_link_libraries(${PROJECT_NAME} PRIVATE xxHash::xxhash)
 target_link_libraries(${PROJECT_NAME} PRIVATE p7)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
-target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
-target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
-target_link_libraries(${PROJECT_NAME} PRIVATE RmlUi::RmlUi)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
@@ -61,10 +55,6 @@ if (APP_VERSION)
     PRIVATE MINOR_VERSION=${MINOR_VERSION}
     PRIVATE PATCH_VERSION=${PATCH_VERSION}
   )
-endif()
-
-if (VALIDATION_LAYER)
-  target_compile_definitions(${PROJECT_NAME} PRIVATE VALIDATION_LAYER_ON)
 endif()
 
 # Set a symbolic link so executable can find the /assets folder

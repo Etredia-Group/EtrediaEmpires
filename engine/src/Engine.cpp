@@ -1,4 +1,4 @@
 #include "Engine.hpp"
 
 AssetManager* Engine::assetManager;
-Renderer* Engine::renderer;
+IRenderer* Engine::renderer;

@@ -1,12 +1,12 @@
 #pragma once
 #include "AssetManager.hpp"
-#include "Renderer.hpp"
+#include "RenderInterface.hpp"
 
 class Engine
 {
 public:
     static AssetManager *assetManager;
-    static Renderer *renderer;
+    static IRenderer *renderer;
 
 private:
     Engine();
