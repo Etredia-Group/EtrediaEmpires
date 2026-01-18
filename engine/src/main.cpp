@@ -1,15 +1,19 @@
 #include "Logger.h"
-#include <GLFW/glfw3.h>
+
+#include <ee_magnum/Renderer.hpp>
+#include <ee_utils/allocator.hpp>
 
 #include "compile_config.hpp"
 #include "Engine.hpp"
+
+#include <GLFW/glfw3.h>
 
 IP7_Trace* Logger::trace;
 
 int main(int argc, char **argv)
 {
 	// Setup P7 logger
-	IP7_Client *p7client = P7_Create_Client(P7_SINK);
+	IP7_Client *p7client = P7_Create_Client(P7_SINK P7_LOGS_PATH);
 	P7_Set_Crash_Handler();
 	Logger::trace = P7_Create_Trace(p7client, L"TC 1");
 	Logger::trace->Register_Thread(L"Main", 0);
@@ -18,7 +22,9 @@ int main(int argc, char **argv)
 
 	// Setup GLFW
 	glfwInit();
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	
+	// Vulkan only
+	// glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 	GLFWwindow *window = glfwCreateWindow(800, 600, "Etredia Empires", nullptr, nullptr);
 
@@ -26,39 +32,37 @@ int main(int argc, char **argv)
 		LOG(CRITICAL, "GLFW Window failed");
 	else LOG(INFO, "GLFW Window created");
 
+	glfwMakeContextCurrent(window);
+
 	// Setup assets
 	AssetManager assetManager;
 	assetManager.Start();
-	assetManager.LoadShaders();
+	//assetManager.LoadShaders();
 
 	// Setup Renderer
 	// assetManager.LoadAsync(AssetInfo::MATERIAL, "assets/materials/helloworld.mat");
 	// AssetHandle baseMaterialHandle = assetManager.Find("assets/materials/helloworld.mat");
 	// AssetMaterial baseMaterial = assetManager.Get<AssetMaterial>(baseMaterialHandle);
-	// IRenderer renderer(window);
-	// renderer.Start();
 
 	//Setup Engine
 	Engine::assetManager = &assetManager;
-	//Engine::renderer = &renderer;
+	Engine::renderer = reinterpret_cast<IRenderer*>(Allocate<MagnumRenderer>(window));
 	
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
 		Engine::renderer->ResizeWindow(width, height);
 	});
 
-	// Process GLFW events
+	// Game loop
 	while(!glfwWindowShouldClose(window))
 	{
+		Engine::renderer->Draw();
+
+		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
 	// Free memory
 	LOG(INFO, "Exit...");
-	if (Engine::renderer != nullptr)
-	{ // Wait for renderer to clean and shutdown
-		Engine::renderer->Shutdown();
-		while(Engine::renderer->GetThreadStatus());
-	}
 	if (Engine::assetManager != nullptr)
 	{ // Wait for asset manager to clean and shutdown
 		Engine::assetManager->Shutdown();
@@ -66,6 +70,7 @@ int main(int argc, char **argv)
 	}
 	glfwDestroyWindow(window);
 	glfwTerminate();
+	//TODO: check Unregister in other threads and make threaded module base class
 	Logger::trace->Unregister_Thread(0);
 	Logger::trace->Release();
 	p7client->Release();

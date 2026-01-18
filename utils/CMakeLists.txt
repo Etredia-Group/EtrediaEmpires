@@ -1,4 +1,26 @@
+if (POLICY CMP0141)
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+endif()
+
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+
 project(utils)
 
-add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
+    "src/*.cpp"
+    "src/*.c"
+    "include/*.hpp"
+    "include/*.h"
+)
+
+
+# Find dependencies
+
+# Link library
+
+add_library(${PROJECT_NAME} ${SOURCES})
+
+target_include_directories(${PROJECT_NAME} PUBLIC include/)

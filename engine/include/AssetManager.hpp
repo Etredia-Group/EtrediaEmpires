@@ -30,8 +30,8 @@ public:
     {
         BINARY,
 
-        SHADER,
-        MATERIAL,
+        VULKAN_SHADER,
+        VULKAN_MATERIAL,
         IMAGE
     } type = BINARY; 
 
@@ -108,8 +108,8 @@ private:
     std::vector<AssetLoadingEntry> loadingEntries;
 
     std::vector<AssetBinary*> binaryStorage;
-    std::vector<AssetShader*> shadersStorage;
-    std::vector<AssetMaterial*> materialsStorage;
+    std::vector<AssetVulkanShader*> shadersStorage;
+    std::vector<AssetVulkanMaterial*> materialsStorage;
 
     void Threading();
     void Request(const AssetStreamCommand &command);

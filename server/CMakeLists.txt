@@ -8,10 +8,10 @@ endif()
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project ("ECSAPI")
+project ("server")
 
-add_subdirectory ("Economy")
-add_subdirectory ("Economy/test")
+add_subdirectory ("economy")
+add_subdirectory ("economy/test")
 
-add_subdirectory ("ECS")
-add_subdirectory ("ECS/test")
+add_subdirectory ("ecs")
+add_subdirectory ("ecs/test")

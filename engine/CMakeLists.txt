@@ -31,6 +31,8 @@ find_package(glfw3 CONFIG REQUIRED)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC utils)
+target_link_libraries(${PROJECT_NAME} PUBLIC engine-api)
+target_link_libraries(${PROJECT_NAME} PUBLIC magnum-renderer)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::lockfree)
 target_link_libraries(${PROJECT_NAME} PRIVATE xxHash::xxhash)

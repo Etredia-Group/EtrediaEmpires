@@ -1,5 +1,5 @@
 #include "AssetData.hpp"
-#include "allocator.hpp"
+#include <ee_utils/allocator.hpp>
 
 AssetBinary::AssetBinary(uint8_t* &source, const size_t &sourceSize)
 {
@@ -14,14 +14,14 @@ AssetBinary::~AssetBinary()
         DeallocateArray(content);
 }
 
-AssetShader::AssetShader(uint8_t* &source, const size_t &sourceSize)
+AssetVulkanShader::AssetVulkanShader(uint8_t* &source, const size_t &sourceSize)
 {
     content = reinterpret_cast<uint32_t*>(source);
     size = sourceSize;
     source = nullptr;
 }
 
-AssetShader::~AssetShader()
+AssetVulkanShader::~AssetVulkanShader()
 {
     if (content != nullptr)
         DeallocateArray(content);

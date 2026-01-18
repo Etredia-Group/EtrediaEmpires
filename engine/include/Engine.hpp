@@ -1,6 +1,8 @@
 #pragma once
+
+#include <ee_engine_api/RenderInterface.hpp>
+
 #include "AssetManager.hpp"
-#include "RenderInterface.hpp"
 
 class Engine
 {

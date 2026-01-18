@@ -14,16 +14,16 @@ struct AssetBinary : AssetData
     ~AssetBinary();
 };
 
-struct AssetShader : AssetData
+struct AssetVulkanShader : AssetData
 {
     uint32_t* content = nullptr;
     size_t size = 0;
 
-    AssetShader(uint8_t* &source, const size_t &sourceSize);
-    ~AssetShader();
+    AssetVulkanShader(uint8_t* &source, const size_t &sourceSize);
+    ~AssetVulkanShader();
 };
 
-struct AssetMaterial : AssetData
+struct AssetVulkanMaterial : AssetData
 {
     uint32_t vertexShaderAssetID;
     uint32_t fragmentShaderAssetID;
