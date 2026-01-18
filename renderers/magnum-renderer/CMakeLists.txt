@@ -43,7 +43,7 @@ add_library(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PUBLIC engine-api)
 target_link_libraries(${PROJECT_NAME} PUBLIC utils)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE p7)
+target_link_libraries(${PROJECT_NAME} PUBLIC p7)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Magnum::GL
     Magnum::GlfwApplication

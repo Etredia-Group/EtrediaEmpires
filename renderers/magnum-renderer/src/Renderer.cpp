@@ -9,8 +9,6 @@
 
 #include <Corrade/Utility/Debug.h>
 
-#include <string>
-
 using namespace Math::Literals;
 
 MagnumRenderer::MagnumRenderer(GLFWwindow *window) : IRenderer(window)
