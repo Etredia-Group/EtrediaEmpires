@@ -5,7 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <queue>
-#include <algorithm>
+#include <stack>
 #include <limits>
 
 #define bytes(value) reinterpret_cast<const char*>(value)
@@ -171,10 +171,213 @@ void FindContour(){
     }
 }
 
-/* ================= STUBS ================= */
+static double PerpendicularDistance(size_t p, size_t a, size_t b, size_t width)
+{
+    double px = p % width;
+    double py = p / width;
 
-void Aproximate(size_t){}
-void Triangulate(){}
+    double ax = a % width;
+    double ay = a / width;
+
+    double bx = b % width;
+    double by = b / width;
+
+    double dx = bx - ax;
+    double dy = by - ay;
+
+    if(dx == 0 && dy == 0)
+        return std::hypot(px - ax, py - ay);
+
+    double num = std::abs(dy * px - dx * py + bx * ay - by * ax);
+    double den = std::sqrt(dx * dx + dy * dy);
+
+    return num / den;
+}
+
+// Douglas-Peucker iterative
+void Aproximate(size_t epsilon)
+{
+    for(auto& [state, provs] : pixelsPerProvincesPerState)
+    {
+        for(std::vector<size_t>& prov : provs)
+        {
+            if(prov.size() < 3)
+                continue;
+
+            const size_t n = prov.size();
+
+            std::vector<bool> keep_point(n, true);
+            std::stack<std::pair<size_t, size_t>> st;
+
+            // в стек кладем первый и последний индекс
+            st.push({0, n - 1});
+
+            while(!st.empty())
+            {
+                auto [startIndex, endIndex] = st.top();
+                st.pop();
+
+                double dMax = 0.0;
+                size_t index = startIndex;
+
+                for(size_t i = startIndex + 1; i < endIndex; ++i)
+                {
+                    if(keep_point[i])
+                    {
+                        double d = PerpendicularDistance(
+                            prov[i],
+                            prov[startIndex],
+                            prov[endIndex],
+                            width
+                        );
+
+                        if(d > dMax)
+                        {
+                            dMax = d;
+                            index = i;
+                        }
+                    }
+                }
+
+                if(dMax >= epsilon)
+                {
+                    st.push({startIndex, index});
+                    st.push({index, endIndex});
+                }
+                else
+                {
+                    for(size_t j = startIndex + 1; j < endIndex; ++j)
+                        keep_point[j] = false;
+                }
+            }
+
+            // формируем итоговый список
+            std::vector<size_t> result;
+            result.reserve(n);
+
+            for(size_t i = 0; i < n; ++i)
+            {
+                if(keep_point[i])
+                    result.push_back(prov[i]);
+            }
+
+            prov.swap(result);
+        }
+    }
+}
+
+struct Pt {
+    int x, y;
+    size_t id;
+};
+
+inline Pt make_pt(size_t i, size_t width) {
+    return { int(i % width), int(i / width), i };
+}
+
+inline long long cross(const Pt& a, const Pt& b, const Pt& c) {
+    return 1LL * (b.x - a.x) * (c.y - a.y)
+         - 1LL * (b.y - a.y) * (c.x - a.x);
+}
+
+long long signed_area2(const std::vector<Pt>& p) {
+    long long a = 0;
+    for (size_t i = 0; i < p.size(); ++i) {
+        const auto& p0 = p[i];
+        const auto& p1 = p[(i + 1) % p.size()];
+        a += 1LL * p0.x * p1.y - 1LL * p1.x * p0.y;
+    }
+    return a;
+}
+
+bool point_in_triangle(const Pt& p,
+                       const Pt& a,
+                       const Pt& b,
+                       const Pt& c)
+{
+    long long c1 = cross(a, b, p);
+    long long c2 = cross(b, c, p);
+    long long c3 = cross(c, a, p);
+    return (c1 >= 0 && c2 >= 0 && c3 >= 0);
+}
+
+std::vector<size_t> triangulate_prov(const std::vector<size_t>& prov,
+                                     size_t width)
+{
+    std::vector<Pt> poly;
+    poly.reserve(prov.size());
+    for (size_t i : prov)
+        poly.push_back(make_pt(i, width));
+
+    // CCW
+    if (signed_area2(poly) < 0)
+        std::reverse(poly.begin(), poly.end());
+
+    std::vector<size_t> out; // a,b,c,a,b,c,...
+
+    while (poly.size() > 3) {
+        bool ear_found = false;
+
+        for (size_t i = 0; i < poly.size(); ++i) {
+            size_t i0 = (i + poly.size() - 1) % poly.size();
+            size_t i1 = i;
+            size_t i2 = (i + 1) % poly.size();
+
+            const Pt& a = poly[i0];
+            const Pt& b = poly[i1];
+            const Pt& c = poly[i2];
+
+            if (cross(a, b, c) <= 0)
+                continue; // не выпуклая
+
+            bool inside = false;
+            for (size_t j = 0; j < poly.size(); ++j) {
+                if (j == i0 || j == i1 || j == i2) continue;
+                if (point_in_triangle(poly[j], a, b, c)) {
+                    inside = true;
+                    break;
+                }
+            }
+
+            if (!inside) {
+                out.push_back(a.id);
+                out.push_back(b.id);
+                out.push_back(c.id);
+                poly.erase(poly.begin() + i1);
+                ear_found = true;
+                break;
+            }
+        }
+
+        if (!ear_found) {
+            // плохой контур (самопересечение / коллинеарность)
+            break;
+        }
+    }
+
+    if (poly.size() == 3) {
+        out.push_back(poly[0].id);
+        out.push_back(poly[1].id);
+        out.push_back(poly[2].id);
+    }
+
+    return out;
+}
+
+
+void Triangulate()
+{
+    for(auto& [state, provs] : pixelsPerProvincesPerState)
+    {
+        for(std::vector<size_t>& prov : provs)
+        {
+            if (prov.size() < 3)
+                continue;
+
+            prov = triangulate_prov(prov, width);
+        }
+    }
+}
 
 /* ================= OUTPUT ================= */
 
@@ -224,7 +427,7 @@ int main(int argc,char**argv){
 
     FloodFill();
     FindContour();
-    Aproximate(0);
+    Aproximate(1);
     Triangulate();
     GenVertices(fout);
 }
