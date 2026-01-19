@@ -1,0 +1,5 @@
+{
+  "cmake.debugConfig": {
+    "args": ["D:/PROJECTS/EtrediaEmpires/sdk/map/provinces.bmp", "D:/PROJECTS/EtrediaEmpires/sdk/map/provinces.map"]
+  }
+}

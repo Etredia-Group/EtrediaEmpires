@@ -41,6 +41,6 @@ foreach(MAT ${MATERIAL_FILES})
     list(APPEND COMPILED_BINARIES ${OUT_FILE})
 endforeach()
 
-add_custom_target(compile_assets ALL
+add_custom_target(compile_material_assets ALL
     DEPENDS ${COMPILED_BINARIES}
 )

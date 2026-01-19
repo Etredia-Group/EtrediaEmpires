@@ -9,7 +9,7 @@
 using json = nlohmann::json;
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-    AssetMaterial,
+    AssetVulkanMaterial,
     vertexShaderAssetID,
     fragmentShaderAssetID,
     renderType,
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
             data[key] = assetId;
         }
 
-        AssetMaterial material = data.get<AssetMaterial>();
+        AssetVulkanMaterial material = data.get<AssetVulkanMaterial>();
         fout.write(reinterpret_cast<const char*>(&material), sizeof(material));
 
         fin.close();
@@ -60,6 +60,7 @@ int main(int argc, char **argv)
     catch (const std::exception &e)
     {
         std::cerr << e.what() << std::endl;
+        return 1;
     }
     
 
