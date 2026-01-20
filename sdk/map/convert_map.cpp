@@ -54,8 +54,13 @@ uint8_t* imageData;
 uint8_t* tempImageData;
 size_t width,height,rowSize;
 
-std::unordered_map<BGR,std::vector<std::vector<size_t>>,BGRHash>
-pixelsPerProvincesPerState;
+struct prov
+{
+    std::vector<size_t> vertices;
+    std::vector<uint16_t> indices;
+};
+
+std::unordered_map<BGR,std::vector<prov>,BGRHash> pixelsPerProvincesPerState;
 
 inline BGR getPixelSafe(size_t r,size_t c){
     if(r>=height||c>=width) return EMPTY_COLOR;
@@ -93,7 +98,7 @@ void FloodFill(){
             if(n%width) q.push(n-1);
             if(n%width+1<width) q.push(n+1);
         }
-        pixelsPerProvincesPerState[color].push_back(prov);
+        pixelsPerProvincesPerState[color].push_back({prov});
     }
 }
 
@@ -145,9 +150,9 @@ size_t FindStart(const std::vector<size_t>&prov,BGR id){
 void FindContour(){
     for(auto&[state,provs]:pixelsPerProvincesPerState){
         for(auto&prov:provs){
-            if(prov.empty()) continue;
-            BGR id=getPixelSafeIndex(prov[0]);
-            size_t start=FindStart(prov,id);
+            if(prov.vertices.empty()) continue;
+            BGR id=getPixelSafeIndex(prov.vertices[0]);
+            size_t start=FindStart(prov.vertices,id);
             if(start==std::numeric_limits<size_t>::max()) continue;
 
             std::vector<size_t> contour;
@@ -157,7 +162,7 @@ void FindContour(){
             size_t prev = (start % width > 0) ? start - 1 : start + 1;
 
 
-            const size_t MAX=prov.size()*8;
+            const size_t MAX=prov.vertices.size()*8;
             for(size_t i=0;i<MAX;i++){
                 size_t next;
                 if(!MooreStep(cur,prev,id,next)) break;
@@ -166,7 +171,7 @@ void FindContour(){
                 prev=cur;
                 cur=next;
             }
-            prov.swap(contour);
+            prov.vertices.swap(contour);
         }
     }
 }
@@ -199,12 +204,12 @@ void Aproximate(size_t epsilon)
 {
     for(auto& [state, provs] : pixelsPerProvincesPerState)
     {
-        for(std::vector<size_t>& prov : provs)
+        for(prov& prov : provs)
         {
-            if(prov.size() < 3)
+            if(prov.vertices.size() < 3)
                 continue;
 
-            const size_t n = prov.size();
+            const size_t n = prov.vertices.size();
 
             std::vector<bool> keep_point(n, true);
             std::stack<std::pair<size_t, size_t>> st;
@@ -225,9 +230,9 @@ void Aproximate(size_t epsilon)
                     if(keep_point[i])
                     {
                         double d = PerpendicularDistance(
-                            prov[i],
-                            prov[startIndex],
-                            prov[endIndex],
+                            prov.vertices[i],
+                            prov.vertices[startIndex],
+                            prov.vertices[endIndex],
                             width
                         );
 
@@ -258,10 +263,10 @@ void Aproximate(size_t epsilon)
             for(size_t i = 0; i < n; ++i)
             {
                 if(keep_point[i])
-                    result.push_back(prov[i]);
+                    result.push_back(prov.vertices[i]);
             }
 
-            prov.swap(result);
+            prov.vertices.swap(result);
         }
     }
 }
@@ -369,12 +374,49 @@ void Triangulate()
 {
     for(auto& [state, provs] : pixelsPerProvincesPerState)
     {
-        for(std::vector<size_t>& prov : provs)
+        for(prov& prov : provs)
         {
-            if (prov.size() < 3)
+            if (prov.vertices.size() < 3)
                 continue;
 
-            prov = triangulate_prov(prov, width);
+            prov.vertices = triangulate_prov(prov.vertices, width);
+        }
+    }
+}
+
+void Optimize()
+{
+    for(auto& [state, provs] : pixelsPerProvincesPerState)
+    {
+        for(prov& prov : provs)
+        {
+            std::unordered_map<size_t, uint16_t> vertexToIndex;
+            vertexToIndex.reserve(prov.vertices.size());
+
+            std::vector<size_t> uniqueVertices;
+            uniqueVertices.reserve(prov.vertices.size());
+
+            prov.indices.clear();
+
+            for (size_t v : prov.vertices)
+            {
+                auto it = vertexToIndex.find(v);
+                if (it != vertexToIndex.end())
+                {
+                    // вершина уже есть
+                    prov.indices.push_back(it->second);
+                }
+                else
+                {
+                    // новая вершина
+                    uint16_t newIndex = static_cast<uint16_t>(uniqueVertices.size());
+                    uniqueVertices.push_back(v);
+                    vertexToIndex[v] = newIndex;
+                    prov.indices.push_back(newIndex);
+                }
+            }
+
+            prov.vertices.swap(uniqueVertices);
         }
     }
 }
@@ -382,19 +424,41 @@ void Triangulate()
 /* ================= OUTPUT ================= */
 
 void GenVertices(std::ofstream&out){
-    uint32_t sc=pixelsPerProvincesPerState.size();
-    out.write(bytes(&sc),4);
-    for(auto&[s,provs]:pixelsPerProvincesPerState){
-        out.write(bytes(&s),3);
-        uint32_t pc=provs.size();
-        out.write(bytes(&pc),4);
-        for(auto&p:provs){
-            uint32_t vc=p.size();
-            out.write(bytes(&vc),4);
-            for(size_t i:p){
-                vertex v{float(i%width),float(i/width)};
+    uint32_t statesCount = static_cast<uint32_t>(pixelsPerProvincesPerState.size());
+    out.write(bytes(&statesCount),4);
+
+    for(auto&[color, provs]:pixelsPerProvincesPerState)
+    {
+        out.write(bytes(&color), sizeof(BGR));
+
+        uint32_t provsCount = static_cast<uint32_t>(provs.size());
+        out.write(bytes(&provsCount), sizeof(uint32_t));
+
+        for(prov& prov:provs)
+        {
+            //Skip invalid meshes
+            if (prov.indices.size() % 3 != 0)
+            {
+                prov.vertices.clear();
+                prov.indices.clear();
+            }
+
+            uint32_t verticesCount = static_cast<uint32_t>(prov.vertices.size());
+            out.write(bytes(&verticesCount), sizeof(uint32_t));
+
+            for(size_t i: prov.vertices)
+            {
+                vertex v{
+                    static_cast<float>(i%width),
+                    static_cast<float>(i/width)
+                };
                 out.write(bytes(&v),sizeof(v));
             }
+
+            uint32_t indicesCount = static_cast<uint32_t>(prov.indices.size());
+            out.write(bytes(&indicesCount), sizeof(uint32_t));
+
+            out.write(reinterpret_cast<char*>(prov.indices.data()), prov.indices.size() * sizeof(uint16_t));
         }
     }
 }
@@ -429,5 +493,6 @@ int main(int argc,char**argv){
     FindContour();
     Aproximate(1);
     Triangulate();
+    Optimize();
     GenVertices(fout);
 }
