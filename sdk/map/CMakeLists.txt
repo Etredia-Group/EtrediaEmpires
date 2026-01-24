@@ -31,8 +31,8 @@ foreach(MAP ${MAP_FILES})
 
     add_custom_command(
         OUTPUT ${OUT_FILE}
-        COMMAND ${PROJECT_NAME} ${MAP} ${OUT_FILE}
-        DEPENDS ${MAP}
+        COMMAND $<TARGET_FILE:${PROJECT_NAME}> ${MAP} ${OUT_FILE}
+        DEPENDS ${MAP} ${PROJECT_NAME}
         COMMENT "Converting map ${MAP_NAME}"
         VERBATIM
     )

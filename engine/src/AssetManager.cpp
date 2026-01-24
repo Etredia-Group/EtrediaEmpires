@@ -50,7 +50,8 @@ void AssetManager::Redirect(AssetHandle &handle, void* resource)
     {
         void* oldResource = asset.resourceAddress->resource.exchange(nullptr, std::memory_order_acq_rel);
         if (oldResource)
-            Deallocate(asset.resourceAddress->resource.load());
+            //Deallocate(asset.resourceAddress->resource.load());
+            Deallocate(oldResource);
     }
 
     asset.resourceAddress->resource.store(resource);
@@ -174,20 +175,29 @@ void AssetManager::Loop()
 
                 switch (asset.type)
                 {
-                    case AssetInfo::VULKAN_SHADER:
+                    case AssetInfo::MAP_MESH:
                     {
-                        AssetVulkanShader* shader = Allocate<AssetVulkanShader>(entry.file->data, entry.file->size);
+                        AssetMapMesh* mesh = Allocate<AssetMapMesh>(entry.file->data, entry.file->size);
+                        mapMeshesStorage.push_back(mesh);
+                        Redirect(entry.handle, mapMeshesStorage.back());
+                        break;
+                    }
+
+
+                    case AssetInfo::SHADER:
+                    {
+                        AssetShader* shader = Allocate<AssetShader>(entry.file->data, entry.file->size);
                         shadersStorage.push_back(shader);
                         Redirect(entry.handle, shadersStorage.back());
                         break;
                     }
 
-                    case AssetInfo::VULKAN_MATERIAL:
+                    case AssetInfo::MATERIAL:
                     {
-                        AssetVulkanMaterial* material = Allocate<AssetVulkanMaterial>();
-                        if (entry.file->size < sizeof(AssetVulkanMaterial))
+                        AssetMaterial* material = Allocate<AssetMaterial>();
+                        if (entry.file->size < sizeof(AssetMaterial))
                             LOG(CRITICAL, "File size is less than needed for material");
-                        std::memcpy(material, entry.file->data, sizeof(AssetVulkanMaterial));
+                        std::memcpy(material, entry.file->data, sizeof(AssetMaterial));
                         materialsStorage.push_back(material);
                         Redirect(entry.handle, materialsStorage.back());
                         break;
@@ -246,6 +256,7 @@ void AssetManager::ProcessCommand(AssetStreamCommand &command)
             if (freeAssetSlots.size() > 0)
             {
                 assetPos = freeAssetSlots.back();
+                Deallocate(activeAssets[assetPos].resourceAddress);
                 activeAssets[assetPos] = std::move(asset);
                 freeAssetSlots.pop_back();
             }
@@ -321,9 +332,9 @@ void AssetManager::Release()
     {
         if (asset.resourceAddress->resource.load() != nullptr)
         {
-            void* oldResource = asset.resourceAddress->resource.exchange(nullptr, std::memory_order_acq_rel);
-            if (oldResource)
-                Deallocate(asset.resourceAddress->resource.load());
+            void* resource = asset.resourceAddress->resource.exchange(nullptr, std::memory_order_acq_rel);
+            if (resource)
+                Deallocate(resource);
         }
         Deallocate(asset.resourceAddress);
     }
@@ -333,30 +344,20 @@ void AssetManager::Release()
         Deallocate(mapping.second);
     assetsMapping.clear();
 
-    //TODO: ClrearStorage(&storage);
-    for (AssetBinary* &resource : binaryStorage)
-    {
-        if (resource != nullptr)
-            Deallocate(resource);
-    }
     binaryStorage.clear();
-    for (AssetVulkanShader* &resource : shadersStorage)
-    {
-        if (resource != nullptr)
-            Deallocate(resource);
-    }
+    mapMeshesStorage.clear();
     shadersStorage.clear();
+    materialsStorage.clear();
 
     LOG(INFO, "Asset Streaming is released");
     isRunning.store(false);
 }
 
-void AssetManager::LoadShaders()
+void AssetManager::LoadDir(AssetInfo::Type type, const std::filesystem::path &path)
 {
-    std::filesystem::path shadersRoot = "assets/shaders";
-    for (const std::filesystem::directory_entry &entry : std::filesystem::directory_iterator(shadersRoot))
+    for (const std::filesystem::directory_entry &entry : std::filesystem::directory_iterator(path))
     {
         if (entry.is_directory()) continue;
-        LoadAsync(AssetInfo::VULKAN_SHADER, entry.path());
+        LoadAsync(type, entry.path());
     }
 }

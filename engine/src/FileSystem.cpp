@@ -122,6 +122,9 @@ bool NativeFileSystem::PollReady(FileHandle &file)
 
 void NativeFileSystem::Close(FileHandle &file)
 {
+    if (file.overlapped.hEvent)
+        CloseHandle(file.overlapped.hEvent);
+
     if (file.buffer != nullptr)
     {
         DeallocateArray(file.buffer);

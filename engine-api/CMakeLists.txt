@@ -25,7 +25,12 @@ find_package(glfw3 CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME} ${SOURCES})
 
+target_link_libraries(${PROJECT_NAME} PRIVATE p7)
 target_link_libraries(${PROJECT_NAME} PUBLIC utils)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
+
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+endif()

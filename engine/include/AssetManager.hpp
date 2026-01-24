@@ -1,6 +1,6 @@
 #pragma once
 #include "FileSystem.hpp"
-#include "AssetData.hpp"
+#include <ee_engine_api/AssetData.hpp>
 
 #include <vector>
 #include <unordered_map>
@@ -30,8 +30,10 @@ public:
     {
         BINARY,
 
-        VULKAN_SHADER,
-        VULKAN_MATERIAL,
+        MAP_MESH,
+
+        SHADER,
+        MATERIAL,
         IMAGE
     } type = BINARY; 
 
@@ -85,11 +87,13 @@ public:
     void Start();
     void Shutdown();
 
-    void LoadShaders();
+    void LoadDir(AssetInfo::Type type, const std::filesystem::path &path);
     
     void LoadAsync(AssetInfo::Type type, const std::filesystem::path &path);
     AssetHandle& Find(const std::filesystem::path &path);
     AssetHandle& Find(const uint32_t &id);
+    template <Asset T> T& FindOnce(const std::filesystem::path &path);
+    template <Asset T> T& FindOnce(const uint32_t &id);
     void Redirect(AssetHandle &handle, void *resource);
     template <Asset T> T& Get(const AssetHandle &handle);
     void Free(AssetHandle &handle);
@@ -108,8 +112,9 @@ private:
     std::vector<AssetLoadingEntry> loadingEntries;
 
     std::vector<AssetBinary*> binaryStorage;
-    std::vector<AssetVulkanShader*> shadersStorage;
-    std::vector<AssetVulkanMaterial*> materialsStorage;
+    std::vector<AssetMapMesh*> mapMeshesStorage;
+    std::vector<AssetShader*> shadersStorage;
+    std::vector<AssetMaterial*> materialsStorage;
 
     void Threading();
     void Request(const AssetStreamCommand &command);
@@ -117,6 +122,8 @@ private:
     void Loop();
     void ProcessCommand(AssetStreamCommand &command);
     void Release();
+
+    template<Asset T> void ClearStorage(std::vector<T*> &storage);
 };
 
 template <Asset T> T& AssetManager::Get(const AssetHandle &handle)
@@ -130,4 +137,24 @@ template <Asset T> T& AssetManager::Get(const AssetHandle &handle)
     Request(command);
     while (command.out->load() == nullptr);
     return *reinterpret_cast<T*>(command.out->load());
+}
+
+template <Asset T> T& AssetManager::FindOnce(const std::filesystem::path &path)
+{
+    return Get<T>(Find(path));
+}
+
+template <Asset T> T& AssetManager::FindOnce(const uint32_t &id)
+{
+    return Get<T>(Find(id));
+}
+
+template<Asset T> void AssetManager::ClearStorage(std::vector<T*> &storage)
+{
+    for (T* &resource : storage)
+    {
+        if (resource != nullptr)
+            Deallocate(resource);
+    }
+    storage.clear();
 }

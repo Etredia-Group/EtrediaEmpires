@@ -1,4 +1,5 @@
 #pragma once
+#include "Map.hpp"
 #include <concepts>
 #include <cstdint>
 
@@ -14,25 +15,17 @@ struct AssetBinary : AssetData
     ~AssetBinary();
 };
 
-struct AssetVulkanShader : AssetData
+struct AssetMapMesh : AssetData
 {
-    uint32_t* content = nullptr;
-    size_t size = 0;
+    MapMesh content;
 
-    AssetVulkanShader(uint8_t* &source, const size_t &sourceSize);
-    ~AssetVulkanShader();
+    AssetMapMesh(uint8_t* &source, const size_t &sourceSize);
 };
 
-struct AssetVulkanMaterial : AssetData
+#define AssetShader AssetBinary
+
+struct AssetMaterial : AssetData
 {
     uint32_t vertexShaderAssetID;
     uint32_t fragmentShaderAssetID;
-    uint32_t renderType;
-    uint32_t renderStage;
-
-    // Vertex shader params
-    // <param id:value>
-
-    // Fragment shader params
-    // <param id:value>
 };

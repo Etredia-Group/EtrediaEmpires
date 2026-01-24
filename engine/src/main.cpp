@@ -34,19 +34,32 @@ int main(int argc, char **argv)
 
 	glfwMakeContextCurrent(window);
 
-	// Setup assets
-	AssetManager assetManager;
-	assetManager.Start();
-	//assetManager.LoadShaders();
+	// Setup Asset Manager
+	Engine::assetManager = Allocate<AssetManager>();
+	Engine::assetManager->Start();
+	Engine::assetManager->LoadDir(AssetInfo::SHADER, "assets/shaders");
+	Engine::assetManager->LoadDir(AssetInfo::MATERIAL, "assets/materials");
 
-	// Setup Renderer
-	// assetManager.LoadAsync(AssetInfo::MATERIAL, "assets/materials/helloworld.mat");
-	// AssetHandle baseMaterialHandle = assetManager.Find("assets/materials/helloworld.mat");
-	// AssetMaterial baseMaterial = assetManager.Get<AssetMaterial>(baseMaterialHandle);
+	// Load assets
+	Engine::assetManager->LoadAsync(AssetInfo::MAP_MESH, "assets/map/states.map");
 
-	//Setup Engine
-	Engine::assetManager = &assetManager;
+	// Setup renderer TODO: builder
 	Engine::renderer = reinterpret_cast<IRenderer*>(Allocate<MagnumRenderer>(window));
+	
+	AssetMapMesh &states = Engine::assetManager->FindOnce<AssetMapMesh>("assets/map/states.map");
+	Engine::renderer->RegisterMapMesh(&states.content);
+	
+	//TODO: ShaderRefs builder from set of AssetMaterial
+	AssetMaterial &provincesMaterial = Engine::assetManager->FindOnce<AssetMaterial>("assets/materials/provinces.mat");
+	AssetShader &vertProv = Engine::assetManager->FindOnce<AssetShader>(provincesMaterial.vertexShaderAssetID);
+	AssetShader &fragProv = Engine::assetManager->FindOnce<AssetShader>(provincesMaterial.fragmentShaderAssetID);
+	Engine::renderer->RegisterMaterials({
+		.vertProvinces = &vertProv,
+		.fragProvinces = &fragProv
+	});
+	
+	Engine::renderer->Init();
+	Engine::renderer->SetCamera({.zoom = 100.0f});
 	
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
 		Engine::renderer->ResizeWindow(width, height);
@@ -63,11 +76,7 @@ int main(int argc, char **argv)
 
 	// Free memory
 	LOG(INFO, "Exit...");
-	if (Engine::assetManager != nullptr)
-	{ // Wait for asset manager to clean and shutdown
-		Engine::assetManager->Shutdown();
-		while(Engine::assetManager->isRunning.load());
-	}
+	Engine::Shutdown();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	//TODO: check Unregister in other threads and make threaded module base class

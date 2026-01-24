@@ -4,16 +4,14 @@
 #include <nlohmann/json.hpp>
 #include <xxhash.h>
 #include <string>
-#include "AssetData.hpp"
+#include <ee_engine_api/AssetData.hpp>
 
 using json = nlohmann::json;
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-    AssetVulkanMaterial,
+    AssetMaterial,
     vertexShaderAssetID,
-    fragmentShaderAssetID,
-    renderType,
-    renderStage
+    fragmentShaderAssetID
 )
 
 int main(int argc, char **argv)
@@ -51,7 +49,7 @@ int main(int argc, char **argv)
             data[key] = assetId;
         }
 
-        AssetVulkanMaterial material = data.get<AssetVulkanMaterial>();
+        AssetMaterial material = data.get<AssetMaterial>();
         fout.write(reinterpret_cast<const char*>(&material), sizeof(material));
 
         fin.close();

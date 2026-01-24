@@ -10,6 +10,8 @@ public:
     static AssetManager *assetManager;
     static IRenderer *renderer;
 
+    static void Shutdown();
+
 private:
     Engine();
 };
