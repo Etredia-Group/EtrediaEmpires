@@ -44,22 +44,26 @@ int main(int argc, char **argv)
 	Engine::assetManager->LoadAsync(AssetInfo::MAP_MESH, "assets/map/states.map");
 
 	// Setup renderer TODO: builder
-	Engine::renderer = reinterpret_cast<IRenderer*>(Allocate<MagnumRenderer>(window));
+	Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_magnum::MagnumRenderer>(window));
 	
-	AssetMapMesh &states = Engine::assetManager->FindOnce<AssetMapMesh>("assets/map/states.map");
+	ee_assets::AssetMapMesh &states = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/states.map");
 	Engine::renderer->RegisterMapMesh(&states.content);
 	
 	//TODO: ShaderRefs builder from set of AssetMaterial
-	AssetMaterial &provincesMaterial = Engine::assetManager->FindOnce<AssetMaterial>("assets/materials/provinces.mat");
-	AssetShader &vertProv = Engine::assetManager->FindOnce<AssetShader>(provincesMaterial.vertexShaderAssetID);
-	AssetShader &fragProv = Engine::assetManager->FindOnce<AssetShader>(provincesMaterial.fragmentShaderAssetID);
+	ee_assets::AssetMaterial &provincesMaterial =
+		Engine::assetManager->FindOnce<ee_assets::AssetMaterial>("assets/materials/provinces.mat");
+	ee_assets::AssetShader &vertProv = Engine::assetManager->FindOnce<ee_assets::AssetShader>(provincesMaterial.vertexShaderAssetID);
+	ee_assets::AssetShader &fragProv = Engine::assetManager->FindOnce<ee_assets::AssetShader>(provincesMaterial.fragmentShaderAssetID);
 	Engine::renderer->RegisterMaterials({
 		.vertProvinces = &vertProv,
 		.fragProvinces = &fragProv
 	});
 	
 	Engine::renderer->Init();
-	Engine::renderer->SetCamera({.zoom = 100.0f});
+	Engine::renderer->SetCamera({
+		.position = {1000.0f, 1000.0f},
+		.zoom = 2000.0f
+	});
 	
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
 		Engine::renderer->ResizeWindow(width, height);

@@ -3,43 +3,43 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Logger.h"
 
-IRenderer::IRenderer(GLFWwindow *window)
+ee_engine::IRenderer::IRenderer(GLFWwindow *window)
 {
     this->window = window;
 	glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
 	screenAspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
 }
 
-IRenderer::~IRenderer()
+ee_engine::IRenderer::~IRenderer()
 {
 	
 }
 
-void IRenderer::RegisterMaterials(const ShaderRefs &shaders)
+void ee_engine::IRenderer::RegisterMaterials(const ShaderRefs &shaders)
 {
 	this->shaders = shaders;
 }
 
-void IRenderer::RegisterMapMesh(MapMesh* mapMesh)
+void ee_engine::IRenderer::RegisterMapMesh(MapMesh* mapMesh)
 {
 	this->mapMesh = mapMesh;
 }
 
-void IRenderer::Draw()
+void ee_engine::IRenderer::Draw()
 {
 	Clear();
 	DrawMap();
 	DrawUI();
 }
 
-void IRenderer::ResizeWindow(int width, int height)
+void ee_engine::IRenderer::ResizeWindow(int width, int height)
 {
 	screenWidth = width;
 	screenHeight = height;
 	screenAspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
 }
 
-void IRenderer::SetCamera(const CameraTransform &camera)
+void ee_engine::IRenderer::SetCamera(const CameraTransform &camera)
 {
 	if (camera.zoom <= 0)
 	{
@@ -65,16 +65,4 @@ void IRenderer::SetCamera(const CameraTransform &camera)
 	viewProjection = P * V;
 
 	ApplyCamera();
-}
-
-void IRenderer::SetMapTransform(const MeshTransform &mapTransform)
-{
-	this->mapTransform = mapTransform;
-
-	glm::mat4 M(1.0f);
-	M = glm::translate(M, glm::vec3(mapTransform.position, 0.0f));
-    M = glm::rotate(M, mapTransform.rotation, glm::vec3(0.0f, 0.0f, 1.0f));
-    M = glm::scale(M, glm::vec3(mapTransform.scale, 1.0f));
-
-	ApplyMapTransform();
 }

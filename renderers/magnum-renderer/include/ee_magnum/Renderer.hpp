@@ -13,33 +13,35 @@
 
 using namespace Magnum;
 
-class MagnumRenderer : public IRenderer
+namespace ee_magnum
 {
-public:
-    MagnumRenderer(GLFWwindow *window);
-    ~MagnumRenderer();
+    class MagnumRenderer : public ee_engine::IRenderer
+    {
+    public:
+        MagnumRenderer(GLFWwindow *window);
+        ~MagnumRenderer();
+        
+        void Init() override;
+        void Shutdown() override;
     
-    void Init() override;
-    void Shutdown() override;
-
-protected:
-    void Clear() override;
-    void DrawMap() override;
-    void DrawUI() override;
-
-    void ApplyCamera() override;
-    void ApplyMapTransform() override;
-
-private:
-    Platform::GLContext context;
-
-    std::vector<GL::Mesh> provinceMeshes;
-    GL::Buffer provinceSSBO;
-    ProvinceMaterial *provinceMaterial;
-
-    void ValidateSupport();
-    void LoadShaders();
-    void LoadProvinces();
-
-    void ApplyMapMVP();
-};
+    protected:
+        void Clear() override;
+        void DrawMap() override;
+        void DrawUI() override;
+    
+        void ApplyCamera() override;
+    
+    private:
+        Platform::GLContext context;
+    
+        std::vector<GL::Mesh> provinceMeshes;
+        GL::Buffer provinceSSBO;
+        ProvinceMaterial *provinceMaterial;
+    
+        void ValidateSupport();
+        void LoadShaders();
+        void LoadProvinces();
+    
+        void ApplyMapMVP();
+    };
+}

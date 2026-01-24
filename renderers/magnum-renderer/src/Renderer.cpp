@@ -14,14 +14,14 @@
 
 using namespace Math::Literals;
 
-MagnumRenderer::MagnumRenderer(GLFWwindow *window) : IRenderer(window)
+ee_magnum::MagnumRenderer::MagnumRenderer(GLFWwindow *window) : IRenderer(window)
 {
     ValidateSupport(); 
 
     LOG(INFO, "Renderer created");   
 }
 
-void MagnumRenderer::Init()
+void ee_magnum::MagnumRenderer::Init()
 {
     LOG(INFO, "GLSL version: %d", GL::Context::current().version());
 
@@ -31,12 +31,12 @@ void MagnumRenderer::Init()
     LOG(INFO, "Renderer initialized");
 }
 
-void MagnumRenderer::Clear()
+void ee_magnum::MagnumRenderer::Clear()
 {
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color);
 }
 
-void MagnumRenderer::DrawMap()
+void ee_magnum::MagnumRenderer::DrawMap()
 {
     ApplyCamera();
     for (uint32_t i = 0; i < provinceMeshes.size(); i++)
@@ -46,39 +46,25 @@ void MagnumRenderer::DrawMap()
     }
 }
 
-void MagnumRenderer::DrawUI()
+void ee_magnum::MagnumRenderer::DrawUI()
 {
     
 }
 
-void MagnumRenderer::ValidateSupport()
+void ee_magnum::MagnumRenderer::ValidateSupport()
 {
     
 }
 
-void MagnumRenderer::ApplyCamera()
-{
-    ApplyMapMVP();
-}
-
-void MagnumRenderer::ApplyMapTransform()
-{
-    ApplyMapMVP();
-}
-
-void MagnumRenderer::ApplyMapMVP()
+void ee_magnum::MagnumRenderer::ApplyCamera()
 {
     Matrix4 viewProjection {Magnum::NoInit};
     std::memcpy(viewProjection.data(), glm::value_ptr(this->viewProjection), sizeof(float) * 16);
 
-    Matrix4 mapModel {Magnum::NoInit};
-    std::memcpy(mapModel.data(), glm::value_ptr(this->mapModel), sizeof(float) * 16);
-
-
-    provinceMaterial->setModelViewProjection(mapModel, viewProjection);
+    provinceMaterial->setViewProjection(viewProjection);
 }
 
-void MagnumRenderer::LoadShaders()
+void ee_magnum::MagnumRenderer::LoadShaders()
 {
     provinceMaterial = Allocate<ProvinceMaterial>(std::string(
         reinterpret_cast<const char*>(shaders.vertProvinces->content), 
@@ -91,12 +77,12 @@ void MagnumRenderer::LoadShaders()
     LOG(INFO, "Shaders loaded");
 }
 
-void MagnumRenderer::LoadProvinces()
+void ee_magnum::MagnumRenderer::LoadProvinces()
 {
-    std::vector<ProvinceSSBO> provincesData;
+    std::vector<ee_engine::ProvinceSSBO> provincesData;
     for (auto& [state, provs]: mapMesh->states)
     {
-        for (MapMesh::Province &province: provs)
+        for (ee_engine::MapMesh::Province &province: provs)
         {
             GL::Mesh stateMesh;
 
@@ -107,7 +93,7 @@ void MagnumRenderer::LoadProvinces()
 
             provinceMeshes.push_back(std::move(stateMesh));
 
-            ProvinceSSBO data {
+            ee_engine::ProvinceSSBO data {
                 .stateId = state,
                 .color = state
             };
@@ -124,7 +110,7 @@ void MagnumRenderer::LoadProvinces()
 
 }
 
-void MagnumRenderer::Shutdown()
+void ee_magnum::MagnumRenderer::Shutdown()
 {
     provinceMeshes.clear();
     provinceSSBO = GL::Buffer{NoCreate};
@@ -133,7 +119,7 @@ void MagnumRenderer::Shutdown()
     provinceMaterial = nullptr;
 }
 
-MagnumRenderer::~MagnumRenderer()
+ee_magnum::MagnumRenderer::~MagnumRenderer()
 {
     
 }

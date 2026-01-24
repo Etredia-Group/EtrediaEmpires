@@ -17,19 +17,23 @@
 
 using namespace Magnum;
 
-class BaseMaterial : public GL::AbstractShaderProgram
+namespace ee_magnum
 {
-public:
-    void setModelViewProjection(const Matrix4 &m, const Matrix4 &vp);
-
-protected:
-    explicit BaseMaterial(const std::string &vertSrc, const std::string &fragSrc);
-};
-
-class ProvinceMaterial : public BaseMaterial
-{
-public:
-    explicit ProvinceMaterial(const std::string &vertSrc, const std::string &fragSrc);
+    class BaseMaterial : public GL::AbstractShaderProgram
+    {
+    public:
+        void setModel(const Matrix4 &model);
+        void setViewProjection(const Matrix4 &vewProjection);
     
-    void setId(const uint32_t &id);
-};
+    protected:
+        explicit BaseMaterial(const std::string &vertSrc, const std::string &fragSrc);
+    };
+    
+    class ProvinceMaterial : public BaseMaterial
+    {
+    public:
+        explicit ProvinceMaterial(const std::string &vertSrc, const std::string &fragSrc);
+        
+        void setId(const uint32_t &id);
+    };
+}

@@ -92,10 +92,10 @@ public:
     void LoadAsync(AssetInfo::Type type, const std::filesystem::path &path);
     AssetHandle& Find(const std::filesystem::path &path);
     AssetHandle& Find(const uint32_t &id);
-    template <Asset T> T& FindOnce(const std::filesystem::path &path);
-    template <Asset T> T& FindOnce(const uint32_t &id);
+    template <ee_assets::Asset T> T& FindOnce(const std::filesystem::path &path);
+    template <ee_assets::Asset T> T& FindOnce(const uint32_t &id);
     void Redirect(AssetHandle &handle, void *resource);
-    template <Asset T> T& Get(const AssetHandle &handle);
+    template <ee_assets::Asset T> T& Get(const AssetHandle &handle);
     void Free(AssetHandle &handle);
 
 private:
@@ -111,10 +111,10 @@ private:
     std::vector<size_t> freeAssetSlots;
     std::vector<AssetLoadingEntry> loadingEntries;
 
-    std::vector<AssetBinary*> binaryStorage;
-    std::vector<AssetMapMesh*> mapMeshesStorage;
-    std::vector<AssetShader*> shadersStorage;
-    std::vector<AssetMaterial*> materialsStorage;
+    std::vector<ee_assets::AssetBinary*> binaryStorage;
+    std::vector<ee_assets::AssetMapMesh*> mapMeshesStorage;
+    std::vector<ee_assets::AssetShader*> shadersStorage;
+    std::vector<ee_assets::AssetMaterial*> materialsStorage;
 
     void Threading();
     void Request(const AssetStreamCommand &command);
@@ -123,10 +123,10 @@ private:
     void ProcessCommand(AssetStreamCommand &command);
     void Release();
 
-    template<Asset T> void ClearStorage(std::vector<T*> &storage);
+    template<ee_assets::Asset T> void ClearStorage(std::vector<T*> &storage);
 };
 
-template <Asset T> T& AssetManager::Get(const AssetHandle &handle)
+template <ee_assets::Asset T> T& AssetManager::Get(const AssetHandle &handle)
 {
     std::atomic<void*> result;
     AssetStreamCommand command {
@@ -139,17 +139,17 @@ template <Asset T> T& AssetManager::Get(const AssetHandle &handle)
     return *reinterpret_cast<T*>(command.out->load());
 }
 
-template <Asset T> T& AssetManager::FindOnce(const std::filesystem::path &path)
+template <ee_assets::Asset T> T& AssetManager::FindOnce(const std::filesystem::path &path)
 {
     return Get<T>(Find(path));
 }
 
-template <Asset T> T& AssetManager::FindOnce(const uint32_t &id)
+template <ee_assets::Asset T> T& AssetManager::FindOnce(const uint32_t &id)
 {
     return Get<T>(Find(id));
 }
 
-template<Asset T> void AssetManager::ClearStorage(std::vector<T*> &storage)
+template<ee_assets::Asset T> void AssetManager::ClearStorage(std::vector<T*> &storage)
 {
     for (T* &resource : storage)
     {

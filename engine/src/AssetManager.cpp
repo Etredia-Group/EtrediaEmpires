@@ -177,7 +177,7 @@ void AssetManager::Loop()
                 {
                     case AssetInfo::MAP_MESH:
                     {
-                        AssetMapMesh* mesh = Allocate<AssetMapMesh>(entry.file->data, entry.file->size);
+                        ee_assets::AssetMapMesh* mesh = Allocate<ee_assets::AssetMapMesh>(entry.file->data, entry.file->size);
                         mapMeshesStorage.push_back(mesh);
                         Redirect(entry.handle, mapMeshesStorage.back());
                         break;
@@ -186,7 +186,7 @@ void AssetManager::Loop()
 
                     case AssetInfo::SHADER:
                     {
-                        AssetShader* shader = Allocate<AssetShader>(entry.file->data, entry.file->size);
+                        ee_assets::AssetShader* shader = Allocate<ee_assets::AssetShader>(entry.file->data, entry.file->size);
                         shadersStorage.push_back(shader);
                         Redirect(entry.handle, shadersStorage.back());
                         break;
@@ -194,10 +194,10 @@ void AssetManager::Loop()
 
                     case AssetInfo::MATERIAL:
                     {
-                        AssetMaterial* material = Allocate<AssetMaterial>();
-                        if (entry.file->size < sizeof(AssetMaterial))
+                        ee_assets::AssetMaterial* material = Allocate<ee_assets::AssetMaterial>();
+                        if (entry.file->size < sizeof(ee_assets::AssetMaterial))
                             LOG(CRITICAL, "File size is less than needed for material");
-                        std::memcpy(material, entry.file->data, sizeof(AssetMaterial));
+                        std::memcpy(material, entry.file->data, sizeof(ee_assets::AssetMaterial));
                         materialsStorage.push_back(material);
                         Redirect(entry.handle, materialsStorage.back());
                         break;
@@ -211,7 +211,7 @@ void AssetManager::Loop()
                     case AssetInfo::BINARY:
                     default:
                     {
-                        AssetBinary* data = Allocate<AssetBinary>(entry.file->data, entry.file->size);
+                        ee_assets::AssetBinary* data = Allocate<ee_assets::AssetBinary>(entry.file->data, entry.file->size);
                         binaryStorage.push_back(data);
                         Redirect(entry.handle, binaryStorage.back());
                         break;

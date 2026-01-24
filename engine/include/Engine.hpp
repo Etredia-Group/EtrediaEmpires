@@ -8,7 +8,7 @@ class Engine
 {
 public:
     static AssetManager *assetManager;
-    static IRenderer *renderer;
+    static ee_engine::IRenderer *renderer;
 
     static void Shutdown();
 

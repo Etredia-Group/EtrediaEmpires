@@ -1,7 +1,7 @@
 #include <ee_magnum/Materials.hpp>
 #include "Logger.h"
 
-BaseMaterial::BaseMaterial(const std::string &vertSrc, const std::string &fragSrc)
+ee_magnum::BaseMaterial::BaseMaterial(const std::string &vertSrc, const std::string &fragSrc)
 {
     GL::Shader vert {GL::Version::GL430, GL::Shader::Type::Vertex};
     GL::Shader frag {GL::Version::GL430, GL::Shader::Type::Fragment};
@@ -20,18 +20,22 @@ BaseMaterial::BaseMaterial(const std::string &vertSrc, const std::string &fragSr
     link();
 }
 
-void BaseMaterial::setModelViewProjection(const Matrix4 &m, const Matrix4 &vp)
+void ee_magnum::BaseMaterial::setModel(const Matrix4 &m)
 {
     setUniform(TRANSFORM_UNIFORM, m);
+}
+
+void ee_magnum::BaseMaterial::setViewProjection(const Matrix4 &vp)
+{
     setUniform(CAMERA_UNIFORM, vp);
 }
 
-ProvinceMaterial::ProvinceMaterial(const std::string &vertSrc, const std::string &fragSrc): BaseMaterial(vertSrc, fragSrc)
+ee_magnum::ProvinceMaterial::ProvinceMaterial(const std::string &vertSrc, const std::string &fragSrc): BaseMaterial(vertSrc, fragSrc)
 {
 
 }
 
-void ProvinceMaterial::setId(const uint32_t &id)
+void ee_magnum::ProvinceMaterial::setId(const uint32_t &id)
 {
     setUniform(PROVINCES_ID_UNIFORM, id);
 }

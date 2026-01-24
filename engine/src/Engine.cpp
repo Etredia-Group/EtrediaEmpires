@@ -2,7 +2,7 @@
 #include <ee_utils/allocator.hpp>
 
 AssetManager* Engine::assetManager;
-IRenderer* Engine::renderer;
+ee_engine::IRenderer* Engine::renderer;
 
 void Engine::Shutdown()
 {
