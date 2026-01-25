@@ -38,6 +38,8 @@ namespace ee_engine
         
         virtual void ResizeWindow(int width, int height);
         void SetCamera(const CameraTransform &camera);
+
+        CameraTransform getCamera();
     
     protected:
         int screenWidth, screenHeight;

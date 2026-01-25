@@ -4,6 +4,8 @@
 #include <ee_utils/allocator.hpp>
 
 #include "compile_config.hpp"
+#include "GLFWInput.hpp"
+#include "Actions.hpp"
 #include "Engine.hpp"
 
 #include <GLFW/glfw3.h>
@@ -33,6 +35,7 @@ int main(int argc, char **argv)
 	else LOG(INFO, "GLFW Window created");
 
 	glfwMakeContextCurrent(window);
+	Engine::window = window;
 
 	// Setup Asset Manager
 	Engine::assetManager = Allocate<AssetManager>();
@@ -42,6 +45,9 @@ int main(int argc, char **argv)
 
 	// Load assets
 	Engine::assetManager->LoadAsync(AssetInfo::MAP_MESH, "assets/map/states.map");
+
+	// Setup input manager TODO: builder
+	Engine::input = Allocate<GLFWInput>(Actions::mappings);
 
 	// Setup renderer TODO: builder
 	Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_magnum::MagnumRenderer>(window));
@@ -61,7 +67,7 @@ int main(int argc, char **argv)
 	
 	Engine::renderer->Init();
 	Engine::renderer->SetCamera({
-		.position = {1000.0f, 1000.0f},
+		//.position = {1000.0f, 1000.0f},
 		.zoom = 2000.0f
 	});
 	
@@ -75,14 +81,13 @@ int main(int argc, char **argv)
 		Engine::renderer->Draw();
 
 		glfwSwapBuffers(window);
+		Engine::input->Poll();
 		glfwPollEvents();
 	}
 
 	// Free memory
 	LOG(INFO, "Exit...");
 	Engine::Shutdown();
-	glfwDestroyWindow(window);
-	glfwTerminate();
 	//TODO: check Unregister in other threads and make threaded module base class
 	Logger::trace->Unregister_Thread(0);
 	Logger::trace->Release();

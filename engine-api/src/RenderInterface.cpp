@@ -66,3 +66,5 @@ void ee_engine::IRenderer::SetCamera(const CameraTransform &camera)
 
 	ApplyCamera();
 }
+
+ee_engine::CameraTransform ee_engine::IRenderer::getCamera() {return this->camera;}
