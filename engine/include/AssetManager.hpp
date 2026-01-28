@@ -2,6 +2,7 @@
 #include "FileSystem.hpp"
 #include <ee_engine_api/AssetData.hpp>
 
+#include "Logger.h"
 #include <vector>
 #include <unordered_map>
 #include <filesystem>
@@ -26,16 +27,7 @@ struct AssetHandle
 class AssetInfo
 {
 public:
-    enum Type
-    {
-        BINARY,
-
-        MAP_MESH,
-
-        SHADER,
-        MATERIAL,
-        IMAGE
-    } type = BINARY; 
+    ee_assets::AssetType type = ee_assets::BINARY; 
 
     std::atomic<bool> isReady;
     AssetAddress* resourceAddress;
@@ -72,7 +64,7 @@ struct AssetStreamCommand
     AssetHandle target;
     uint32_t targetId = INVALID_ASSET_ID;
     std::filesystem::path targetPath;
-    AssetInfo::Type targetType = AssetInfo::BINARY;
+    ee_assets::AssetType targetType = ee_assets::BINARY;
     std::atomic<void*>* out;
 };
 
@@ -87,9 +79,9 @@ public:
     void Start();
     void Shutdown();
 
-    void LoadDir(AssetInfo::Type type, const std::filesystem::path &path);
+    void LoadDir(ee_assets::AssetType type, const std::filesystem::path &path);
     
-    void LoadAsync(AssetInfo::Type type, const std::filesystem::path &path);
+    void LoadAsync(ee_assets::AssetType type, const std::filesystem::path &path);
     AssetHandle& Find(const std::filesystem::path &path);
     AssetHandle& Find(const uint32_t &id);
     template <ee_assets::Asset T> T& FindOnce(const std::filesystem::path &path);
@@ -112,6 +104,7 @@ private:
     std::vector<AssetLoadingEntry> loadingEntries;
 
     std::vector<ee_assets::AssetBinary*> binaryStorage;
+    std::vector<ee_assets::AssetSave*> savesStorage;
     std::vector<ee_assets::AssetMapMesh*> mapMeshesStorage;
     std::vector<ee_assets::AssetShader*> shadersStorage;
     std::vector<ee_assets::AssetMaterial*> materialsStorage;
@@ -123,6 +116,8 @@ private:
     void ProcessCommand(AssetStreamCommand &command);
     void Release();
 
+    template<ee_assets::Asset T> void FinishLoadConstruct(AssetLoadingEntry &loaded, std::vector<T*> &storage);
+    template<ee_assets::Asset T> void FinishLoadPlain(AssetLoadingEntry &loaded, std::vector<T*> &storage);
     template<ee_assets::Asset T> void ClearStorage(std::vector<T*> &storage);
 };
 
@@ -147,6 +142,23 @@ template <ee_assets::Asset T> T& AssetManager::FindOnce(const std::filesystem::p
 template <ee_assets::Asset T> T& AssetManager::FindOnce(const uint32_t &id)
 {
     return Get<T>(Find(id));
+}
+
+template<ee_assets::Asset T> void AssetManager::FinishLoadConstruct(AssetLoadingEntry &loaded, std::vector<T*> &storage)
+{
+    T* resource = Allocate<T>(loaded.file->data, loaded.file->size);
+    storage.push_back(resource);
+    Redirect(loaded.handle, storage.back());
+}
+
+template<ee_assets::Asset T> void AssetManager::FinishLoadPlain(AssetLoadingEntry &loaded, std::vector<T*> &storage)
+{
+    T* resource = Allocate<T>();
+    if (loaded.file->size < sizeof(T))
+        LOG(CRITICAL, "File size is less than needed for asset of type: %d", typeid(T).name());
+    std::memcpy(resource, loaded.file->data, sizeof(T));
+    storage.push_back(resource);
+    Redirect(loaded.handle, storage.back());
 }
 
 template<ee_assets::Asset T> void AssetManager::ClearStorage(std::vector<T*> &storage)

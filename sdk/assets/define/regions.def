@@ -1,0 +1,19 @@
+#ifndef MAP
+#define MAP(name, color)
+#endif
+
+MAP(elnia, 0xFF0000)
+MAP(south_hleria, 0xFFD800)
+MAP(siburia_central, 0xFF00DC)
+MAP(siburia, 0xFF0000)
+MAP(savatia, 0xFF0000)
+MAP(east_monfua, 0xFF0000)
+
+MAP(dineria, 0x0400FF)
+MAP(perdania, 0xFF6A00)
+MAP(arstinia, 0xFF0000)
+MAP(ortostan, 0xFF0000)
+MAP(zerandia, 0xFF0000)
+MAP(mgahvatia, 0xFF0000)
+
+#undef MAP

@@ -1,4 +1,3 @@
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <cstdint>
@@ -40,7 +39,9 @@ struct vertex { float x,y; };
 
 struct BGRHash {
     size_t operator()(const BGR& c) const noexcept {
-        return (c.r<<16)|(c.g<<8)|c.b;
+        return static_cast<uint32_t>(c.r) << 16 | 
+            static_cast<uint32_t>(c.g) << 8 | 
+            static_cast<uint32_t>(c.b);
     }
 };
 

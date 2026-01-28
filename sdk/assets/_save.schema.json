@@ -1,0 +1,23 @@
+{
+    "type": "object",
+    "title": "Etredia Empires savegame data",
+    "description": "Contains initial state of a game (e.g. scenarios, saves)",
+
+    "properties": {
+        "subjects": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "tag": {"type": "string"},
+                    "color": {"type": "string"},
+                    
+                    "regions": {
+                        "type": "array",
+                        "items": {"type": "string"}
+                    }
+                }
+            }
+        }
+    }
+}

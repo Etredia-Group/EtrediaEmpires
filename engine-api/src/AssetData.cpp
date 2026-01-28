@@ -9,9 +9,12 @@ YOU CAN PREVENT SOURCE BUFFER FROM CLOSING.
 IT CAN BE USED FOR STORING ASSET DATA WITHOUT COPY.
 IN THIS CASE, YOU MUST SET SOURCE TO NULLPTR AND FREE BUFFER YOURSELF.
 
+TODO: make binary format describing for common functions instead of individual serialize/deserialize functions
+TODO: parallelize convertion loops
+
 */
 
-ee_assets::AssetBinary::AssetBinary(uint8_t* &source, const size_t &sourceSize)
+ee_assets::AssetBinary::AssetBinary(uint8_t* &source, const size_t sourceSize)
 {
     content = source;
     size = sourceSize;
@@ -26,7 +29,7 @@ ee_assets::AssetBinary::~AssetBinary()
 
 
 
-ee_assets::AssetMapMesh::AssetMapMesh(uint8_t* &source, const size_t &sourceSize)
+ee_assets::AssetMapMesh::AssetMapMesh(uint8_t* &source, const size_t sourceSize)
 {
     uint8_t* buffer = source;
     uint8_t* pointer = source;
@@ -86,4 +89,79 @@ ee_assets::AssetMapMesh::AssetMapMesh(uint8_t* &source, const size_t &sourceSize
     }
 
     DeallocateArray(buffer);
+}
+
+
+ee_assets::AssetSave::AssetSave(uint8_t* &source, const size_t sourceSize)
+{
+    uint8_t* buffer = source;
+    uint8_t* pointer = source;
+    size_t leftoverSize = sourceSize;
+    source = nullptr;
+
+    uint16_t subjectsCount = static_cast<uint16_t>(subjects.size());
+    ee_utils::readNext(&subjectsCount, pointer, leftoverSize, sizeof(uint16_t));
+
+    for (uint16_t i = 0; i < subjectsCount; i++)
+    {
+        ee_data::Subject subject;
+
+        ee_utils::readNext(&subject.tag, pointer, leftoverSize, sizeof(subject.tag));
+        ee_utils::readNext(&subject.color, pointer, leftoverSize, sizeof(subject.color));
+        
+        uint16_t regionsCount = 0;
+        ee_utils::readNext(&regionsCount, pointer, leftoverSize, sizeof(uint16_t));
+        subject.regions.resize(regionsCount);
+        ee_utils::readNext(
+            subject.regions.data(),
+            pointer,
+            leftoverSize,
+            subject.regions.size() * sizeof(uint32_t)
+        );
+
+        subjects.push_back(subject);
+    }
+
+    DeallocateArray(buffer);
+}
+
+
+
+
+
+// SERIALIZERS
+
+uint8_t* ee_assets::AssetSave::Serialize(size_t &size)
+{
+    size = sizeof(uint16_t);
+    for (ee_data::Subject &subject : subjects)
+    {
+        size += sizeof(subject.tag);
+        size += sizeof(subject.color);
+        size += sizeof(uint16_t) + subject.regions.size() * sizeof(uint32_t);
+    }
+
+    size_t leftover = size;
+    uint8_t *result = AllocateArray<uint8_t>(size);
+    uint8_t *pointer = result;
+
+    uint16_t subjectsCount = static_cast<uint16_t>(subjects.size());
+    ee_utils::writeNext(pointer, &subjectsCount, leftover, sizeof(uint16_t));
+
+    for (ee_data::Subject &subject : subjects)
+    {
+        ee_utils::writeNext(pointer, &subject.tag, leftover, sizeof(subject.tag));
+        ee_utils::writeNext(pointer, &subject.color, leftover, sizeof(subject.color));
+        
+        uint16_t regionsCount = static_cast<uint16_t>(subject.regions.size());
+        ee_utils::writeNext(pointer, &regionsCount, leftover, sizeof(uint16_t));
+        ee_utils::writeNext(
+            pointer,
+            subject.regions.data(),
+            leftover,
+            subject.regions.size() * sizeof(uint32_t)
+        );
+    }
+
+    return result;
 }

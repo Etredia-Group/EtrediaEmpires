@@ -87,7 +87,7 @@ void AssetManager::Request(const AssetStreamCommand::Type &type)
 	commands.push(AssetStreamCommand {.type = type});
 }
 
-void AssetManager::LoadAsync(AssetInfo::Type type, const std::filesystem::path &path)
+void AssetManager::LoadAsync(ee_assets::AssetType type, const std::filesystem::path &path)
 {
     AssetStreamCommand command {
         .type = AssetStreamCommand::LOAD,
@@ -166,6 +166,7 @@ void AssetManager::Loop()
         }
         incompleteCommands.clear();
 
+        // TODO: FinishLoadTasks()
 		for (AssetLoadingEntry &entry : loadingEntries)
         {
             bool isReady = entry.fileOwner->PollReady(*entry.file);
@@ -175,47 +176,26 @@ void AssetManager::Loop()
 
                 switch (asset.type)
                 {
-                    case AssetInfo::MAP_MESH:
-                    {
-                        ee_assets::AssetMapMesh* mesh = Allocate<ee_assets::AssetMapMesh>(entry.file->data, entry.file->size);
-                        mapMeshesStorage.push_back(mesh);
-                        Redirect(entry.handle, mapMeshesStorage.back());
+                    case ee_assets::MAP_MESH:
+                        FinishLoadConstruct(entry, mapMeshesStorage);
                         break;
-                    }
-
-
-                    case AssetInfo::SHADER:
-                    {
-                        ee_assets::AssetShader* shader = Allocate<ee_assets::AssetShader>(entry.file->data, entry.file->size);
-                        shadersStorage.push_back(shader);
-                        Redirect(entry.handle, shadersStorage.back());
+                    case ee_assets::SAVE:
+                        FinishLoadConstruct(entry, savesStorage);
                         break;
-                    }
 
-                    case AssetInfo::MATERIAL:
-                    {
-                        ee_assets::AssetMaterial* material = Allocate<ee_assets::AssetMaterial>();
-                        if (entry.file->size < sizeof(ee_assets::AssetMaterial))
-                            LOG(CRITICAL, "File size is less than needed for material");
-                        std::memcpy(material, entry.file->data, sizeof(ee_assets::AssetMaterial));
-                        materialsStorage.push_back(material);
-                        Redirect(entry.handle, materialsStorage.back());
+                    case ee_assets::SHADER:
+                        FinishLoadConstruct(entry, shadersStorage);
                         break;
-                    }
-
-                    case AssetInfo::IMAGE:
-                    {
+                    case ee_assets::MATERIAL:
+                        FinishLoadPlain(entry, materialsStorage);
                         break;
-                    }
+                    case ee_assets::IMAGE:
+                        break;
 
-                    case AssetInfo::BINARY:
+                    case ee_assets::BINARY:
                     default:
-                    {
-                        ee_assets::AssetBinary* data = Allocate<ee_assets::AssetBinary>(entry.file->data, entry.file->size);
-                        binaryStorage.push_back(data);
-                        Redirect(entry.handle, binaryStorage.back());
+                        FinishLoadConstruct(entry, binaryStorage);
                         break;
-                    }
                 }
 
                 entry.fileOwner->Close(*entry.file);
@@ -234,6 +214,7 @@ void AssetManager::Loop()
 }
 void AssetManager::ProcessCommand(AssetStreamCommand &command)
 {
+    // TODO: method for each command
     switch(command.type)
 	{
 		case AssetStreamCommand::LOAD:
@@ -353,7 +334,7 @@ void AssetManager::Release()
     isRunning.store(false);
 }
 
-void AssetManager::LoadDir(AssetInfo::Type type, const std::filesystem::path &path)
+void AssetManager::LoadDir(ee_assets::AssetType type, const std::filesystem::path &path)
 {
     for (const std::filesystem::directory_entry &entry : std::filesystem::directory_iterator(path))
     {
