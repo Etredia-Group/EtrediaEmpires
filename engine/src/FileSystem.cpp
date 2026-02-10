@@ -1,6 +1,13 @@
-#include "FileSystem.hpp"
+module;
+
 #include "Logger.h"
-#include <ee_utils/allocator.hpp>
+#include <filesystem>
+#include <cstdint>
+#include <cstddef>
+
+module FileSystem;
+import allocator;
+
 
 IFileSystem::~IFileSystem()
 {
@@ -12,13 +19,13 @@ IFileSystem::~IFileSystem()
 
 #ifdef _WIN32
 
-FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const uint32_t flags)
+FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const std::uint32_t flags)
 {
     FileHandle* result = Allocate<FileHandle>();
 
-    #ifndef NDEBUG
+#ifndef NDEBUG
     result->debugPath = path;
-    #endif
+#endif
 
     DWORD createFileMode = 0;
 
@@ -28,13 +35,13 @@ FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const uint
         createFileMode |= GENERIC_WRITE;
 
     HANDLE file = CreateFileW(
-        path.c_str(),
-        createFileMode,
-        NULL,
-        NULL,
-        OPEN_EXISTING,
-        FILE_FLAG_OVERLAPPED,
-        NULL
+            path.c_str(),
+            createFileMode,
+            NULL,
+            NULL,
+            OPEN_EXISTING,
+            FILE_FLAG_OVERLAPPED,
+            NULL
     );
 
     if (file == INVALID_HANDLE_VALUE)
@@ -51,7 +58,7 @@ FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const uint
 
     if (freeFileSlots.size() > 0)
     {
-        size_t pos = freeFileSlots.back();
+        std::size_t pos = freeFileSlots.back();
         result->id = pos;
         activeFiles[pos] = result;
         freeFileSlots.pop_back();
@@ -65,20 +72,20 @@ FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const uint
     return *result;
 }
 
-void NativeFileSystem::ReadAsync(FileHandle &file, const uint32_t bufferSize, const uint32_t flags)
+void NativeFileSystem::ReadAsync(FileHandle &file, const std::uint32_t bufferSize, const std::uint32_t flags)
 {
     file.overlapped = {
-        .hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr)
+            .hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr)
     };
-    file.buffer = AllocateArray<uint8_t>(bufferSize);
+    file.buffer = AllocateArray<std::uint8_t>(bufferSize);
     file.bufferSize = bufferSize;
 
     BOOL isSync = ReadFile(
-        file.win32Handle,
-        file.buffer,
-        bufferSize,
-        NULL,
-        &file.overlapped
+            file.win32Handle,
+            file.buffer,
+            bufferSize,
+            NULL,
+            &file.overlapped
     );
 
     if (isSync || GetLastError() != ERROR_IO_PENDING)
@@ -116,7 +123,7 @@ bool NativeFileSystem::PollReady(FileHandle &file)
             return false;
         }
     }
-    
+
     return true;
 }
 

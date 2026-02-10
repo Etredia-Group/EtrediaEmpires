@@ -1,6 +1,10 @@
-#include "GLFWInput.hpp"
-#include "Engine.hpp"
+module;
+
 #include "Logger.h"
+#include <GLFW/glfw3.h>
+
+module GLFWInput;
+import Engine;
 
 GLFWInput::GLFWInput(ee_engine::InputHandlers handlers) : ee_engine::IInput(handlers)
 {
@@ -8,7 +12,7 @@ GLFWInput::GLFWInput(ee_engine::InputHandlers handlers) : ee_engine::IInput(hand
 
     glfwSetScrollCallback(Engine::window, [](GLFWwindow *window, double dx, double dy)  {
         reinterpret_cast<GLFWInput*>(glfwGetWindowUserPointer(window))->
-            handlers.zooming(static_cast<float>(dx), static_cast<float>(dy));
+                handlers.zooming(static_cast<float>(dx), static_cast<float>(dy));
     });
 
     LOG(INFO, "Input mappings initialized");

@@ -1,26 +1,14 @@
-if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif()
+include(${CMAKE_SOURCE_DIR}/cmake/library.cmake)
 
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-
-project(utils)
-
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
-    "src/*.cpp"
-    "src/*.c"
-    "include/*.hpp"
-    "include/*.h"
-)
-
+set(LIB utils)
 
 # Find dependencies
 
+find_package(Boost REQUIRED COMPONENTS lockfree)
+
 # Link library
 
-add_library(${PROJECT_NAME} ${SOURCES})
+add_library_target(${LIB})
 
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
+target_link_libraries(${LIB} PUBLIC p7)
+target_link_libraries(${LIB} PRIVATE Boost::lockfree)

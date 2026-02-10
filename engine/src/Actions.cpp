@@ -1,6 +1,9 @@
-#include "Actions.hpp"
-#include "Engine.hpp"
+module;
+
 #include <cmath>
+
+module Actions;
+import Engine;
 
 ee_engine::InputHandlers Actions::mappings {
     .zooming = Zoom,

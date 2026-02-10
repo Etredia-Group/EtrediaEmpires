@@ -1,3 +1,6 @@
+import AssetData;
+import GameData;
+
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -7,7 +10,6 @@
 #include <string>
 #include <charconv>
 #include <functional>
-#include <ee_engine_api/AssetData.hpp>
 
 using json = nlohmann::json;
 
@@ -23,11 +25,19 @@ namespace ee_data
     )
 }
 
+namespace ee_data
+{
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+        GameState,
+        subjects
+    )
+}
+
 namespace ee_assets
 {
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
         AssetSave,
-        subjects
+        content
     )
 
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
@@ -124,7 +134,7 @@ int main(int argc, char **argv)
         // Compile colors
         CompileRecursive(data, [](const std::basic_string<char> &key, json &value) {
             if (!value.is_string()) return;
-            
+
             const char* color_str = value.get_ref<const std::string&>().c_str() + 1;
             uint8_t b = 0, g = 0, r = 0;
             uint32_t hex = 0;

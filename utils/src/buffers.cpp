@@ -1,7 +1,12 @@
-#include <ee_utils/buffers.hpp>
+module;
+
+#include <cstdint>
+#include <cstddef>
 #include <cstring>
 
-bool ee_utils::readNext(void* dst, uint8_t* &srcPointer, size_t &srcLeftoverSize, const size_t &readSize)
+module buffers;
+
+bool ee_utils::readNext(void* dst, std::uint8_t* &srcPointer, std::size_t &srcLeftoverSize, const std::size_t &readSize)
 {
     if (srcLeftoverSize >= readSize)
     {
@@ -15,7 +20,7 @@ bool ee_utils::readNext(void* dst, uint8_t* &srcPointer, size_t &srcLeftoverSize
     return false;
 }
 
-bool ee_utils::writeNext(uint8_t* &dstPointer, void* src, size_t &dstLeftoverSize, const size_t &writeSize)
+bool ee_utils::writeNext(std::uint8_t* &dstPointer, void* src, std::size_t &dstLeftoverSize, const std::size_t &writeSize)
 {
     if (dstLeftoverSize >= writeSize)
     {

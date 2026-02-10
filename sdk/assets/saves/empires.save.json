@@ -1,33 +1,26 @@
 {
+  "content": {
     "subjects": [
-
-        {
-            "tag": "ESH",
-            "color": "#FF0000",
-
-            "regions": [
-                "elnia",
-                "south_hleria",
-                "siburia_central",
-                "siburia",
-                "savatia",
-                "east_monfua"
-            ]
-        },
-
-        {
-            "tag": "UCB",
-            "color": "#00FF00",
-
-            "regions": [
-                "dineria",
-                "perdania",
-                "arstinia",
-                "ortostan",
-                "zerandia",
-                "mgahvatia"
-            ]
-        }
-
+      {
+        "tag": "FSC",
+        "color": "#FF0000",
+        "regions": [
+          "pepene",
+          "scarna"
+        ]
+      },
+      {
+        "tag": "UCB",
+        "color": "#0000FF",
+        "regions": [
+          "dineria",
+          "perdania",
+          "arstinia",
+          "alende",
+          "zerandia",
+          "mgahvatia"
+        ]
+      }
     ]
+  }
 }
