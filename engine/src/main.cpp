@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     Engine::assetManager->LoadDir(ee_assets::MATERIAL, "assets/materials");
 
     // Load assets
-    Engine::assetManager->LoadAsync(ee_assets::MAP_MESH, "assets/map/regions.map");
+    Engine::assetManager->LoadAsync(ee_assets::MAP_MESH, "assets/map/ET.map");
     Engine::assetManager->LoadAsync(ee_assets::SAVE, "assets/scenarios/empires.save");
 
     // Setup input manager TODO: builder
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     // Setup renderer TODO: builder
     Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_magnum::MagnumRenderer>(window));
 
-    ee_assets::AssetMapMesh &states = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/regions.map");
+    ee_assets::AssetMapMesh &states = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/ET.map");
     Engine::renderer->RegisterMapMesh(&states.content);
 
     //TODO: ShaderRefs builder from set of AssetMaterial
@@ -78,9 +78,9 @@ int main(int argc, char **argv)
 
     // Setup Client TODO: builder
     Engine::client = Allocate<Client>();
-    AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
-    Engine::client->LoadSave(save);
-    Engine::client->Init();
+//    AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
+//    Engine::client->LoadSave(save);
+//    Engine::client->Init();
     Engine::client->Start();
 
     // Game loop
