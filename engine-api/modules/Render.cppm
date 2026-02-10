@@ -69,7 +69,8 @@ export namespace ee_engine
         void SetCamera(const CameraTransform &camera);
 
         constexpr CameraTransform getCamera() const noexcept {return camera;};
-
+        glm::vec2 ScreenToWorld(const float screenx, const float screenY);
+        glm::vec2 ScreenToWorld(const glm::vec2 &screenPos);
 
 
     protected:
@@ -78,6 +79,7 @@ export namespace ee_engine
         float screenAspect;
         CameraTransform camera;
         glm::mat4 viewProjection;
+        glm::mat4 viewProjectionInversed;
 
         GLFWwindow *window;
         MapMesh *mapMesh;

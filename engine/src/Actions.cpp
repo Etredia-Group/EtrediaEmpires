@@ -1,6 +1,7 @@
 module;
 
 #include <cmath>
+#include <glm/glm.hpp>
 
 module Actions;
 import Engine;
@@ -17,7 +18,13 @@ void Actions::Zoom(float dx, float dy)
     Engine::renderer->SetCamera(cam);
 }
 
-void Actions::MapScroll(float dx, float dy)
+void Actions::MapScroll(float x, float y, float lastX, float lastY)
 {
+    ee_engine::CameraTransform cam = Engine::renderer->getCamera();
 
+    glm::vec2 pos = Engine::renderer->ScreenToWorld(x, y);
+    glm::vec2 lastPos = Engine::renderer->ScreenToWorld(lastX, lastY);
+    cam.position -= pos - lastPos;
+
+    Engine::renderer->SetCamera(cam);
 }

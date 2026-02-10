@@ -72,8 +72,26 @@ void ee_engine::IRenderer::SetCamera(const CameraTransform &camera)
     );
 
     viewProjection = P * V;
+    viewProjectionInversed = glm::inverse(viewProjection);
 
     ApplyCamera();
+}
+
+glm::vec2 ee_engine::IRenderer::ScreenToWorld(const float screenX, const float screenY)
+{
+    return ScreenToWorld(glm::vec2(screenX, screenY));
+}
+
+glm::vec2 ee_engine::IRenderer::ScreenToWorld(const glm::vec2 &screenPos)
+{
+    float x = 2.0f * screenPos.x / screenWidth - 1.0f;
+    float y = -2.0f * screenPos.y / screenHeight + 1.0f;
+
+    glm::vec4 ndc(x, y, 0.0f, 1.0f);
+
+    glm::vec4 world = viewProjectionInversed * ndc;
+
+    return glm::vec2(world) / world.w;
 }
 
 void ee_engine::IRenderer::UpdateRegionCmd(ee_engine::RendererCommand &command)
