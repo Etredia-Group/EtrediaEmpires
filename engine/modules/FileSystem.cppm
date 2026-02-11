@@ -56,7 +56,7 @@ export
         std::vector<std::size_t> freeFileSlots;
     };
 
-    class NativeFileSystem : public IFileSystem {
+    class NativeFileSystem final : public IFileSystem {
     public:
         FileHandle &Open(const std::filesystem::path &path, const std::uint32_t flags) override;
 

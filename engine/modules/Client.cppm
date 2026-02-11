@@ -3,7 +3,7 @@ module;
 #include <cstdint>
 
 export module Client;
-import worker;
+import utils;
 import GameData;
 import DataChannel;
 import AssetManager;

@@ -6,7 +6,7 @@ module;
 #include <cstddef>
 
 module FileSystem;
-import allocator;
+import utils;
 
 
 IFileSystem::~IFileSystem()

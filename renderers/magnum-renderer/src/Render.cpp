@@ -19,7 +19,7 @@ module;
 #include <string>
 
 module MagnumRender;
-import allocator;
+import utils;
 
 using namespace Math::Literals;
 
@@ -96,18 +96,17 @@ void ee_magnum::MagnumRenderer::LoadProvinces()
     {
         for (ee_engine::MapMesh::Province &province: provs)
         {
-            GL::Mesh stateMesh;
+            GL::Mesh regionMesh;
 
-            stateMesh.setPrimitive(GL::MeshPrimitive::Triangles)
+            regionMesh.setPrimitive(GL::MeshPrimitive::Triangles)
                     .setCount(static_cast<Magnum::Int>(province.indices.size()))
                     .addVertexBuffer(GL::Buffer{province.vertices}, 0, GL::Attribute<0, Magnum::Vector2>{})
                     .setIndexBuffer(GL::Buffer{province.indices}, 0, GL::MeshIndexType::UnsignedShort);
 
-            provinceMeshes.push_back(std::move(stateMesh));
+            provinceMeshes.push_back(std::move(regionMesh));
 
             ee_engine::ProvinceSSBO data {
                     .regionId = region,
-                    //.color = region
                     .color = 0xFFFFFF
             };
 

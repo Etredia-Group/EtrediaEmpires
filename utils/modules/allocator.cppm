@@ -2,7 +2,7 @@ module;
 
 #include <utility>
 
-export module allocator;
+export module utils:allocator;
 
 export {
     template<typename T, typename... Args> T* Allocate(Args&&... args)

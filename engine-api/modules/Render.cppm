@@ -8,8 +8,8 @@ module;
 #include <cstddef>
 
 export module Render;
-import worker;
-import MapView;
+import utils;
+import views;
 import AssetData;
 
 export namespace ee_engine

@@ -11,7 +11,8 @@ module;
 #include <string>
 #include <cstdint>
 
-module Materials;
+module MagnumRender;
+    import :Materials;
 
 ee_magnum::BaseMaterial::BaseMaterial(const std::string &vertSrc, const std::string &fragSrc)
 {
@@ -47,7 +48,7 @@ ee_magnum::ProvinceMaterial::ProvinceMaterial(const std::string &vertSrc, const 
 
 }
 
-void ee_magnum::ProvinceMaterial::setId(const uint32_t &id)
+void ee_magnum::ProvinceMaterial::setId(const uint32_t id)
 {
     setUniform(PROVINCES_ID_BINDING, id);
 }

@@ -5,8 +5,7 @@ module;
 #include <cstddef>
 
 module AssetData;
-import allocator;
-import buffers;
+import utils;
 
 /*
 
@@ -40,10 +39,10 @@ ee_assets::AssetMapMesh::AssetMapMesh(std::uint8_t* &source, const std::size_t s
     std::size_t leftoverSize = sourceSize;
     source = nullptr;
 
-    std::uint32_t statesCount = 0;
-    ee_utils::readNext(&statesCount, pointer, leftoverSize, sizeof(std::uint32_t));
+    std::uint32_t regionsCount = 0;
+    ee_utils::readNext(&regionsCount, pointer, leftoverSize, sizeof(std::uint32_t));
 
-    for (std::uint32_t state = 0; state < statesCount; state++)
+    for (std::uint32_t region = 0; region < regionsCount; region++)
     {
         std::uint32_t id = 0;
         glm::u8vec3 color {};

@@ -8,8 +8,7 @@ export module Engine;
     export import AssetManager;
     export import Client;
 
-import allocator;
-import worker;
+import utils;
 
 export
 {

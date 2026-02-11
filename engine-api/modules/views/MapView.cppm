@@ -5,8 +5,7 @@ module;
 #include <unordered_map>
 #include <cstdint>
 
-//TODO: module Views
-export module MapView;
+export module views:MapView;
 
 export namespace ee_engine
 {

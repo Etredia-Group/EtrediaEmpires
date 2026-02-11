@@ -1,5 +1,5 @@
 struct Province {
-    uint stateId;
+    uint regionId;
     uint color;
 };
 layout(std430, binding=0) buffer Data {

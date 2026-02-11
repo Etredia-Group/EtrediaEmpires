@@ -1,4 +1,4 @@
-import allocator;
+import utils;
 
 import Engine;
 import Actions;
@@ -11,7 +11,6 @@ import GLFWInput;
 #include <vector>
 
 IP7_Trace* Logger::trace;
-
 int main(int argc, char **argv)
 {
     // Setup P7 logger
@@ -53,8 +52,8 @@ int main(int argc, char **argv)
     // Setup renderer TODO: builder
     Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_magnum::MagnumRenderer>(window));
 
-    ee_assets::AssetMapMesh &states = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/ET.map");
-    Engine::renderer->RegisterMapMesh(&states.content);
+    ee_assets::AssetMapMesh &regions = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/ET.map");
+    Engine::renderer->RegisterMapMesh(&regions.content);
 
     //TODO: ShaderRefs builder from set of AssetMaterial
     ee_assets::AssetMaterial &provincesMaterial =
@@ -98,7 +97,6 @@ int main(int argc, char **argv)
     // Free memory
     LOG(INFO, "Exit...");
     Engine::Shutdown();
-    //TODO: check Unregister in other threads and make threaded module base class
     Logger::trace->Unregister_Thread(0);
     Logger::trace->Release();
     p7client->Release();
@@ -106,9 +104,5 @@ int main(int argc, char **argv)
     return 0;
 }
 
-// TODO: Rename states to regions in old sources
-// TODO: Remove unneccesary address providing like (const type &arg) for small primitives
 // TODO: Use CRTP where possible in classes with virtual/override
-// TODO: Use final in classes with override
-// TODO: Implementations of API as partition modules
 // TODO: Leaks detection

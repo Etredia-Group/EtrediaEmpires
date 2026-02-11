@@ -6,8 +6,8 @@ module;
 #include <stdexcept>
 
 module Client;
-import allocator;
-import MapView;
+import utils;
+import views;
 import Engine;
 
 Client::Client() : ee_utils::ThreadedWorker<ClientCommand, ClientCommand::COMPLETED>(L"Client")

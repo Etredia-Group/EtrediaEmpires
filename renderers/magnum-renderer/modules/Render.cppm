@@ -9,8 +9,8 @@ module;
 #include <cstddef>
 
 export module MagnumRender;
-import MapView;
-import Materials;
+    import :Materials;
+import views;
 import Render;
 
 using namespace Magnum;

@@ -7,7 +7,7 @@ module;
 
 export module AssetData;
 import GameData;
-import MapView;
+import views;
 
 export namespace ee_assets
 {

@@ -9,7 +9,7 @@ module;
 #include <string>
 #include <cstdint>
 
-export module Materials;
+export module MagnumRender:Materials;
 
 using namespace Magnum;
 
@@ -29,7 +29,7 @@ export namespace ee_magnum
         explicit BaseMaterial(const std::string &vertSrc, const std::string &fragSrc);
     };
 
-    class ProvinceMaterial : public BaseMaterial
+    class ProvinceMaterial final : public BaseMaterial
     {
     public:
         inline static constexpr std::int32_t PROVINCES_DATA_BINDING = 0;
@@ -37,6 +37,6 @@ export namespace ee_magnum
 
         explicit ProvinceMaterial(const std::string &vertSrc, const std::string &fragSrc);
 
-        void setId(const std::uint32_t &id);
+        void setId(const std::uint32_t id);
     };
 }

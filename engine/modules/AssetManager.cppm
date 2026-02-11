@@ -17,8 +17,7 @@ module;
 export module AssetManager;
     export import AssetData;
 
-import allocator;
-import worker;
+import utils;
 import FileSystem;
 
 export
@@ -153,7 +152,7 @@ export
             return *reinterpret_cast<AssetHandle*>(command.out->load());
         }
 
-        AssetHandle& Find(const std::uint32_t &id)
+        AssetHandle& Find(const std::uint32_t id)
         {
             std::atomic<void*> result;
             AssetStreamCommand command;
@@ -173,7 +172,7 @@ export
         }
 
         // Returned resource reference should not be stored
-        template <ee_assets::Asset T> T& FindOnce(const std::uint32_t &id)
+        template <ee_assets::Asset T> T& FindOnce(const std::uint32_t id)
         {
             return Get<T>(Find(id));
         }
@@ -294,9 +293,6 @@ export
             mapMeshesStorage.clear();
             shadersStorage.clear();
             materialsStorage.clear();
-
-            LOG(INFO, "Asset Streaming is released");
-            isRunning.store(false);
         }
 
     private:

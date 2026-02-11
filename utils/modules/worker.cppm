@@ -11,7 +11,7 @@ module;
 #include <type_traits>
 #include <concepts>
 
-export module worker;
+export module utils:worker;
 
 export namespace ee_utils
 {
@@ -144,7 +144,8 @@ export namespace ee_utils
         void ReleaseStop()
         {
             Release();
-            LOG(INFO, "Client is released");
+            LOG(INFO, "Thread is released");
+            Logger::trace->Unregister_Thread(0);
             isRunning.store(false);
         }
     };
