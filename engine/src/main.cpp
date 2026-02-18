@@ -1,3 +1,8 @@
+#include "Logger.h"
+#include "compile_config.hpp"
+#include <GLFW/glfw3.h>
+#include <vector>
+
 import utils;
 
 import Engine;
@@ -5,10 +10,6 @@ import Actions;
 import MagnumRender;
 import GLFWInput;
 
-#include "Logger.h"
-#include "compile_config.hpp"
-#include <GLFW/glfw3.h>
-#include <vector>
 
 IP7_Trace* Logger::trace;
 int main(int argc, char **argv)

@@ -9,7 +9,7 @@ module;
 #include <Magnum/GL/Buffer.h>
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/Math/Color.h>
-#include <Magnum/Shaders/VertexColor.h>
+#include <Magnum/Shaders/VertexColorGL.h>
 #include <Corrade/Utility/Debug.h>
 
 #include <GLFW/glfw3.h>
@@ -17,6 +17,7 @@ module;
 #include <cstddef>
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
+#include <vector>
 
 module MagnumRender;
 import utils;
@@ -98,10 +99,13 @@ void ee_magnum::MagnumRenderer::LoadProvinces()
         {
             GL::Mesh regionMesh;
 
+            Containers::ArrayView provinceVertices(province.vertices.data(), province.vertices.size());
+            Containers::ArrayView provinceIndices(province.indices.data(), province.indices.size());
+
             regionMesh.setPrimitive(GL::MeshPrimitive::Triangles)
                     .setCount(static_cast<Magnum::Int>(province.indices.size()))
-                    .addVertexBuffer(GL::Buffer{province.vertices}, 0, GL::Attribute<0, Magnum::Vector2>{})
-                    .setIndexBuffer(GL::Buffer{province.indices}, 0, GL::MeshIndexType::UnsignedShort);
+                    .addVertexBuffer(GL::Buffer{provinceVertices}, 0, GL::Attribute<0, Magnum::Vector2>{})
+                    .setIndexBuffer(GL::Buffer{provinceIndices}, 0, GL::MeshIndexType::UnsignedShort);
 
             provinceMeshes.push_back(std::move(regionMesh));
 
@@ -120,14 +124,16 @@ void ee_magnum::MagnumRenderer::LoadProvinces()
     LOG(INFO, "Registered %d province meshes in renderer", provinceMeshes.size());
 
     provinceSSBO.setTargetHint(GL::Buffer::TargetHint::ShaderStorage);
-    provinceSSBO.setData(provincesData, GL::BufferUsage::DynamicDraw);
+    Containers::ArrayView provincesDataView(provincesData.data(), provincesData.size());
+    provinceSSBO.setData(provincesDataView, GL::BufferUsage::DynamicDraw);
     provinceSSBO.bind(GL::Buffer::Target::ShaderStorage, ProvinceMaterial::PROVINCES_DATA_BINDING);
 
 }
 
 void ee_magnum::MagnumRenderer::UpdateProvinces(const std::size_t index, const std::vector<ee_engine::ProvinceSSBO> &data)
 {
-    provinceSSBO.setSubData(index, data);
+    Containers::ArrayView provincesData(data.data(), data.size());
+    provinceSSBO.setSubData(index, provincesData);
 }
 
 void ee_magnum::MagnumRenderer::Shutdown()

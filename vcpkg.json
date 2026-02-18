@@ -7,7 +7,15 @@
 		"vulkan",
 		"glfw3",
 		"glm",
-		{"name": "magnum", "features": ["glfwapplication"]},
+		{
+			"name": "magnum",
+			"features": ["glfwapplication"],
+			"version>=": "0"
+		},
+		{
+			"name": "corrade",
+			"version>=": "0"
+		},
 		"rmlui",
 		"gtest"
 	]
