@@ -1,23 +1,16 @@
 module;
 
 #include "Logger.h"
-#include <boost/lockfree/spsc_queue.hpp>
-#include <cstdint>
-#include <cstddef>
-#include <array>
-#include <thread>
-#include <atomic>
-#include <stdexcept>
-#include <type_traits>
-#include <concepts>
 
 export module utils:worker;
+    import :lockfree;
+import std;
 
 export namespace ee_utils
 {
     struct WorkerCommand
     {
-        uint8_t type = 0;
+        std::uint8_t type = 0;
     };
     template<typename T> concept IWorkerCommand = std::is_base_of_v<WorkerCommand, T>;
 

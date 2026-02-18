@@ -1,13 +1,7 @@
-module;
-
-#include <concepts>
-#include <type_traits>
-#include <cstdint>
-#include <cstddef>
-
 export module AssetData;
 import GameData;
 import views;
+import std;
 
 export namespace ee_assets
 {

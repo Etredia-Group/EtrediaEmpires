@@ -1,8 +1,5 @@
-module;
-
-#include <functional>
-
 export module Input;
+import std;
 
 export namespace ee_engine
 {

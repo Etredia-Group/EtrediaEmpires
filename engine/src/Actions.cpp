@@ -1,6 +1,5 @@
 module;
 
-#include <cmath>
 #include <glm/glm.hpp>
 
 module Actions;

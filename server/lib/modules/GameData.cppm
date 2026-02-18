@@ -1,9 +1,5 @@
-module;
-
-#include <cstdint>
-#include <vector>
-
 export module GameData;
+import std;
 
 export namespace ee_data
 {

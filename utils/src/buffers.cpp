@@ -1,9 +1,3 @@
-module;
-
-#include <cstdint>
-#include <cstddef>
-#include <cstring>
-
 module utils;
     import :buffers;
 

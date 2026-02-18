@@ -3,22 +3,14 @@ module;
 #include "Logger.h"
 #include "compile_config.hpp"
 #include <ee_utils/utils.hpp>
-#include <vector>
-#include <unordered_map>
-#include <filesystem>
-#include <thread>
-#include <atomic>
-#include <cstdint>
-#include <cstddef>
 #include <xxhash.h>
-#include <cstring>
-#include <Boost/lockfree/spsc_queue.hpp>
 
 export module AssetManager;
     export import AssetData;
 
 import utils;
 import FileSystem;
+import std;
 
 export
 {

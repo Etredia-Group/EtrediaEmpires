@@ -8,8 +8,6 @@ module;
 #include <Magnum/Math/Matrix4.h>
 
 #include "Logger.h"
-#include <string>
-#include <cstdint>
 
 module MagnumRender;
     import :Materials;

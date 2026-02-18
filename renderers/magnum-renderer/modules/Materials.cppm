@@ -6,10 +6,9 @@ module;
 #include <Magnum/GL/Shader.h>
 #include <Magnum/GL/Version.h>
 #include <Magnum/Math/Matrix4.h>
-#include <string>
-#include <cstdint>
 
 export module MagnumRender:Materials;
+import std;
 
 using namespace Magnum;
 

@@ -1,8 +1,5 @@
-module;
-
-#include <utility>
-
 export module utils:allocator;
+import std;
 
 export {
     template<typename T, typename... Args> T* Allocate(Args&&... args)

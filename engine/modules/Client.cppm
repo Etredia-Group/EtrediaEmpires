@@ -1,12 +1,9 @@
-module;
-
-#include <cstdint>
-
 export module Client;
 import utils;
 import GameData;
 import DataChannel;
 import AssetManager;
+import std;
 
 export
 {

@@ -1,11 +1,9 @@
 module;
 
 #include <glm/glm.hpp>
-#include <vector>
-#include <unordered_map>
-#include <cstdint>
 
 export module views:MapView;
+import std;
 
 export namespace ee_engine
 {

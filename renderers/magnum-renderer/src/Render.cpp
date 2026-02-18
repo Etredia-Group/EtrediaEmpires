@@ -13,11 +13,7 @@ module;
 #include <Corrade/Utility/Debug.h>
 
 #include <GLFW/glfw3.h>
-#include <cstdint>
-#include <cstddef>
 #include <glm/gtc/type_ptr.hpp>
-#include <string>
-#include <vector>
 
 module MagnumRender;
 import utils;

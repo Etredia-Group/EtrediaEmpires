@@ -1,11 +1,8 @@
 module;
-
 #include <glm/glm.hpp>
-#include <cstdint>
-#include <cstddef>
-
 module AssetData;
 import utils;
+import std;
 
 /*
 

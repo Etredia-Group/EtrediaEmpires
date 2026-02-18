@@ -1,12 +1,9 @@
 module;
 
-#include <filesystem>
-#include <vector>
-#include <cstdint>
-#include <cstddef>
 #include <ee_utils/platform.hpp>
 
 export module FileSystem;
+import std;
 
 export
 {

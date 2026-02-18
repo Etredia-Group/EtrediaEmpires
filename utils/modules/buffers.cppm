@@ -1,9 +1,5 @@
-module;
-
-#include <cstdint>
-#include <cstddef>
-
 export module utils:buffers;
+import std;
 
 export namespace ee_utils
 {
