@@ -2,7 +2,6 @@ module;
 
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <ee_utils/utils.hpp>
 
 module Render;
 import std;
@@ -10,7 +9,7 @@ import utils;
 
 ee_engine::IRenderer::IRenderer(GLFWwindow *window)
 {
-    commandsMapping[RendererCommand::UPDATE_REGION] = MAP_WORKER_COMMAND(RendererCommand, UpdateRegionCmd);
+    commandsMapping[RendererCommand::UPDATE_REGION] = std::bind_front(&IRenderer::UpdateRegionCmd, this);
 
     this->window = window;
     glfwGetFramebufferSize(window, &screenWidth, &screenHeight);

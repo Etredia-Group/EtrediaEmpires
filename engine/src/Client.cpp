@@ -1,7 +1,3 @@
-module;
-
-#include <ee_utils/utils.hpp>
-
 module Client;
 import utils;
 import views;
@@ -9,8 +5,7 @@ import Engine;
 
 Client::Client() : ee_utils::ThreadedWorker<ClientCommand, ClientCommand::COMPLETED>(L"Client")
 {
-    commandsMapping[ClientCommand::SEND] = MAP_WORKER_COMMAND(ClientCommand, SendCmd);
-
+    commandsMapping[ClientCommand::SEND] = std::bind_front(&Client::SendCmd, this);
 }
 
 void Client::Init()

@@ -1,7 +1,6 @@
 module;
 
 #include "compile_config.hpp"
-#include <ee_utils/utils.hpp>
 #include <xxhash.h>
 
 export module AssetManager;
@@ -99,9 +98,9 @@ export
     public:
         AssetManager() : ee_utils::ThreadedWorker<AssetStreamCommand, AssetStreamCommand::COMPLETED>(L"Assets Stream")
         {
-            commandsMapping[AssetStreamCommand::LOAD] = MAP_WORKER_COMMAND(AssetStreamCommand, LoadCmd);
-            commandsMapping[AssetStreamCommand::FIND] = MAP_WORKER_COMMAND(AssetStreamCommand, FindCmd);
-            commandsMapping[AssetStreamCommand::GET] = MAP_WORKER_COMMAND(AssetStreamCommand, GetCmd);
+            commandsMapping[AssetStreamCommand::LOAD] = std::bind_front(&AssetManager::LoadCmd, this);
+            commandsMapping[AssetStreamCommand::FIND] = std::bind_front(&AssetManager::FindCmd, this);
+            commandsMapping[AssetStreamCommand::GET] = std::bind_front(&AssetManager::GetCmd, this);
 
             diskSystem = Allocate<NativeFileSystem>();
         }
