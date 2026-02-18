@@ -1,6 +1,5 @@
 module;
 
-#include "Logger.h"
 #include <ee_utils/utils.hpp>
 
 module Client;

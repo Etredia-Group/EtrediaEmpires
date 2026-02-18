@@ -5,7 +5,10 @@ module;
 
 export module utils:lockfree;
 
-export using boost::lockfree::capacity;
+export namespace boost
+{
+    using lockfree::capacity;
 
-export using boost::lockfree::queue;
-export using boost::lockfree::spsc_queue;
+    using lockfree::queue;
+    using lockfree::spsc_queue;
+}

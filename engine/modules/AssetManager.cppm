@@ -1,6 +1,5 @@
 module;
 
-#include "Logger.h"
 #include "compile_config.hpp"
 #include <ee_utils/utils.hpp>
 #include <xxhash.h>

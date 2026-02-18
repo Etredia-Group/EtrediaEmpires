@@ -2,8 +2,6 @@ module;
 
 #define NOMINMAX
 
-#include "Logger.h"
-
 #include <Magnum/Platform/GLContext.h>
 #include <Magnum/GL/Mesh.h>
 #include <Magnum/GL/Buffer.h>

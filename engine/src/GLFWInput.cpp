@@ -1,6 +1,5 @@
 module;
 
-#include "Logger.h"
 #include <GLFW/glfw3.h>
 
 #define GLFW_GET_INPUT reinterpret_cast<GLFWInput*>(glfwGetWindowUserPointer(window))
@@ -8,6 +7,7 @@ module;
 
 module GLFWInput;
 import Engine;
+import utils;
 
 GLFWInput::GLFWInput(ee_engine::InputHandlers handlers) : ee_engine::IInput(handlers)
 {

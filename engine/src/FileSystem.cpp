@@ -1,7 +1,6 @@
 module;
 
-#include "Logger.h"
-
+#include <ee_utils/platform.hpp>
 
 module FileSystem;
 import utils;

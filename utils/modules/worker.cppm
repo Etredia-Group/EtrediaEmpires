@@ -1,9 +1,6 @@
-module;
-
-#include "Logger.h"
-
 export module utils:worker;
     import :lockfree;
+    import :logger;
 import std;
 
 export namespace ee_utils
@@ -47,6 +44,8 @@ export namespace ee_utils
         std::array<std::function<void(TCommand &command)>, maxCmdType + 1> commandsMapping;
         // TODO: maybe I should use lockfree::queue ?
         boost::lockfree::spsc_queue<TCommand, boost::lockfree::capacity<512>> commands;
+
+        Worker() {};
 
         void ProcessCommand(TCommand &command)
         {
@@ -110,7 +109,7 @@ export namespace ee_utils
 
         void Threading()
         {
-            Logger::trace->Register_Thread(threadName, 0);
+            Logger::RegisterThread(threadName);
             LOG(INFO, "Thread started");
 
             Loop();
@@ -121,6 +120,7 @@ export namespace ee_utils
         void Loop()
         {
             TCommand commandBuffer{};
+            // ReSharper disable once CppTooWideScope
             std::vector<TCommand> incompleteCommands;
             while (!stoken->stop_requested())
             {
@@ -138,7 +138,7 @@ export namespace ee_utils
         {
             Release();
             LOG(INFO, "Thread is released");
-            Logger::trace->Unregister_Thread(0);
+            Logger::UnregisterThread();
             isRunning.store(false);
         }
     };

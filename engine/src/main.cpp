@@ -1,4 +1,3 @@
-#include "Logger.h"
 #include "compile_config.hpp"
 #include <GLFW/glfw3.h>
 
@@ -10,15 +9,11 @@ import MagnumRender;
 import GLFWInput;
 import std;
 
-
-IP7_Trace* Logger::trace;
 int main(int argc, char **argv)
 {
     // Setup P7 logger
-    IP7_Client *p7client = P7_Create_Client(P7_SINK P7_LOGS_PATH);
-    P7_Set_Crash_Handler();
-    Logger::trace = P7_Create_Trace(p7client, L"TC 1");
-    Logger::trace->Register_Thread(L"Main", 0);
+    Logger::Init(P7_SINK P7_LOGS_PATH);
+    Logger::RegisterThread(L"Main");
 
     LOG(INFO, "Etredia Empires, v%d.%d.%d", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION);
 
@@ -98,9 +93,8 @@ int main(int argc, char **argv)
     // Free memory
     LOG(INFO, "Exit...");
     Engine::Shutdown();
-    Logger::trace->Unregister_Thread(0);
-    Logger::trace->Release();
-    p7client->Release();
+    Logger::UnregisterThread();
+    Logger::Release();
 
     return 0;
 }

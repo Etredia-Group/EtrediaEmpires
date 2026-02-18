@@ -7,10 +7,10 @@ module;
 #include <Magnum/GL/Version.h>
 #include <Magnum/Math/Matrix4.h>
 
-#include "Logger.h"
 
 module MagnumRender;
     import :Materials;
+import utils;
 
 ee_magnum::BaseMaterial::BaseMaterial(const std::string &vertSrc, const std::string &fragSrc)
 {

@@ -1,12 +1,12 @@
 module;
 
-#include "Logger.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <ee_utils/utils.hpp>
 
 module Render;
 import std;
+import utils;
 
 ee_engine::IRenderer::IRenderer(GLFWwindow *window)
 {
