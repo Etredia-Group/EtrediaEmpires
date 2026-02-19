@@ -79,10 +79,10 @@ int main(int argc, char **argv)
     Engine::client->Start();
 
     // Game loop
-    ee_engine::RendererCommand renderCmdBuffer; std::vector<ee_engine::RendererCommand> renderIncompletesBuffer;
+    ee_engine::RendererCommand renderCmdBuffer;
     while(!glfwWindowShouldClose(window))
     {
-        Engine::renderer->ProcessQueue(renderCmdBuffer, renderIncompletesBuffer);
+        Engine::renderer->ProcessQueue(renderCmdBuffer);
         Engine::renderer->Draw();
 
         glfwSwapBuffers(window);

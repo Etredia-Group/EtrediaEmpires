@@ -3,7 +3,7 @@ import utils;
 import views;
 import Engine;
 
-Client::Client() : ee_utils::ThreadedWorker<ClientCommand, ClientCommand::COMPLETED>(L"Client")
+Client::Client() : ThreadedWorker(L"Client", 0)
 {
     commandsMapping[ClientCommand::SEND] = std::bind_front(&Client::SendCmd, this);
 }

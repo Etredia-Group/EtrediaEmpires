@@ -19,7 +19,7 @@ export
 
     struct AssetHandle
     {
-        inline static constexpr std::uint32_t INVALID_ASSET_ID = UINT32_MAX;
+        static constexpr std::uint32_t INVALID_ASSET_ID = UINT32_MAX;
         std::size_t slot = 0;
         std::uint32_t id = 0;
     };
@@ -96,7 +96,7 @@ export
     class AssetManager final : public ee_utils::ThreadedWorker<AssetStreamCommand, AssetStreamCommand::COMPLETED>
     {
     public:
-        AssetManager() : ee_utils::ThreadedWorker<AssetStreamCommand, AssetStreamCommand::COMPLETED>(L"Assets Stream")
+        AssetManager() : ThreadedWorker(L"Assets Stream", 250)
         {
             commandsMapping[AssetStreamCommand::LOAD] = std::bind_front(&AssetManager::LoadCmd, this);
             commandsMapping[AssetStreamCommand::FIND] = std::bind_front(&AssetManager::FindCmd, this);
@@ -105,7 +105,7 @@ export
             diskSystem = Allocate<NativeFileSystem>();
         }
 
-        ~AssetManager()
+        ~AssetManager() override
         {
             Deallocate(diskSystem);
         }
@@ -138,7 +138,7 @@ export
             command.out = &result;
 
             Request(command);
-            while (command.out->load() == nullptr);
+            while (command.out->load() == nullptr) {}
             return *reinterpret_cast<AssetHandle*>(command.out->load());
         }
 
@@ -167,9 +167,9 @@ export
             return Get<T>(Find(id));
         }
 
-        void Redirect(AssetHandle &handle, void *resource)
+        void Redirect(const AssetHandle &handle, void *resource)
         {
-            AssetInfo &asset = activeAssets[handle.slot];
+            const AssetInfo &asset = activeAssets[handle.slot];
             if (asset.resourceAddress == nullptr)
             {
                 LOG(WARNING, "Attempt to redirect empty handle");
@@ -262,7 +262,7 @@ export
 
         void Release() override
         {
-            for (AssetInfo &asset : activeAssets)
+            for (const AssetInfo &asset : activeAssets)
             {
                 //TODO: LEAK! Free resource
                 if (asset.resourceAddress->resource.load() != nullptr)
@@ -275,8 +275,8 @@ export
             }
             activeAssets.clear();
 
-            for (auto &mapping : assetsMapping)
-                Deallocate(mapping.second);
+            for (AssetHandle *&handle: assetsMapping | std::views::values)
+                Deallocate(handle);
             assetsMapping.clear();
 
             binaryStorage.clear();

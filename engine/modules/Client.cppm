@@ -23,7 +23,7 @@ export
     {
     public:
         Client();
-        ~Client();
+        ~Client() override;
         void Init();
 
         //void Send(); -> Request(SEND)

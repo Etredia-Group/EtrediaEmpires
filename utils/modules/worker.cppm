@@ -9,50 +9,62 @@ export namespace ee_utils
     {
         std::uint8_t type = 0;
     };
-    template<typename T> concept IWorkerCommand = std::is_base_of_v<WorkerCommand, T>;
+    template <typename T> concept IWorkerCommand = std::is_base_of_v<WorkerCommand, T>;
 
-    template <IWorkerCommand TCommand, std::size_t maxCmdType>
+    template <IWorkerCommand TCommand, std::size_t MaxCmdTypeId, bool IdleDetection = false>
     class Worker
     {
     public:
         void Request(const TCommand &command)
         {
-            commands.push(command);
+            commands.push(command); //TODO: filled queue case
         }
 
         void Request(const std::uint8_t type)
         {
-            commands.push(TCommand {.type = type});
+            commands.push(TCommand {.type = type}); //TODO: filled queue case
         }
 
-        void ProcessQueue(TCommand &buffer, std::vector<TCommand> &incompletesBuffer)
+        void ProcessQueue(TCommand &buffer) requires !IdleDetection
         {
             while (this->commands.pop(buffer))
             {
                 ProcessCommand(buffer);
-                if (buffer.type != maxCmdType)
-                    incompletesBuffer.push_back(buffer);
             }
-            for (TCommand &command : incompletesBuffer)
+        }
+
+        std::uint32_t ProcessQueue(TCommand &buffer) requires IdleDetection
+        {
+            thread_local std::uint32_t idleCounter = 0;
+            if (!this->commands.pop(buffer))
             {
-                this->commands.push(command);
+                idleCounter++;
+                return idleCounter;
             }
-            incompletesBuffer.clear();
+            idleCounter = 0;
+
+            do
+            {
+                ProcessCommand(buffer);
+            } while (this->commands.pop(buffer));
+
+            return 0;
         }
 
     protected:
-        std::array<std::function<void(TCommand &command)>, maxCmdType + 1> commandsMapping;
-        // TODO: maybe I should use lockfree::queue ?
+        // TODO: replace std::function with more optimized ref
+        std::array<std::function<void(TCommand &command)>, MaxCmdTypeId + 1> commandsMapping;
+        // TODO: maybe I should use lockfree::queue ? Otherwise make consumer thread explicit for safety
         boost::lockfree::spsc_queue<TCommand, boost::lockfree::capacity<512>> commands;
 
         Worker() {};
 
         void ProcessCommand(TCommand &command)
         {
-            if (command.type > maxCmdType || !commandsMapping[command.type])
+            if (command.type > MaxCmdTypeId || !commandsMapping[command.type])
             {
                 LOG(WARNING, "Unhandled command. Type id: %d", command.type);
-                command.type = maxCmdType;
+                command.type = MaxCmdTypeId;
                 return;
             }
 
@@ -68,7 +80,7 @@ export namespace ee_utils
 
         void Start()
         {
-            if (isRunning)
+            if (isRunning.load())
             {
                 LOG(CRITICAL, "Thread can be started only once before stop");
                 throw std::logic_error("Thread can be started only once before stop");
@@ -83,7 +95,7 @@ export namespace ee_utils
 
         void Shutdown()
         {
-            if (isRunning)
+            if (isRunning.load())
                 thread.request_stop();
             else LOG(WARNING, "Tried to shutdown stopped thread");
         }
@@ -96,15 +108,22 @@ export namespace ee_utils
     };
     template<typename T> concept IThreadedWorker = std::is_base_of_v<ThreadedWorkerBase, T>;
 
-    template <IWorkerCommand TCommand, std::size_t maxCmdType>
-    class ThreadedWorker : public Worker<TCommand, maxCmdType>, public ThreadedWorkerBase
+    enum class IdleBackoffMode : std::uint8_t
+    {
+        DISABLED,
+        YIELD
+    };
+
+    template <IWorkerCommand TCommand, std::size_t MaxCmdType, IdleBackoffMode IdleBackoffMode = IdleBackoffMode::DISABLED>
+    class ThreadedWorker : public Worker<TCommand, MaxCmdType, static_cast<bool>(IdleBackoffMode)>, public ThreadedWorkerBase
     {
     protected:
         const wchar_t *threadName;
 
-        explicit ThreadedWorker<TCommand, maxCmdType>(const wchar_t *threadName)
+        explicit ThreadedWorker(const wchar_t *threadName, std::uint32_t yieldIdleTime = 0)
         {
             this->threadName = threadName;
+            this->yieldIdleTime = yieldIdleTime;
         }
 
         void Threading()
@@ -120,11 +139,19 @@ export namespace ee_utils
         void Loop()
         {
             TCommand commandBuffer{};
-            // ReSharper disable once CppTooWideScope
-            std::vector<TCommand> incompleteCommands;
             while (!stoken->stop_requested())
             {
-                this->ProcessQueue(commandBuffer, incompleteCommands);
+                if constexpr (IdleBackoffMode == IdleBackoffMode::DISABLED)
+                {
+                    this->ProcessQueue(commandBuffer);
+                }
+                else
+                {
+                    const std::uint32_t idleCounter = this->ProcessQueue(commandBuffer);
+
+                    if (idleCounter > yieldIdleTime)
+                        std::this_thread::yield();
+                }
 
                 Update();
             }
@@ -134,6 +161,8 @@ export namespace ee_utils
         virtual void Release() = 0;
 
     private:
+        std::uint32_t yieldIdleTime;
+
         void ReleaseStop()
         {
             Release();
