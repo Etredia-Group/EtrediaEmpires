@@ -3,8 +3,7 @@ import Input;
 
 export
 {
-    class Actions
-    {
+    class Actions {
     public:
         static ee_engine::InputHandlers mappings;
 

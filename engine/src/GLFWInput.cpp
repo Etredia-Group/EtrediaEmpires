@@ -9,8 +9,7 @@ module GLFWInput;
 import Engine;
 import utils;
 
-GLFWInput::GLFWInput(ee_engine::InputHandlers handlers) : ee_engine::IInput(handlers)
-{
+GLFWInput::GLFWInput(ee_engine::InputHandlers handlers) : ee_engine::IInput(handlers) {
     glfwSetWindowUserPointer(Engine::window, this);
     glfwSetScrollCallback(Engine::window, [](GLFWwindow *window, double dx, double dy) {
         GLFW_CALLBACK(zooming, static_cast<float>(dx), static_cast<float>(dy));
@@ -19,8 +18,7 @@ GLFWInput::GLFWInput(ee_engine::InputHandlers handlers) : ee_engine::IInput(hand
     LOG(INFO, "Input mappings initialized");
 }
 
-void GLFWInput::Poll()
-{
+void GLFWInput::Poll() {
     double mouseX, mouseY;
     glfwGetCursorPos(Engine::window, &mouseX, &mouseY);
     this->mouseX = static_cast<float>(mouseX);
@@ -38,22 +36,20 @@ void GLFWInput::Poll()
     lastMouseY = this->mouseY;
 }
 
-void GLFWInput::OnLeftMouseButton(int state){}
-void GLFWInput::OnRightMouseButton(int state){}
+void GLFWInput::OnLeftMouseButton(int state) {}
+void GLFWInput::OnRightMouseButton(int state) {}
 
-void GLFWInput::OnMiddleMouseButton(int state)
-{
-    switch(state)
+void GLFWInput::OnMiddleMouseButton(int state) {
+    switch (state) {
+    case GLFW_PRESS:
     {
-        case GLFW_PRESS:
-        {
-            handlers.mapScroll(mouseX, mouseY, lastMouseX, lastMouseY);
-            break;
-        }
+        handlers.mapScroll(mouseX, mouseY, lastMouseX, lastMouseY);
+        break;
+    }
 
-        case GLFW_RELEASE:
-        {
-            break;
-        }
+    case GLFW_RELEASE:
+    {
+        break;
+    }
     }
 }

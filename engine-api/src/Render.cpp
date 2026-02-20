@@ -7,8 +7,7 @@ module Render;
 import std;
 import utils;
 
-ee_engine::IRenderer::IRenderer(GLFWwindow *window)
-{
+ee_engine::IRenderer::IRenderer(GLFWwindow *window) {
     commandsMapping[RendererCommand::UPDATE_REGION] = std::bind_front(&IRenderer::UpdateRegionCmd, this);
 
     this->window = window;
@@ -16,39 +15,30 @@ ee_engine::IRenderer::IRenderer(GLFWwindow *window)
     screenAspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
 }
 
-ee_engine::IRenderer::~IRenderer()
-{
+ee_engine::IRenderer::~IRenderer() {}
 
-}
-
-void ee_engine::IRenderer::RegisterMaterials(const ShaderRefs &shaders)
-{
+void ee_engine::IRenderer::RegisterMaterials(const ShaderRefs& shaders) {
     this->shaders = shaders;
 }
 
-void ee_engine::IRenderer::RegisterMapMesh(MapMesh* mapMesh)
-{
+void ee_engine::IRenderer::RegisterMapMesh(MapMesh *mapMesh) {
     this->mapMesh = mapMesh;
 }
 
-void ee_engine::IRenderer::Draw()
-{
+void ee_engine::IRenderer::Draw() {
     Clear();
     DrawMap();
     DrawUI();
 }
 
-void ee_engine::IRenderer::ResizeWindow(int width, int height)
-{
+void ee_engine::IRenderer::ResizeWindow(int width, int height) {
     screenWidth = width;
     screenHeight = height;
     screenAspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
 }
 
-void ee_engine::IRenderer::SetCamera(const CameraTransform &camera)
-{
-    if (camera.zoom <= 0)
-    {
+void ee_engine::IRenderer::SetCamera(const CameraTransform& camera) {
+    if (camera.zoom <= 0) {
         LOG(WARNING, "Camera zoom cannot be zero or less!");
         return;
     }
@@ -59,13 +49,13 @@ void ee_engine::IRenderer::SetCamera(const CameraTransform &camera)
     float halfWidth = camera.zoom * screenAspect;
 
     glm::mat4 P = glm::ortho(
-            -halfWidth, +halfWidth,
-            -halfHeight, +halfHeight
+        -halfWidth, +halfWidth,
+        -halfHeight, +halfHeight
     );
 
     glm::mat4 V = glm::translate(
-            glm::mat4(1.0f),
-            glm::vec3(-camera.position, 0.0f)
+        glm::mat4(1.0f),
+        glm::vec3(-camera.position, 0.0f)
     );
 
     viewProjection = P * V;
@@ -74,13 +64,11 @@ void ee_engine::IRenderer::SetCamera(const CameraTransform &camera)
     ApplyCamera();
 }
 
-glm::vec2 ee_engine::IRenderer::ScreenToWorld(const float screenX, const float screenY)
-{
+glm::vec2 ee_engine::IRenderer::ScreenToWorld(const float screenX, const float screenY) {
     return ScreenToWorld(glm::vec2(screenX, screenY));
 }
 
-glm::vec2 ee_engine::IRenderer::ScreenToWorld(const glm::vec2 &screenPos)
-{
+glm::vec2 ee_engine::IRenderer::ScreenToWorld(const glm::vec2& screenPos) {
     float x = 2.0f * screenPos.x / screenWidth - 1.0f;
     float y = -2.0f * screenPos.y / screenHeight + 1.0f;
 
@@ -91,16 +79,13 @@ glm::vec2 ee_engine::IRenderer::ScreenToWorld(const glm::vec2 &screenPos)
     return glm::vec2(world) / world.w;
 }
 
-void ee_engine::IRenderer::UpdateRegionCmd(ee_engine::RendererCommand &command)
-{
-    if (!regionsMapping.contains(command.region.id))
-    {
+void ee_engine::IRenderer::UpdateRegionCmd(ee_engine::RendererCommand& command) {
+    if (!regionsMapping.contains(command.region.id)) {
         LOG(WARNING, "Updating unregistered region with id: %d", command.region.id);
         return;
     }
 
-    if (command.region.id != command.region.data.regionId)
-    {
+    if (command.region.id != command.region.data.regionId) {
         LOG(ERROR, "Updating regions ID is not supported! Region: %d Changed ID: %d",
             command.region.id, command.region.data.regionId);
     }
@@ -108,8 +93,7 @@ void ee_engine::IRenderer::UpdateRegionCmd(ee_engine::RendererCommand &command)
     RegionIndecies mapping = regionsMapping[command.region.id];
     std::vector<ProvinceSSBO> buffer;
     buffer.reserve(mapping.provincesCount);
-    for (std::size_t i = 0; i < mapping.provincesCount; i++)
-    {
+    for (std::size_t i = 0; i < mapping.provincesCount; i++) {
         buffer.push_back(command.region.data);
     }
 

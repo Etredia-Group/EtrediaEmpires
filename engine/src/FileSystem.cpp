@@ -7,19 +7,17 @@ import utils;
 
 //TOO: REWORK WITH IOCP
 
-IFileSystem::~IFileSystem()
-{
-    for (FileHandle* handle : activeFiles)
+IFileSystem::~IFileSystem() {
+    for (FileHandle *handle : activeFiles)
         Deallocate(handle);
-    for (FileHandle* handle : failedFiles)
+    for (FileHandle *handle : failedFiles)
         Deallocate(handle);
 }
 
 #ifdef _WIN32
 
-FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const std::uint32_t flags)
-{
-    FileHandle* result = Allocate<FileHandle>();
+FileHandle& NativeFileSystem::Open(const std::filesystem::path& path, const std::uint32_t flags) {
+    FileHandle *result = Allocate<FileHandle>();
 
 #ifndef NDEBUG
     result->debugPath = path;
@@ -33,17 +31,16 @@ FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const std:
         createFileMode |= GENERIC_WRITE;
 
     HANDLE file = CreateFileW(
-            path.c_str(),
-            createFileMode,
-            NULL,
-            NULL,
-            OPEN_EXISTING,
-            FILE_FLAG_OVERLAPPED,
-            NULL
+        path.c_str(),
+        createFileMode,
+        NULL,
+        NULL,
+        OPEN_EXISTING,
+        FILE_FLAG_OVERLAPPED,
+        NULL
     );
 
-    if (file == INVALID_HANDLE_VALUE)
-    {
+    if (file == INVALID_HANDLE_VALUE) {
         LOG(ERROR, "Failed to open file %s. Error: %d", path.c_str(), GetLastError());
         failedFiles.push_back(result);
         return *result;
@@ -54,15 +51,13 @@ FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const std:
     if (result->size == INVALID_FILE_SIZE)
         LOG(ERROR, "Failed to get size of file %s. Error: %d", path.c_str(), GetLastError());
 
-    if (freeFileSlots.size() > 0)
-    {
+    if (freeFileSlots.size() > 0) {
         std::size_t pos = freeFileSlots.back();
         result->id = pos;
         activeFiles[pos] = result;
         freeFileSlots.pop_back();
     }
-    else
-    {
+    else {
         result->id = activeFiles.size();
         activeFiles.push_back(result);
     }
@@ -70,79 +65,70 @@ FileHandle& NativeFileSystem::Open(const std::filesystem::path &path, const std:
     return *result;
 }
 
-void NativeFileSystem::ReadAsync(FileHandle &file, const std::uint32_t bufferSize, const std::uint32_t flags)
-{
+void NativeFileSystem::ReadAsync(FileHandle& file, const std::uint32_t bufferSize, const std::uint32_t flags) {
     file.overlapped = {
-            .hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr)
+        .hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr)
     };
     file.buffer = AllocateArray<std::uint8_t>(bufferSize);
     file.bufferSize = bufferSize;
 
     BOOL isSync = ReadFile(
-            file.win32Handle,
-            file.buffer,
-            bufferSize,
-            NULL,
-            &file.overlapped
+        file.win32Handle,
+        file.buffer,
+        bufferSize,
+        NULL,
+        &file.overlapped
     );
 
     if (isSync || GetLastError() != ERROR_IO_PENDING)
         LOG(ERROR, "File reading is synchronious while asynchronious is awaited");
 }
 
-bool NativeFileSystem::PollReady(FileHandle &file)
-{
+bool NativeFileSystem::PollReady(FileHandle& file) {
     DWORD status = WaitForSingleObject(file.overlapped.hEvent, 0);
 
-    switch (status)
+    switch (status) {
+    case WAIT_OBJECT_0:
     {
-        case WAIT_OBJECT_0:
-        {
-            if (file.size == file.bufferSize)
-            {
-                file.data = file.buffer;
-                file.buffer = nullptr;
-            }
-            else
-            {
-                /* TODO: reserve size for data, shift and move */
-            }
-
-            break;
+        if (file.size == file.bufferSize) {
+            file.data = file.buffer;
+            file.buffer = nullptr;
+        }
+        else {
+            /* TODO: reserve size for data, shift and move */
         }
 
-        case WAIT_ABANDONED:
-        case WAIT_TIMEOUT:
-            return false;
+        break;
+    }
 
-        default:
-        {
-            LOG(CRITICAL, "Failed to get file status. Error: %d", GetLastError());
-            return false;
-        }
+    case WAIT_ABANDONED:
+    case WAIT_TIMEOUT:
+        return false;
+
+    default:
+    {
+        LOG(CRITICAL, "Failed to get file status. Error: %d", GetLastError());
+        return false;
+    }
     }
 
     return true;
 }
 
-void NativeFileSystem::Close(FileHandle &file)
-{
+void NativeFileSystem::Close(FileHandle& file) {
     if (file.overlapped.hEvent)
         CloseHandle(file.overlapped.hEvent);
 
-    if (file.buffer != nullptr)
-    {
+    if (file.buffer != nullptr) {
         DeallocateArray(file.buffer);
         file.buffer = nullptr;
     }
-    if (file.data != nullptr)
-    {
+    if (file.data != nullptr) {
         DeallocateArray(file.data);
         file.data = nullptr;
     }
 
-    if (file.win32Handle != INVALID_HANDLE_VALUE)
-    {
+    if (file.win32Handle != INVALID_HANDLE_VALUE) {
         CloseHandle(file.win32Handle);
         file.win32Handle = INVALID_HANDLE_VALUE;
     }
@@ -152,7 +138,6 @@ void NativeFileSystem::Close(FileHandle &file)
 #endif
 
 #ifdef __linux__
-
 
 
 #endif

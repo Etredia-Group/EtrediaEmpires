@@ -9,13 +9,12 @@ module;
 
 
 module MagnumRender;
-    import :Materials;
+import :Materials;
 import utils;
 
-ee_magnum::BaseMaterial::BaseMaterial(const std::string &vertSrc, const std::string &fragSrc)
-{
-    GL::Shader vert {GL::Version::GL430, GL::Shader::Type::Vertex};
-    GL::Shader frag {GL::Version::GL430, GL::Shader::Type::Fragment};
+ee_magnum::BaseMaterial::BaseMaterial(const std::string& vertSrc, const std::string& fragSrc) {
+    GL::Shader vert{GL::Version::GL430, GL::Shader::Type::Vertex};
+    GL::Shader frag{GL::Version::GL430, GL::Shader::Type::Fragment};
 
     vert.addSource(vertSrc);
     frag.addSource(fragSrc);
@@ -31,22 +30,17 @@ ee_magnum::BaseMaterial::BaseMaterial(const std::string &vertSrc, const std::str
     link();
 }
 
-void ee_magnum::BaseMaterial::setModel(const Matrix4 &m)
-{
+void ee_magnum::BaseMaterial::setModel(const Matrix4& m) {
     setUniform(TRANSFORM_BINDING, m);
 }
 
-void ee_magnum::BaseMaterial::setViewProjection(const Matrix4 &vp)
-{
+void ee_magnum::BaseMaterial::setViewProjection(const Matrix4& vp) {
     setUniform(CAMERA_BINDING, vp);
 }
 
-ee_magnum::ProvinceMaterial::ProvinceMaterial(const std::string &vertSrc, const std::string &fragSrc): BaseMaterial(vertSrc, fragSrc)
-{
+ee_magnum::ProvinceMaterial::ProvinceMaterial(const std::string& vertSrc, const std::string& fragSrc) : BaseMaterial(
+    vertSrc, fragSrc) {}
 
-}
-
-void ee_magnum::ProvinceMaterial::setId(const uint32_t id)
-{
+void ee_magnum::ProvinceMaterial::setId(const uint32_t id) {
     setUniform(PROVINCES_ID_BINDING, id);
 }

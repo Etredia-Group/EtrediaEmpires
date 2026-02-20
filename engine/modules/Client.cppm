@@ -7,10 +7,8 @@ import std;
 
 export
 {
-    struct ClientCommand : public ee_utils::WorkerCommand
-    {
-        enum Type : std::uint8_t
-        {
+    struct ClientCommand : public ee_utils::WorkerCommand {
+        enum Type : std::uint8_t {
             NONE,
 
             SEND,
@@ -19,8 +17,7 @@ export
         };
     };
 
-    class Client final : public ee_utils::ThreadedWorker<ClientCommand, ClientCommand::COMPLETED>
-    {
+    class Client final : public ee_utils::ThreadedWorker<ClientCommand, ClientCommand::COMPLETED> {
     public:
         Client();
         ~Client() override;
@@ -41,7 +38,7 @@ export
         NetworkChannel *networkConnection = nullptr;
         AssetHandle save;
 
-        void SendCmd(ClientCommand &command);
+        void SendCmd(ClientCommand& command);
 
         void ViewModelSubject(ee_data::Subject subject);
     };

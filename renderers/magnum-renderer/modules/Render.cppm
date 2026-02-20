@@ -8,17 +8,15 @@ module;
 #include <GLFW/glfw3.h>
 
 export module MagnumRender;
-    import :Materials;
+import :Materials;
 import views;
 import Render;
 import std;
 
 using namespace Magnum;
 
-export namespace ee_magnum
-{
-    class MagnumRenderer final : public ee_engine::IRenderer
-    {
+export namespace ee_magnum {
+    class MagnumRenderer final : public ee_engine::IRenderer {
     public:
         MagnumRenderer(GLFWwindow *window);
         ~MagnumRenderer();
@@ -33,7 +31,8 @@ export namespace ee_magnum
 
         void ApplyCamera() override;
 
-        virtual void UpdateProvinces(const std::size_t index, const std::vector<ee_engine::ProvinceSSBO> &data) override;
+        virtual void
+        UpdateProvinces(const std::size_t index, const std::vector<ee_engine::ProvinceSSBO>& data) override;
 
     private:
         Platform::GLContext context;

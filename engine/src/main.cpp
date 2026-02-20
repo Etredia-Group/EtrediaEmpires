@@ -9,8 +9,7 @@ import MagnumRender;
 import GLFWInput;
 import std;
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     // Setup P7 logger
     Logger::Init(P7_SINK P7_LOGS_PATH);
     Logger::RegisterThread(L"Main");
@@ -48,23 +47,25 @@ int main(int argc, char **argv)
     // Setup renderer TODO: builder
     Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_magnum::MagnumRenderer>(window));
 
-    ee_assets::AssetMapMesh &regions = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/ET.map");
+    ee_assets::AssetMapMesh& regions = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/ET.map");
     Engine::renderer->RegisterMapMesh(&regions.content);
 
     //TODO: ShaderRefs builder from set of AssetMaterial
-    ee_assets::AssetMaterial &provincesMaterial =
-            Engine::assetManager->FindOnce<ee_assets::AssetMaterial>("assets/materials/provinces.mat");
-    ee_assets::AssetShader &vertProv = Engine::assetManager->FindOnce<ee_assets::AssetShader>(provincesMaterial.vertexShaderAssetID);
-    ee_assets::AssetShader &fragProv = Engine::assetManager->FindOnce<ee_assets::AssetShader>(provincesMaterial.fragmentShaderAssetID);
+    ee_assets::AssetMaterial& provincesMaterial =
+        Engine::assetManager->FindOnce<ee_assets::AssetMaterial>("assets/materials/provinces.mat");
+    ee_assets::AssetShader& vertProv = Engine::assetManager->FindOnce<ee_assets::AssetShader>(
+        provincesMaterial.vertexShaderAssetID);
+    ee_assets::AssetShader& fragProv = Engine::assetManager->FindOnce<ee_assets::AssetShader>(
+        provincesMaterial.fragmentShaderAssetID);
     Engine::renderer->RegisterMaterials({
-            .vertProvinces = &vertProv,
-            .fragProvinces = &fragProv
+        .vertProvinces = &vertProv,
+        .fragProvinces = &fragProv
     });
 
     Engine::renderer->Init();
     Engine::renderer->SetCamera({
-            //.position = {1000.0f, 1000.0f},
-            .zoom = 2000.0f
+        //.position = {1000.0f, 1000.0f},
+        .zoom = 2000.0f
     });
 
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
@@ -73,15 +74,14 @@ int main(int argc, char **argv)
 
     // Setup Client TODO: builder
     Engine::client = Allocate<Client>();
-//    AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
-//    Engine::client->LoadSave(save);
-//    Engine::client->Init();
+    //    AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
+    //    Engine::client->LoadSave(save);
+    //    Engine::client->Init();
     Engine::client->Start();
 
     // Game loop
     ee_engine::RendererCommand renderCmdBuffer;
-    while(!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         Engine::renderer->ProcessQueue(renderCmdBuffer);
         Engine::renderer->Draw();
 

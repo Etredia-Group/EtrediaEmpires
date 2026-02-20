@@ -3,17 +3,16 @@ module;
 #include <GLFW/glfw3.h>
 
 export module Engine;
-    export import Render;
-    export import Input;
-    export import AssetManager;
-    export import Client;
+export import Render;
+export import Input;
+export import AssetManager;
+export import Client;
 
 import utils;
 
 export
 {
-    class Engine
-    {
+    class Engine {
     public:
         inline static GLFWwindow *window;
         inline static ee_engine::IInput *input;
@@ -21,13 +20,11 @@ export
         inline static ee_engine::IRenderer *renderer;
         inline static Client *client;
 
-        static void Shutdown()
-        {
+        static void Shutdown() {
             if (input != nullptr)
                 Deallocate(input);
 
-            if (renderer != nullptr)
-            {
+            if (renderer != nullptr) {
                 renderer->Shutdown();
                 Deallocate(renderer);
             }
@@ -41,12 +38,10 @@ export
         }
 
         template <ee_utils::IThreadedWorker T>
-        static void WaitThreadShutdown(T* &thread)
-        {
-            if (thread != nullptr)
-            {
+        static void WaitThreadShutdown(T * & thread) {
+            if (thread != nullptr) {
                 thread->Shutdown();
-                while(thread->isRunning.load()) {}
+                while (thread->isRunning.load()) {}
                 Deallocate(thread);
             }
             thread = nullptr;

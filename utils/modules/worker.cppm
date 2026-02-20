@@ -1,68 +1,58 @@
 export module utils:worker;
-    import :lockfree;
-    import :logger;
+import :lockfree;
+import :logger;
 import std;
 
-export namespace ee_utils
-{
-    struct WorkerCommand
-    {
+export namespace ee_utils {
+    struct WorkerCommand {
         std::uint8_t type = 0;
     };
+
     template <typename T> concept IWorkerCommand = std::is_base_of_v<WorkerCommand, T>;
 
     template <IWorkerCommand TCommand, std::size_t MaxCmdTypeId, bool IdleDetection = false>
-    class Worker
-    {
+    class Worker {
     public:
-        void Request(const TCommand &command)
-        {
+        void Request(const TCommand& command) {
             commands.push(command); //TODO: filled queue case
         }
 
-        void Request(const std::uint8_t type)
-        {
-            commands.push(TCommand {.type = type}); //TODO: filled queue case
+        void Request(const std::uint8_t type) {
+            commands.push(TCommand{.type = type}); //TODO: filled queue case
         }
 
-        void ProcessQueue(TCommand &buffer) requires !IdleDetection
-        {
-            while (this->commands.pop(buffer))
-            {
+        void ProcessQueue(TCommand& buffer) requires !IdleDetection {
+            while (this->commands.pop(buffer)) {
                 ProcessCommand(buffer);
             }
         }
 
-        std::uint32_t ProcessQueue(TCommand &buffer) requires IdleDetection
-        {
+        std::uint32_t ProcessQueue(TCommand& buffer) requires IdleDetection {
             thread_local std::uint32_t idleCounter = 0;
-            if (!this->commands.pop(buffer))
-            {
+            if (!this->commands.pop(buffer)) {
                 idleCounter++;
                 return idleCounter;
             }
             idleCounter = 0;
 
-            do
-            {
+            do {
                 ProcessCommand(buffer);
-            } while (this->commands.pop(buffer));
+            }
+            while (this->commands.pop(buffer));
 
             return 0;
         }
 
     protected:
         // TODO: replace std::function with more optimized ref
-        std::array<std::function<void(TCommand &command)>, MaxCmdTypeId + 1> commandsMapping;
+        std::array<std::function<void(TCommand& command)>, MaxCmdTypeId + 1> commandsMapping;
         // TODO: maybe I should use lockfree::queue ? Otherwise make consumer thread explicit for safety
         boost::lockfree::spsc_queue<TCommand, boost::lockfree::capacity<512>> commands;
 
         Worker() {};
 
-        void ProcessCommand(TCommand &command)
-        {
-            if (command.type > MaxCmdTypeId || !commandsMapping[command.type])
-            {
+        void ProcessCommand(TCommand& command) {
+            if (command.type > MaxCmdTypeId || !commandsMapping[command.type]) {
                 LOG(WARNING, "Unhandled command. Type id: %d", command.type);
                 command.type = MaxCmdTypeId;
                 return;
@@ -78,10 +68,8 @@ export namespace ee_utils
 
         virtual ~ThreadedWorkerBase() {}
 
-        void Start()
-        {
-            if (isRunning.load())
-            {
+        void Start() {
+            if (isRunning.load()) {
                 LOG(CRITICAL, "Thread can be started only once before stop");
                 throw std::logic_error("Thread can be started only once before stop");
             }
@@ -93,8 +81,7 @@ export namespace ee_utils
             });
         }
 
-        void Shutdown()
-        {
+        void Shutdown() {
             if (isRunning.load())
                 thread.request_stop();
             else LOG(WARNING, "Tried to shutdown stopped thread");
@@ -106,28 +93,27 @@ export namespace ee_utils
 
         virtual void Threading() = 0;
     };
-    template<typename T> concept IThreadedWorker = std::is_base_of_v<ThreadedWorkerBase, T>;
 
-    enum class IdleBackoffMode : std::uint8_t
-    {
+    template <typename T> concept IThreadedWorker = std::is_base_of_v<ThreadedWorkerBase, T>;
+
+    enum class IdleBackoffMode : std::uint8_t {
         DISABLED,
         YIELD
     };
 
-    template <IWorkerCommand TCommand, std::size_t MaxCmdType, IdleBackoffMode IdleBackoffMode = IdleBackoffMode::DISABLED>
-    class ThreadedWorker : public Worker<TCommand, MaxCmdType, static_cast<bool>(IdleBackoffMode)>, public ThreadedWorkerBase
-    {
+    template <IWorkerCommand TCommand, std::size_t MaxCmdType, IdleBackoffMode IdleBackoffMode =
+                                           IdleBackoffMode::DISABLED>
+    class ThreadedWorker : public Worker<TCommand, MaxCmdType, static_cast<bool>(IdleBackoffMode)>,
+                           public ThreadedWorkerBase {
     protected:
         const wchar_t *threadName;
 
-        explicit ThreadedWorker(const wchar_t *threadName, std::uint32_t yieldIdleTime = 0)
-        {
+        explicit ThreadedWorker(const wchar_t *threadName, std::uint32_t yieldIdleTime = 0) {
             this->threadName = threadName;
             this->yieldIdleTime = yieldIdleTime;
         }
 
-        void Threading()
-        {
+        void Threading() {
             Logger::RegisterThread(threadName);
             LOG(INFO, "Thread started");
 
@@ -136,17 +122,13 @@ export namespace ee_utils
             ReleaseStop();
         }
 
-        void Loop()
-        {
+        void Loop() {
             TCommand commandBuffer{};
-            while (!stoken->stop_requested())
-            {
-                if constexpr (IdleBackoffMode == IdleBackoffMode::DISABLED)
-                {
+            while (!stoken->stop_requested()) {
+                if constexpr (IdleBackoffMode == IdleBackoffMode::DISABLED) {
                     this->ProcessQueue(commandBuffer);
                 }
-                else
-                {
+                else {
                     const std::uint32_t idleCounter = this->ProcessQueue(commandBuffer);
 
                     if (idleCounter > yieldIdleTime)
@@ -163,8 +145,7 @@ export namespace ee_utils
     private:
         std::uint32_t yieldIdleTime;
 
-        void ReleaseStop()
-        {
+        void ReleaseStop() {
             Release();
             LOG(INFO, "Thread is released");
             Logger::UnregisterThread();

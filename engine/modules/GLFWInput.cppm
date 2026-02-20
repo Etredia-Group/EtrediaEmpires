@@ -5,9 +5,9 @@ module;
 export module GLFWInput;
 import Input;
 
-export {
-    class GLFWInput final : public ee_engine::IInput
-    {
+export
+{
+    class GLFWInput final : public ee_engine::IInput {
     public:
         GLFWInput(ee_engine::InputHandlers handlers);
 

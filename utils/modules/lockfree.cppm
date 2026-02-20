@@ -5,8 +5,7 @@ module;
 
 export module utils:lockfree;
 
-export namespace boost
-{
+export namespace boost {
     using lockfree::capacity;
 
     using lockfree::queue;
