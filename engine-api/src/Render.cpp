@@ -31,7 +31,7 @@ void ee_engine::IRenderer::Draw() {
     DrawUI();
 }
 
-void ee_engine::IRenderer::ResizeWindow(int width, int height) {
+void ee_engine::IRenderer::ResizeWindow(const int width, const int height) {
     screenWidth = width;
     screenHeight = height;
     screenAspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
@@ -45,15 +45,15 @@ void ee_engine::IRenderer::SetCamera(const CameraTransform& camera) {
 
     this->camera = camera;
 
-    float halfHeight = camera.zoom;
-    float halfWidth = camera.zoom * screenAspect;
+    const float halfHeight = camera.zoom;
+    const float halfWidth = camera.zoom * screenAspect;
 
-    glm::mat4 P = glm::ortho(
+    const glm::mat4 P = glm::ortho(
         -halfWidth, +halfWidth,
         -halfHeight, +halfHeight
     );
 
-    glm::mat4 V = glm::translate(
+    const glm::mat4 V = glm::translate(
         glm::mat4(1.0f),
         glm::vec3(-camera.position, 0.0f)
     );
@@ -64,11 +64,11 @@ void ee_engine::IRenderer::SetCamera(const CameraTransform& camera) {
     ApplyCamera();
 }
 
-glm::vec2 ee_engine::IRenderer::ScreenToWorld(const float screenX, const float screenY) {
+glm::vec2 ee_engine::IRenderer::ScreenToWorld(const float screenX, const float screenY) const {
     return ScreenToWorld(glm::vec2(screenX, screenY));
 }
 
-glm::vec2 ee_engine::IRenderer::ScreenToWorld(const glm::vec2& screenPos) {
+glm::vec2 ee_engine::IRenderer::ScreenToWorld(const glm::vec2& screenPos) const {
     float x = 2.0f * screenPos.x / screenWidth - 1.0f;
     float y = -2.0f * screenPos.y / screenHeight + 1.0f;
 
@@ -79,7 +79,7 @@ glm::vec2 ee_engine::IRenderer::ScreenToWorld(const glm::vec2& screenPos) {
     return glm::vec2(world) / world.w;
 }
 
-void ee_engine::IRenderer::UpdateRegionCmd(ee_engine::RendererCommand& command) {
+void ee_engine::IRenderer::UpdateRegionCmd(RendererCommand& command) {
     if (!regionsMapping.contains(command.region.id)) {
         LOG(WARNING, "Updating unregistered region with id: %d", command.region.id);
         return;
@@ -90,14 +90,14 @@ void ee_engine::IRenderer::UpdateRegionCmd(ee_engine::RendererCommand& command) 
             command.region.id, command.region.data.regionId);
     }
 
-    RegionIndecies mapping = regionsMapping[command.region.id];
+    RegionRanges mapping = regionsMapping[command.region.id];
     std::vector<ProvinceSSBO> buffer;
     buffer.reserve(mapping.provincesCount);
     for (std::size_t i = 0; i < mapping.provincesCount; i++) {
         buffer.push_back(command.region.data);
     }
 
-    UpdateProvinces(mapping.startIndex, buffer);
+    UpdateProvinces(mapping.offset, buffer);
 
-    command.type = ee_engine::RendererCommand::COMPLETED;
+    command.type = RendererCommand::COMPLETED;
 }

@@ -19,9 +19,14 @@ project (EtrediaEmpires LANGUAGES CXX)
 
 add_subdirectory(sdk/map)
 add_subdirectory(sdk/assets)
+
 add_subdirectory(p7lib)
 add_subdirectory(utils)
+
 add_subdirectory(server/lib)
 add_subdirectory(engine-api)
+
 add_subdirectory(renderers/magnum-renderer)
+add_subdirectory(renderers/vulkan)
+
 add_subdirectory(engine)

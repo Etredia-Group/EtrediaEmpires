@@ -16,6 +16,7 @@ add_executable_target(${EXE})
 target_link_libraries(${EXE} PUBLIC utils)
 target_link_libraries(${EXE} PUBLIC engine-api)
 target_link_libraries(${EXE} PUBLIC magnum-renderer)
+target_link_libraries(${EXE} PUBLIC vulkan-renderer)
 
 target_link_libraries(${EXE} PRIVATE Boost::lockfree)
 target_link_libraries(${EXE} PRIVATE xxHash::xxhash)

@@ -95,7 +95,7 @@ void ee_magnum::MagnumRenderer::LoadProvinces() {
             provincesData.push_back(data);
         }
 
-        regionsMapping[region] = {.startIndex = regionIndex, .provincesCount = provs.size()};
+        regionsMapping[region] = {.offset = regionIndex, .provincesCount = provs.size()};
         regionIndex += provs.size() * sizeof(ee_engine::ProvinceSSBO);
     }
 
@@ -107,10 +107,10 @@ void ee_magnum::MagnumRenderer::LoadProvinces() {
     provinceSSBO.bind(GL::Buffer::Target::ShaderStorage, ProvinceMaterial::PROVINCES_DATA_BINDING);
 }
 
-void ee_magnum::MagnumRenderer::UpdateProvinces(const std::size_t index,
+void ee_magnum::MagnumRenderer::UpdateProvinces(const std::size_t offset,
                                                 const std::vector<ee_engine::ProvinceSSBO>& data) {
     Containers::ArrayView provincesData(data.data(), data.size());
-    provinceSSBO.setSubData(index, provincesData);
+    provinceSSBO.setSubData(offset, provincesData);
 }
 
 void ee_magnum::MagnumRenderer::Shutdown() {

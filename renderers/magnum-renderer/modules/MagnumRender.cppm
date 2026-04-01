@@ -18,8 +18,8 @@ using namespace Magnum;
 export namespace ee_magnum {
     class MagnumRenderer final : public ee_engine::IRenderer {
     public:
-        MagnumRenderer(GLFWwindow *window);
-        ~MagnumRenderer();
+        explicit MagnumRenderer(GLFWwindow *window);
+        ~MagnumRenderer() override;
 
         void Init() override;
         void Shutdown() override;
@@ -31,8 +31,7 @@ export namespace ee_magnum {
 
         void ApplyCamera() override;
 
-        virtual void
-        UpdateProvinces(const std::size_t index, const std::vector<ee_engine::ProvinceSSBO>& data) override;
+        void UpdateProvinces(std::size_t offset, const std::vector<ee_engine::ProvinceSSBO>& data) override;
 
     private:
         Platform::GLContext context;
@@ -44,7 +43,5 @@ export namespace ee_magnum {
         void ValidateSupport();
         void LoadShaders();
         void LoadProvinces();
-
-        void ApplyMapMVP();
     };
 }

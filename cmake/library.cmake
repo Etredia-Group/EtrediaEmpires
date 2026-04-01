@@ -1,4 +1,12 @@
 function(add_library_target TARGET_NAME)
+    cmake_parse_arguments(
+            ADDITIONAL
+            ""
+            ""
+            "MODULES;MODULE_BASEDIRS"
+            ""
+            ${ARGN}
+    )
 
     set(CMAKE_CXX_STANDARD 23)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,22 +30,13 @@ function(add_library_target TARGET_NAME)
         modules/*.ixx
     )
 
-    target_sources(${TARGET_NAME} PUBLIC FILE_SET modules TYPE CXX_MODULES BASE_DIRS ${PROJECT_SOURCE_DIR} FILES ${MODULES})
+    list(APPEND MODULES ${ADDITIONAL_MODULES})
+    set (MODULE_BASEDIRS ${PROJECT_SOURCE_DIR})
+    list(APPEND MODULE_BASEDIRS ${ADDITIONAL_MODULE_BASEDIRS})
+
+    target_sources(${TARGET_NAME} PUBLIC FILE_SET modules TYPE CXX_MODULES BASE_DIRS ${MODULE_BASEDIRS} FILES ${MODULES})
     target_sources(${TARGET_NAME} PUBLIC FILE_SET headers TYPE HEADERS BASE_DIRS ${PROJECT_SOURCE_DIR} FILES ${HEADERS})
     target_sources(${TARGET_NAME} PRIVATE ${SOURCES})
-
-    # MSVC STD module linking
-    # target_compile_options(${TARGET_NAME} PRIVATE
-    #    /EHsc
-    #    "SHELL:/reference \"std=$ENV{STD_MODULE_DIR}/std.ifc\""
-    #   "SHELL:/reference \"std.compat=$ENV{STD_MODULE_DIR}/std.compat.ifc\""
-    #)
-    #target_link_libraries(${TARGET_NAME} PRIVATE "$ENV{STD_MODULE_DIR}/std.obj")
-    # target_link_libraries(${TARGET_NAME} PRIVATE "$ENV{STD_MODULE_DIR}/std.compat.obj")
-    #target_compile_options(${TARGET_NAME} PRIVATE
-    #    /wd5050
-    #)
-    #target_compile_features(${TARGET_NAME} PRIVATE cxx_std_23 INTERFACE cxx_std_23)
 
     # Clang modules
 #    target_compile_options(${TARGET_NAME} PRIVATE

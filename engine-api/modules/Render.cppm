@@ -62,8 +62,8 @@ export namespace ee_engine {
         void SetCamera(const CameraTransform& camera);
 
         constexpr CameraTransform getCamera() const noexcept { return camera; };
-        glm::vec2 ScreenToWorld(const float screenx, const float screenY);
-        glm::vec2 ScreenToWorld(const glm::vec2& screenPos);
+        glm::vec2 ScreenToWorld(float screenX, float screenY) const;
+        glm::vec2 ScreenToWorld(const glm::vec2& screenPos) const;
 
     protected:
         bool _isReady;
@@ -77,12 +77,12 @@ export namespace ee_engine {
         MapMesh *mapMesh;
         ShaderRefs shaders;
 
-        struct RegionIndecies {
-            std::size_t startIndex;
+        struct RegionRanges {
+            std::size_t offset;
             std::size_t provincesCount;
         };
 
-        std::unordered_map<std::uint32_t /*id*/, RegionIndecies> regionsMapping;
+        std::unordered_map<std::uint32_t /*id*/, RegionRanges> regionsMapping;
 
         explicit IRenderer(GLFWwindow *window);
 
@@ -92,7 +92,7 @@ export namespace ee_engine {
 
         virtual void ApplyCamera() = 0;
 
-        virtual void UpdateProvinces(const std::size_t index, const std::vector<ee_engine::ProvinceSSBO>& data) = 0;
+        virtual void UpdateProvinces(std::size_t offset, const std::vector<ProvinceSSBO>& data) = 0;
 
     private:
         void UpdateRegionCmd(RendererCommand& command);

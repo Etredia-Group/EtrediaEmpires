@@ -5,7 +5,7 @@ import utils;
 
 import Engine;
 import Actions;
-import MagnumRender;
+import VulkanRender;
 import GLFWInput;
 import std;
 
@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
     glfwInit();
 
     // Vulkan only
-    // glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     GLFWwindow *window = glfwCreateWindow(800, 600, "Etredia Empires", nullptr, nullptr);
 
@@ -38,16 +38,17 @@ int main(int argc, char **argv) {
     Engine::assetManager->LoadDir(ee_assets::MATERIAL, "assets/materials");
 
     // Load assets
-    Engine::assetManager->LoadAsync(ee_assets::MAP_MESH, "assets/map/ET.map");
+    Engine::assetManager->LoadAsync(ee_assets::MAP_MESH, "assets/map/regions.map");
     Engine::assetManager->LoadAsync(ee_assets::SAVE, "assets/scenarios/empires.save");
 
     // Setup input manager TODO: builder
     Engine::input = Allocate<GLFWInput>(Actions::mappings);
 
     // Setup renderer TODO: builder
-    Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_magnum::MagnumRenderer>(window));
+    //Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_magnum::MagnumRenderer>(window));
+    Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_vulkan::VulkanRenderer>(window));
 
-    ee_assets::AssetMapMesh& regions = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/ET.map");
+    ee_assets::AssetMapMesh& regions = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/regions.map");
     Engine::renderer->RegisterMapMesh(&regions.content);
 
     //TODO: ShaderRefs builder from set of AssetMaterial
@@ -64,19 +65,20 @@ int main(int argc, char **argv) {
 
     Engine::renderer->Init();
     Engine::renderer->SetCamera({
-        //.position = {1000.0f, 1000.0f},
+        .position = {1000.0f, 1000.0f},
         .zoom = 2000.0f
+        //.zoom = 1.0f
     });
 
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow*, const int width, const int height) {
         Engine::renderer->ResizeWindow(width, height);
     });
 
     // Setup Client TODO: builder
     Engine::client = Allocate<Client>();
-    //    AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
-    //    Engine::client->LoadSave(save);
-    //    Engine::client->Init();
+    const AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
+    Engine::client->LoadSave(save);
+    Engine::client->Init();
     Engine::client->Start();
 
     // Game loop
@@ -99,5 +101,4 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-// TODO: Use CRTP where possible in classes with virtual/override
 // TODO: Leaks detection
