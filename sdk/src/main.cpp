@@ -13,6 +13,12 @@ import std;
 using json = nlohmann::json;
 using path = std::filesystem::path;
 
+void IfNotExluded(const std::vector<path> &exluded, const path &a, const std::function<void()> &callback) {
+    if (std::ranges::find(exluded, a) == exluded.end())
+        callback();
+    else LOG(INFO, "SKIP EXCLUDED [%s]", a.c_str());
+}
+
 template <ee_assets::Asset TAsset>
 void CompileJson(const ee_sdk::JsonCompiler &compiler, const path &relative, const path &src, const path &out) {
     LOG(INFO, "Start compiling %s...", relative.c_str());
@@ -46,6 +52,32 @@ void CompileMaps(const ee_sdk::MapMeshCompiler &compiler, const path &relative, 
     }
 }
 
+void CompileSPIRV(const path &compiler, const path &relative, const path &src, const path &out) {
+    LOG(INFO, "Start compiling %s...", relative.c_str());
+
+    for (const std::filesystem::directory_entry &asset : std::filesystem::recursive_directory_iterator(src/relative)) {
+        if (!asset.is_regular_file()) continue;
+
+        const path shader = std::filesystem::relative(asset.path(), src/relative);
+        std::filesystem::create_directories((out/relative/shader).parent_path());
+
+        const std::string cmd = std::format("{} \"{}\" -O -o \"{}\"",
+            compiler.string(),
+            asset.path().string(),
+            (out/relative/shader).string()
+        );
+        LOG(INFO, "Run [%hs]", cmd.c_str());
+
+        if (
+            const std::int32_t result = std::system(cmd.c_str());
+            result == 0
+        ) {
+            LOG(INFO, "COMPILED SPIR-V SHADER: [%s]", (relative/shader).c_str());
+        }
+        else LOG(CRITICAL, "COMPILATION FAILED: [%s]. Result code: %d", (relative/shader).c_str(), result);
+    }
+}
+
 int main(const int argc, char **argv) {
     std::uint32_t status = 0;
 
@@ -61,6 +93,8 @@ int main(const int argc, char **argv) {
         options.add_options()
             ("src", "Path to your mod source assets", cxxopts::value<path>())
             ("o,out", "Path to compiled assets", cxxopts::value<path>()->default_value("out"))
+            ("e,exclude", "List of excluded asset types", cxxopts::value<std::vector<path>>()->default_value(""))
+            ("E,exclude-path", "List of exluded asset paths", cxxopts::value<std::vector<path>>()->default_value(""))
             ("h,help", "Print usage");
 
         if (
@@ -73,12 +107,25 @@ int main(const int argc, char **argv) {
             const path &src = cmd["src"].as<path>();
             const path &out = cmd["out"].as<path>();
 
+            const std::vector<path> &excludedTypes = cmd["exclude"].as<std::vector<path>>();
+            const std::vector<path> &excludedPaths = cmd["exclude-path"].as<std::vector<path>>();
+
             const ee_sdk::JsonCompiler jsonCompiler(src/"regions.json");
-            CompileJson<ee_assets::AssetMaterial>(jsonCompiler, "materials", src, out);
-            CompileJson<ee_assets::AssetSave>(jsonCompiler, "scenarios", src, out);
+            IfNotExluded(excludedTypes, "materials", [jsonCompiler, src, out] {
+                CompileJson<ee_assets::AssetMaterial>(jsonCompiler, "materials", src, out);
+            });
+            IfNotExluded(excludedTypes, "scenarios", [jsonCompiler, src, out] {
+                CompileJson<ee_assets::AssetSave>(jsonCompiler, "scenarios", src, out);
+            });
 
             constexpr ee_sdk::MapMeshCompiler mapMeshCompiler;
-            CompileMaps(mapMeshCompiler, "map", src, out);
+            IfNotExluded(excludedTypes, "map", [mapMeshCompiler, src, out] {
+                CompileMaps(mapMeshCompiler, "map", src, out);
+            });
+
+            IfNotExluded(excludedTypes, "shaders", [src, out] {
+                CompileSPIRV("glslc", "shaders", src, out);
+            });
         }
 
     }

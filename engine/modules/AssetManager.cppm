@@ -98,8 +98,8 @@ export
             Deallocate(diskSystem);
         }
 
-        void LoadDir(ee_assets::AssetType type, const std::filesystem::path& path) {
-            for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(path)) {
+        void LoadDir(const ee_assets::AssetType type, const std::filesystem::path& path) {
+            for (const std::filesystem::directory_entry& entry : std::filesystem::recursive_directory_iterator(path)) {
                 if (entry.is_directory()) continue;
                 LoadAsync(type, entry.path());
             }

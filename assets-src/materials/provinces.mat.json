@@ -1,4 +1,4 @@
 {
-    "vertexShaderAssetID": "assets/shaders/provinces.vert",
-    "fragmentShaderAssetID": "assets/shaders/provinces.frag"
+    "vertexShaderAssetID": "assets/shaders/provinces-flat/provinces.vert",
+    "fragmentShaderAssetID": "assets/shaders/provinces-flat/provinces.frag"
 }

@@ -43,7 +43,6 @@ export namespace ee_assets
 }
 
 export namespace ee_sdk {
-
     std::optional<json> ReadJson(const std::filesystem::path &assetPath) {
         std::ifstream fin(assetPath);
         if (!fin.is_open()) {
