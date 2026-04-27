@@ -82,7 +82,7 @@ void ee_magnum::MagnumRenderer::LoadProvinces() {
 
             regionMesh.setPrimitive(GL::MeshPrimitive::Triangles)
                       .setCount(static_cast<Magnum::Int>(province.indices.size()))
-                      .addVertexBuffer(GL::Buffer{provinceVertices}, 0, GL::Attribute<0, Magnum::Vector2>{})
+                      .addVertexBuffer(GL::Buffer{provinceVertices}, 0, GL::Attribute<0, Magnum::Vector3>{})
                       .setIndexBuffer(GL::Buffer{provinceIndices}, 0, GL::MeshIndexType::UnsignedShort);
 
             provinceMeshes.push_back(std::move(regionMesh));

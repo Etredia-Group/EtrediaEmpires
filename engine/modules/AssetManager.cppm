@@ -2,6 +2,7 @@ module;
 
 #include "compile_config.hpp"
 #include <xxhash.h>
+#include <rfl/capnproto.hpp>
 
 export module AssetManager;
 export import AssetData;
@@ -29,7 +30,7 @@ export
         std::atomic<bool> isReady;
         AssetAddress *resourceAddress;
 
-        AssetInfo(void *resource) {
+        explicit AssetInfo(void *resource) {
             this->resourceAddress = Allocate<AssetAddress>();
             this->resourceAddress->resource.store(resource);
         }
@@ -122,7 +123,7 @@ export
 
             Request(command);
             while (command.out->load() == nullptr) {}
-            return *reinterpret_cast<AssetHandle*>(command.out->load());
+            return *static_cast<AssetHandle*>(command.out->load());
         }
 
         AssetHandle& Find(const std::uint32_t id) {
@@ -133,8 +134,8 @@ export
             command.out = &result;
 
             Request(command);
-            while (command.out->load() == nullptr);
-            return *reinterpret_cast<AssetHandle*>(command.out->load());
+            while (command.out->load() == nullptr) {}
+            return *static_cast<AssetHandle*>(command.out->load());
         }
 
         // Returned resource reference should not be stored
@@ -149,7 +150,7 @@ export
             return Get<T>(Find(id));
         }
 
-        void Redirect(const AssetHandle& handle, void *resource) {
+        void Redirect(const AssetHandle& handle, void *resource) const {
             const AssetInfo& asset = activeAssets[handle.slot];
             if (asset.resourceAddress == nullptr) {
                 LOG(WARNING, "Attempt to redirect empty handle");
@@ -176,11 +177,11 @@ export
             command.out = &result;
 
             Request(command);
-            while (command.out->load() == nullptr);
-            return *reinterpret_cast<T*>(command.out->load());
+            while (command.out->load() == nullptr) {}
+            return *static_cast<T*>(command.out->load());
         }
 
-        void Free(AssetHandle& handle) {
+        void Free(const AssetHandle& handle) {
             AssetInfo& asset = activeAssets[handle.slot];
             Redirect(handle, nullptr);
             Deallocate(asset.resourceAddress);
@@ -193,23 +194,22 @@ export
         void Update() override {
             // TODO: FinishLoadTasks()
             for (AssetLoadingEntry& entry : loadingEntries) {
-                bool isReady = entry.fileOwner->PollReady(*entry.file);
-                if (isReady) {
+                if (entry.fileOwner->PollReady(*entry.file)) {
                     AssetInfo& asset = activeAssets[entry.handle.slot];
 
                     switch (asset.type) {
                     case ee_assets::MAP_MESH:
-                        FinishLoadConstruct(entry, mapMeshesStorage);
+                        FinishLoadCapnprotoDeserialize(entry, mapMeshesStorage);
                         break;
                     case ee_assets::SAVE:
-                        FinishLoadConstruct(entry, savesStorage);
+                        FinishLoadCapnprotoDeserialize(entry, savesStorage);
                         break;
 
                     case ee_assets::SHADER:
                         FinishLoadConstruct(entry, shadersStorage);
                         break;
                     case ee_assets::MATERIAL:
-                        FinishLoadPlain(entry, materialsStorage);
+                        FinishLoadCapnprotoDeserialize(entry, materialsStorage);
                         break;
                     case ee_assets::IMAGE:
                         break;
@@ -298,13 +298,13 @@ export
                 assetPos = activeAssets.size() - 1;
             }
             handle->slot = assetPos;
-            auto assetPath = command.targetPath.generic_u8string();
-            std::uint32_t assetId = assetsIdMapping[command.targetPath] =
+            const std::basic_string<char8_t> assetPath = command.targetPath.generic_u8string();
+            const std::uint32_t assetId = assetsIdMapping[command.targetPath] =
                 XXH32(assetPath.data(), assetPath.size(), ASSETS_HASH_SPACE);
             handle->id = assetId;
             assetsMapping[assetId] = handle;
 
-            AssetLoadingEntry loadingEntry{
+            const AssetLoadingEntry loadingEntry{
                 .handle = *handle,
                 .file = &file,
                 .fileOwner = diskSystem
@@ -324,7 +324,7 @@ export
                 id = idMapping->second;
             }
 
-            std::unordered_map<std::uint32_t, AssetHandle*>::iterator assetMapping = assetsMapping.find(id);
+            const std::unordered_map<std::uint32_t, AssetHandle*>::iterator assetMapping = assetsMapping.find(id);
 
             if (assetMapping == assetsMapping.end())
                 return;
@@ -335,7 +335,7 @@ export
             command.type = AssetStreamCommand::COMPLETED;
         }
 
-        void GetCmd(AssetStreamCommand& command) {
+        void GetCmd(AssetStreamCommand& command) const {
             if (activeAssets.size() <= command.target.slot)
                 return;
             if (!activeAssets[command.target.slot].isReady)
@@ -355,13 +355,36 @@ export
         }
 
         template <ee_assets::Asset T>
-        void FinishLoadPlain(AssetLoadingEntry& loaded, std::vector<T*>& storage) {
-            T *resource = Allocate<T>();
-            if (loaded.file->size < sizeof(T))
-                LOG(CRITICAL, "File size is less than needed for asset of type: %d", typeid(T).name());
-            std::memcpy(resource, loaded.file->data, sizeof(T));
-            storage.push_back(resource);
-            Redirect(loaded.handle, storage.back());
+        void FinishLoadCapnprotoDeserialize(AssetLoadingEntry& loaded, std::vector<T*>& storage) {
+            try {
+                if (rfl::Result<T> result = rfl::capnproto::read<T>(
+                    reinterpret_cast<const char*>(loaded.file->data),
+                    loaded.file->size
+                )) {
+                    storage.push_back(Allocate<T>(std::move(*result)));
+                    Redirect(loaded.handle, storage.back());
+                }
+                else {
+#if !defined(NDEBUG)
+                    LOG(
+                        ERROR,
+                        "Failed to read asset: [%s]. [%hs]",
+                        loaded.file->debugPath.c_str(),
+                        result.error().what().c_str()
+                    );
+#else
+                    LOG(ERROR, "Failed to read asset: ID[%d]. [%hs]", loaded.file->id, result.error().what().c_str());
+#endif
+                }
+            } catch (std::exception e) {
+                storage.push_back(Allocate<T>());
+                Redirect(loaded.handle, storage.back());
+#if !defined(NDEBUG)
+                LOG(ERROR, "Failed to read asset: [%s]. [%hs]", loaded.file->debugPath.c_str(), e.what());
+#else
+                LOG(ERROR, "Failed to read asset: ID[%d]. [%hs]", loaded.file->id, e.what());
+#endif
+            }
         }
 
         template <ee_assets::Asset T>

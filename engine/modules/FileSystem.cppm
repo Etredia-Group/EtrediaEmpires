@@ -30,16 +30,16 @@ export
 
     class IFileSystem {
     public:
-        inline static constexpr std::uint32_t FILE_OPEN_NONE = 0;
-        inline static constexpr std::uint32_t FILE_OPEN_READ = (1 << 0);
-        inline static constexpr std::uint32_t FILE_OPEN_WRITE = (1 << 1);
-        inline static constexpr std::uint32_t FILE_OPEN_MMAP = (1 << 2);
-        inline static constexpr std::uint32_t FILE_READ_SEQUENTIAL = 0;
-        inline static constexpr std::uint32_t FILE_READ_RANDOM_ACCESS = (1 << 0);
+        static constexpr std::uint32_t FILE_OPEN_NONE = 0;
+        static constexpr std::uint32_t FILE_OPEN_READ = (1 << 0);
+        static constexpr std::uint32_t FILE_OPEN_WRITE = (1 << 1);
+        static constexpr std::uint32_t FILE_OPEN_MMAP = (1 << 2);
+        static constexpr std::uint32_t FILE_READ_SEQUENTIAL = 0;
+        static constexpr std::uint32_t FILE_READ_RANDOM_ACCESS = (1 << 0);
 
-        virtual FileHandle& Open(const std::filesystem::path& path, const std::uint32_t flags) = 0;
+        virtual FileHandle& Open(const std::filesystem::path& path, std::uint32_t flags) = 0;
 
-        virtual void ReadAsync(FileHandle& file, const std::uint32_t bufferSize, const std::uint32_t flags) = 0;
+        virtual void ReadAsync(FileHandle& file, std::uint32_t bufferSize, std::uint32_t flags) = 0;
 
         virtual bool PollReady(FileHandle& file) = 0;
 
@@ -55,14 +55,12 @@ export
 
     class NativeFileSystem final : public IFileSystem {
     public:
-        FileHandle& Open(const std::filesystem::path& path, const std::uint32_t flags) override;
+        FileHandle& Open(const std::filesystem::path& path, std::uint32_t flags) override;
 
-        void ReadAsync(FileHandle& file, const std::uint32_t bufferSize, std::uint32_t flags) override;
+        void ReadAsync(FileHandle& file, std::uint32_t bufferSize, std::uint32_t flags) override;
 
         bool PollReady(FileHandle& file) override;
 
         void Close(FileHandle& file) override;
-
-    private:
     };
 }

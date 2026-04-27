@@ -1,22 +1,33 @@
 {
-	"dependencies": [
-		"boost-lockfree",
-		"xxhash",
-		"nlohmann-json",
-		"entt",
-		"vulkan",
-		"glfw3",
-		"glm",
-		{
-			"name": "magnum",
-			"features": ["glfwapplication"],
-			"version>=": "0"
-		},
-		{
-			"name": "corrade",
-			"version>=": "0"
-		},
-		"rmlui",
-		"gtest"
-	]
+  "dependencies": [
+    "cxxopts",
+    "boost-lockfree",
+    "xxhash",
+    "nlohmann-json",
+    {
+      "name": "reflectcpp",
+      "features": [
+        "capnproto"
+      ]
+    },
+    "entt",
+    "vulkan",
+    "glfw3",
+    "glm",
+    {
+      "name": "magnum",
+      "features": [
+        "glfwapplication"
+      ],
+      "version>=": "0"
+    },
+    {
+      "name": "corrade",
+      "version>=": "0"
+    },
+    "rmlui",
+    "gtest"
+  ],
+  "version": "0.0.1",
+  "name": "etredia-empires"
 }

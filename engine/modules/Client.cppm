@@ -7,7 +7,7 @@ import std;
 
 export
 {
-    struct ClientCommand : public ee_utils::WorkerCommand {
+    struct ClientCommand : ee_utils::WorkerCommand {
         enum Type : std::uint8_t {
             NONE,
 
@@ -21,14 +21,14 @@ export
     public:
         Client();
         ~Client() override;
-        void Init();
+        void Init() const;
 
         //void Send(); -> Request(SEND)
 
-        const IDataChannel* GetConnection();
+        const IDataChannel* GetConnection() const;
         void ConnectServer();
 
-        void LoadSave(const AssetHandle save);
+        void LoadSave(AssetHandle save);
 
     protected:
         void Update() override;
@@ -40,6 +40,6 @@ export
 
         void SendCmd(ClientCommand& command);
 
-        void ViewModelSubject(ee_data::Subject subject);
+        static void ViewModelSubject(const ee_data::Subject &subject);
     };
 }

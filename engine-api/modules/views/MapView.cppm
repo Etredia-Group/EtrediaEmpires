@@ -12,7 +12,7 @@ export namespace ee_engine {
             std::vector<std::uint16_t> indices;
         };
 
-        std::unordered_map<std::uint32_t, std::vector<Province>> regions;
+        std::unordered_map<std::uint32_t /* colorId */, std::vector<Province>> regions;
     };
 
     struct ProvinceSSBO {

@@ -1,12 +1,12 @@
 export module AssetData;
-import GameData;
-import views;
+export import GameData;
+export import views;
 import std;
 
 export namespace ee_assets {
-    struct AssetData {};
+    struct AssetTag {};
 
-    template <typename T> concept Asset = std::is_base_of_v<AssetData, T>;
+    template <typename T> concept Asset = requires { typename T::asset_tag; };
 
     enum AssetType {
         BINARY,
@@ -19,33 +19,33 @@ export namespace ee_assets {
         IMAGE
     };
 
-    struct AssetBinary : public AssetData {
+    struct AssetBinary {
+        using asset_tag = AssetTag;
+
         std::uint8_t *content = nullptr;
         std::size_t size = 0;
 
-        AssetBinary(std::uint8_t * & source, const std::size_t sourceSize);
+        AssetBinary(std::uint8_t * & source, std::size_t sourceSize);
         ~AssetBinary();
     };
 
-    struct AssetMapMesh : public AssetData {
-        ee_engine::MapMesh content;
+    struct AssetMapMesh {
+        using asset_tag = AssetTag;
 
-        std::uint8_t* Serialize(std::size_t& size);
-        AssetMapMesh() {};
-        AssetMapMesh(std::uint8_t * & source, const std::size_t sourceSize);
+        ee_engine::MapMesh content;
     };
 
-    struct AssetSave : public AssetData {
-        ee_data::GameState content;
+    struct AssetSave {
+        using asset_tag = AssetTag;
 
-        std::uint8_t* Serialize(std::size_t& size);
-        AssetSave() {};
-        AssetSave(std::uint8_t * & source, const std::size_t sourceSize);
+        ee_data::GameState content;
     };
 
     using AssetShader = AssetBinary;
 
-    struct AssetMaterial : public AssetData {
+    struct AssetMaterial {
+        using asset_tag = AssetTag;
+
         std::uint32_t vertexShaderAssetID;
         std::uint32_t fragmentShaderAssetID;
     };

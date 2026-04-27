@@ -83,6 +83,7 @@ namespace logger {
                 return;
             }
 
+            P7_Set_Crash_Handler();
             client = P7_Create_Client(options);
             P7_Set_Crash_Handler();
             trace = P7_Create_Trace(client, L"TC 1");
@@ -159,10 +160,14 @@ namespace logger {
                 nullptr,
                 location.line(),
                 location.file_name(),
-                location.function_name(),
+                "", //TODO: location.function_name(),
                 format,
                 std::forward<Args>(args)...
             );
+
+            if (level == ERROR || level == CRITICAL) {
+                Logger::client->Flush();
+            }
         }
     };
 
@@ -202,10 +207,14 @@ namespace logger {
                 nullptr,
                 location.line(),
                 location.file_name(),
-                location.function_name(),
+                "", //TODO: location.function_name(),
                 TM(format),
                 std::forward<Args>(args)...
             );
+
+            if (level == ERROR || level == CRITICAL) {
+                Logger::client->Flush();
+            }
         }
     };
 

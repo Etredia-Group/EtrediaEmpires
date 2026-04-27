@@ -26,7 +26,7 @@ export namespace ee_engine {
         float rotation;
     };
 
-    struct RendererCommand : public ee_utils::WorkerCommand {
+    struct RendererCommand : ee_utils::WorkerCommand {
         enum Type : std::uint8_t {
             NONE,
 

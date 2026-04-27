@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     glfwMakeContextCurrent(window);
     Engine::window = window;
 
-    // Setup Asset Manager TODO: builder
+    // Setup Asset Manager
     Engine::assetManager = Allocate<AssetManager>();
     Engine::assetManager->Start();
     Engine::assetManager->LoadDir(ee_assets::SHADER, "assets/shaders");
@@ -41,18 +41,17 @@ int main(int argc, char **argv) {
     Engine::assetManager->LoadAsync(ee_assets::MAP_MESH, "assets/map/regions.map");
     Engine::assetManager->LoadAsync(ee_assets::SAVE, "assets/scenarios/empires.save");
 
-    // Setup input manager TODO: builder
+    // Setup input manager
     Engine::input = Allocate<GLFWInput>(Actions::mappings);
 
-    // Setup renderer TODO: builder
-    //Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_magnum::MagnumRenderer>(window));
+    // Setup renderer
     Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_vulkan::VulkanRenderer>(window));
 
     ee_assets::AssetMapMesh& regions = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/regions.map");
     Engine::renderer->RegisterMapMesh(&regions.content);
 
     //TODO: ShaderRefs builder from set of AssetMaterial
-    ee_assets::AssetMaterial& provincesMaterial =
+    const ee_assets::AssetMaterial& provincesMaterial =
         Engine::assetManager->FindOnce<ee_assets::AssetMaterial>("assets/materials/provinces.mat");
     ee_assets::AssetShader& vertProv = Engine::assetManager->FindOnce<ee_assets::AssetShader>(
         provincesMaterial.vertexShaderAssetID);
@@ -74,7 +73,7 @@ int main(int argc, char **argv) {
         Engine::renderer->ResizeWindow(width, height);
     });
 
-    // Setup Client TODO: builder
+    // Setup Client
     Engine::client = Allocate<Client>();
     const AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
     Engine::client->LoadSave(save);

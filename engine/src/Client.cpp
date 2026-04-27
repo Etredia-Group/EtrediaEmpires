@@ -7,7 +7,7 @@ Client::Client() : ThreadedWorker(L"Client", 0) {
     commandsMapping[ClientCommand::SEND] = std::bind_front(&Client::SendCmd, this);
 }
 
-void Client::Init() {
+void Client::Init() const {
     if (Engine::renderer == nullptr || !Engine::renderer->isReady()) {
         LOG(CRITICAL, "Renderer is not ready. Client cannot be created");
         throw std::logic_error("Renderer is not ready");
@@ -19,7 +19,7 @@ void Client::Init() {
     ViewModelSubject(asset.content.subjects[1]);
 }
 
-const IDataChannel* Client::GetConnection() {
+const IDataChannel* Client::GetConnection() const {
     return networkConnection;
 }
 
@@ -39,14 +39,15 @@ void Client::Update() {}
 void Client::Release() {}
 
 
+// ReSharper disable once CppMemberFunctionMayBeStatic
 void Client::SendCmd(ClientCommand& command) {
     command.type = ClientCommand::COMPLETED;
 }
 
 
-void Client::ViewModelSubject(ee_data::Subject subject) {
+void Client::ViewModelSubject(const ee_data::Subject &subject) {
     for (const std::uint32_t region : subject.regions) {
-        ee_engine::ProvinceSSBO vm{
+        const ee_engine::ProvinceSSBO vm {
             .regionId = region,
             .color = subject.color
         };
