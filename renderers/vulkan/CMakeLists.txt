@@ -6,6 +6,7 @@ set(LIB vulkan-renderer)
 
 find_package(Vulkan REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(RmlUi CONFIG REQUIRED)
 
 # Link library
 
@@ -27,3 +28,4 @@ target_link_libraries(${LIB} PUBLIC utils)
 target_link_libraries(${LIB} PUBLIC p7)
 target_link_libraries(${LIB} PRIVATE glm::glm)
 target_link_libraries(${LIB} PRIVATE Vulkan::Vulkan)
+target_link_libraries(${LIB} PRIVATE RmlUi::RmlUi)

@@ -85,3 +85,33 @@ void vulkan_render::ResourcesFactory::SetupFrames(const Context &context, Swapch
     }
     LOG(INFO, "Frame views are ready.");
 }
+
+vulkan_render::Texture<vulkan_render::TextureMode::RENDER> vulkan_render::DataFactory::CreateRenderTexture(
+    const Context &context,
+    const RenderCommands &commands,
+    const std::uint32_t width, const std::uint32_t height,
+    const std::span<std::byte> textureData
+) {
+    Texture<TextureMode::PARTIAL> texture(context, width, height, vk::Format::eR8G8B8A8Srgb);
+    const Buffer<
+        std::byte,
+        vk::BufferUsageFlagBits::eTransferSrc,
+        BufferMode::STATIC
+    > stagingBuffer(context, textureData);
+
+    commands.TranslateTextureLayout(
+        texture,
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eTransferDstOptimal
+    );
+    commands.SubmitTexture(stagingBuffer, texture);
+    commands.TranslateTextureLayout(
+        texture,
+        vk::ImageLayout::eTransferDstOptimal,
+        vk::ImageLayout::eShaderReadOnlyOptimal
+    );
+
+    texture.Init(vk::ImageAspectFlagBits::eColor);
+
+    return std::move(texture);
+}

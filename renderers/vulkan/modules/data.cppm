@@ -149,6 +149,7 @@ export namespace vulkan_render {
     };
 
     enum class TextureMode {
+        PARTIAL,
         RENDER,
         DEPTH
     };
@@ -171,35 +172,25 @@ export namespace vulkan_render {
         Texture(
             const Context &context,
             const std::uint32_t width, const std::uint32_t height,
-            const vk::Format &format,
-            const std::span<std::byte> textureData
-        ) requires (mode == TextureMode::RENDER)
-        : context(context), width(width), height(height), data(textureData), format(format) {
-            Buffer<
-                std::byte,
-                vk::BufferUsageFlagBits::eTransferSrc,
-                BufferMode::STATIC
-            > stagingBuffer(context, data);
-
+            const vk::Format &format
+        ) requires (mode == TextureMode::PARTIAL)
+        : context(context), width(width), height(height), format(format) {
             MakeInstance(
                 vk::Flags(vk::ImageUsageFlagBits::eTransferDst) | vk::ImageUsageFlagBits::eSampled,
                 vk::MemoryPropertyFlagBits::eDeviceLocal,
                 handle,
                 memory
             );
-
-            /* TODO: Transition image layout
-             * Copy buffer to image
-             * Transition image layout
-             * Create view
-             */
         }
 
         Texture(
             const Context &context,
             const Surface &surface
-        ) requires (mode == TextureMode::DEPTH)
-        : context(context), width(surface.extent.width), height(surface.extent.height), format(vk::Format::eD32SfloatS8Uint) {
+        ) requires (mode == TextureMode::DEPTH) :
+            context(context),
+            width(surface.extent.width),
+            height(surface.extent.height),
+            format(vk::Format::eD32SfloatS8Uint) {
             MakeInstance(
                 vk::ImageUsageFlagBits::eDepthStencilAttachment,
                 vk::MemoryPropertyFlagBits::eDeviceLocal,
@@ -207,6 +198,21 @@ export namespace vulkan_render {
                 memory
             );
             MakeView(vk::ImageAspectFlagBits::eDepth);
+        }
+
+        // ReSharper disable once CppNonExplicitConvertingConstructor
+        Texture(Texture<TextureMode::PARTIAL> &&from) requires (mode == TextureMode::RENDER) :
+            context(from.context),
+            width(from.width),
+            height(from.height),
+            format(from.format) {
+            if (*from.view == nullptr) {
+                LOG(ERROR, "Corrupted render texture created, source data is not complete.");
+            }
+        }
+
+        void Init(const vk::ImageAspectFlags &flags) requires (mode == TextureMode::PARTIAL) {
+            MakeView(flags);
         }
 
         Texture(Texture&&) noexcept = default;

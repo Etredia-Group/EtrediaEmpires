@@ -74,6 +74,83 @@ void vulkan_render::RenderCommands::SubmitStagingBuffer(const BaseBuffer<BufferM
     cmd.Submit(buffer.context.device.transfer);
 }
 
+void vulkan_render::RenderCommands::SubmitTexture(
+    const BaseBuffer<BufferMode::STATIC> &buffer,
+    const Texture<TextureMode::PARTIAL> &texture
+) const {
+    const Command cmd(buffer.context, graphicsPool);
+
+    const vk::BufferImageCopy copyRegion {
+        .bufferOffset = 0,
+        .bufferRowLength = 0,
+        .bufferImageHeight = 0,
+        .imageSubresource = {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        },
+        .imageOffset = {0, 0, 0},
+        .imageExtent =  {texture.width, texture.height, 1}
+    };
+
+    cmd.handle.copyBufferToImage(buffer.handle, texture.handle, vk::ImageLayout::eTransferDstOptimal, {copyRegion});
+
+    cmd.Submit(buffer.context.device.graphics);
+}
+
+void vulkan_render::RenderCommands::TranslateTextureLayout(
+    const Texture<TextureMode::PARTIAL> &texture,
+    const vk::ImageLayout &from,
+    const vk::ImageLayout &to
+) const {
+    const Command cmd(texture.context, graphicsPool);
+
+    vk::ImageMemoryBarrier barrier {
+        .oldLayout = from,
+        .newLayout = to,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .image = texture.handle,
+        .subresourceRange = {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        },
+    };
+
+    vk::PipelineStageFlags sourceStage;
+    vk::PipelineStageFlags destinationStage;
+
+    if (from == vk::ImageLayout::eUndefined && to == vk::ImageLayout::eTransferDstOptimal) {
+        barrier.srcAccessMask = vk::AccessFlagBits::eNone;
+        barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+
+        sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+        destinationStage = vk::PipelineStageFlagBits::eTransfer;
+    } else if (from == vk::ImageLayout::eTransferDstOptimal && to == vk::ImageLayout::eReadOnlyOptimal) {
+        barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+        sourceStage = vk::PipelineStageFlagBits::eTransfer;
+        destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
+    } else {
+        LOG(ERROR, "Unsupported layout transition: %d -> %d.", from, to);
+    }
+
+    cmd.handle.pipelineBarrier(
+        sourceStage, destinationStage,
+        vk::DependencyFlags(0),
+        nullptr,
+        nullptr,
+        {barrier}
+    );
+
+    cmd.Submit(texture.context.device.graphics);
+}
+
 vk::raii::CommandPool vulkan_render::RenderCommands::MakePool(const Context &context, const std::uint32_t queueFamily) {
     return context.device.handle.createCommandPool({
         .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,

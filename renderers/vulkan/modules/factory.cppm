@@ -5,6 +5,8 @@
 export module vulkan_render:factory;
 import :hardware;
 import :resources;
+import :control;
+import :data;
 
 export namespace vulkan_render {
 
@@ -25,6 +27,16 @@ export namespace vulkan_render {
          * @param surface surface origin.
          */
         static void SetupFrames(const Context &context, Swapchain &swapchain, const Surface &surface);
+    };
+
+    class DataFactory {
+    public:
+        static Texture<TextureMode::RENDER> CreateRenderTexture(
+            const Context &context,
+            const RenderCommands &commands,
+            std::uint32_t width, std::uint32_t height,
+            std::span<std::byte> textureData
+        );
     };
 
 }

@@ -47,6 +47,15 @@ export namespace vulkan_render {
         RenderCommands(const Context &context, std::uint32_t maxFramesInFlight);
 
         void SubmitStagingBuffer(const BaseBuffer<BufferMode::STAGING_ACCESS> &buffer) const;
+        void SubmitTexture(
+            const BaseBuffer<BufferMode::STATIC> &buffer,
+            const Texture<TextureMode::PARTIAL> &texture
+        ) const;
+        void TranslateTextureLayout(
+            const Texture<TextureMode::PARTIAL> &texture,
+            const vk::ImageLayout &from,
+            const vk::ImageLayout &to
+        ) const;
 
     private:
         static vk::raii::CommandPool MakePool(const Context &context, std::uint32_t queueFamily);

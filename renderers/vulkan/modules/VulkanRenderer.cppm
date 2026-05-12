@@ -18,7 +18,7 @@ namespace ee_vulkan {
         static constexpr vk::ClearValue CLEAR_DEPTH = {.depthStencil = {1.0f, 0}};
     };
 
-    struct Mesh {
+    struct ProvinceMesh {
         lazy<vulkan_render::Buffer<
             glm::vec2,
             vk::BufferUsageFlagBits::eVertexBuffer,
@@ -76,7 +76,7 @@ export namespace ee_vulkan {
 
         lazy<vulkan_render::Texture<vulkan_render::TextureMode::DEPTH>> depth;
         lazy<vulkan_render::Uniform<glm::mat4>> viewProjectionUniform;
-        Mesh provinces;
+        ProvinceMesh provinces;
 
         std::size_t currentFrame = 0;
 
