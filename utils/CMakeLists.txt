@@ -7,6 +7,7 @@ set(LIB utils)
 find_package(Boost REQUIRED COMPONENTS lockfree)
 find_package(reflectcpp CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(RmlUi CONFIG REQUIRED)
 
 # Link library
 
@@ -16,3 +17,4 @@ target_link_libraries(${LIB} PUBLIC p7)
 target_link_libraries(${LIB} PRIVATE Boost::lockfree)
 target_link_libraries(${LIB} PRIVATE reflectcpp::reflectcpp)
 target_link_libraries(${LIB} PRIVATE glm::glm)
+target_link_libraries(${LIB} PRIVATE RmlUi::RmlUi)

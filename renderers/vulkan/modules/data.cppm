@@ -69,7 +69,9 @@ export namespace vulkan_render {
         NO_UNIQUE_ADDRESS MappedMemory<T, mode != BufferMode::STATIC> content;
         static constexpr std::size_t elementSize = sizeof(T);
 
-        Buffer(const Context &context, const std::span<T> data) requires (mode == BufferMode::STATIC)
+        template <typename U>
+        Buffer(const Context &context, const std::span<U> data)
+            requires (mode == BufferMode::STATIC && std::same_as<std::remove_const_t<U>, T>)
             : BaseBuffer<mode>(context, data.size() * elementSize) {
 
             MakeInstance(
@@ -205,7 +207,10 @@ export namespace vulkan_render {
             context(from.context),
             width(from.width),
             height(from.height),
-            format(from.format) {
+            format(from.format),
+            handle(std::move(from.handle)),
+            view(std::move(from.view)),
+            memory(std::move(from.memory)) {
             if (*from.view == nullptr) {
                 LOG(ERROR, "Corrupted render texture created, source data is not complete.");
             }
@@ -267,15 +272,47 @@ export namespace vulkan_render {
         }
     };
 
+    using PartialTexture = Texture<TextureMode::PARTIAL>;
+    using DepthTexture = Texture<TextureMode::DEPTH>;
+    using RenderTexture = Texture<TextureMode::RENDER>;
+
     template <typename T>
     class Uniform {
     public:
         std::vector<Buffer<T, vk::BufferUsageFlagBits::eUniformBuffer, BufferMode::CPU_ACCESS>> buffers;
-        explicit Uniform(const Context &context, std::uint32_t maxFramesInFlight) {
+        Uniform(const Context &context, std::uint32_t maxFramesInFlight) {
             buffers.reserve(maxFramesInFlight);
             for (std::uint32_t i = 0; i < maxFramesInFlight; i++) {
                 buffers.push_back(Buffer<T, vk::BufferUsageFlagBits::eUniformBuffer, BufferMode::CPU_ACCESS>(context, 1));
             }
+        }
+    };
+
+    class Sampler {
+    public:
+        vk::raii::Sampler handle;
+
+        explicit Sampler(const Context &context) : handle(MakeInstance(context)) {}
+
+    private:
+        static vk::raii::Sampler MakeInstance(const Context &context) {
+            const vk::SamplerCreateInfo samplerInfo {
+                .magFilter = vk::Filter::eNearest,
+                .minFilter = vk::Filter::eLinear,
+                .mipmapMode = vk::SamplerMipmapMode::eLinear,
+                .addressModeU = vk::SamplerAddressMode::eRepeat,
+                .addressModeV = vk::SamplerAddressMode::eRepeat,
+                .addressModeW = vk::SamplerAddressMode::eRepeat,
+                .mipLodBias = 0.0f,
+                .anisotropyEnable = vk::False,
+                .compareEnable = vk::False,
+                .compareOp = vk::CompareOp::eAlways,
+                .minLod = 0.0f,
+                .maxLod = 0.0f,
+                .borderColor = vk::BorderColor::eIntOpaqueBlack,
+                .unnormalizedCoordinates = vk::False
+            };
+            return context.device.handle.createSampler(samplerInfo);
         }
     };
 

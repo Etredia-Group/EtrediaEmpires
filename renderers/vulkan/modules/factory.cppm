@@ -31,11 +31,16 @@ export namespace vulkan_render {
 
     class DataFactory {
     public:
-        static Texture<TextureMode::RENDER> CreateRenderTexture(
+        static RenderTexture CreateRenderTexture(
             const Context &context,
             const RenderCommands &commands,
             std::uint32_t width, std::uint32_t height,
-            std::span<std::byte> textureData
+            std::span<const std::byte> textureData
+        );
+
+        static RenderTexture CreateRenderTexture(
+            const Context &context,
+            const RenderCommands &commands
         );
     };
 

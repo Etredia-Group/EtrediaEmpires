@@ -1,0 +1,4 @@
+{
+    "vertexShaderAssetID": "assets/shaders/rml-ui/rmlui.vert",
+    "fragmentShaderAssetID": "assets/shaders/rml-ui/rmlui.frag"
+}

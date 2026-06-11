@@ -7,6 +7,8 @@ export module VulkanRender;
 import Render;
 import views;
 import vulkan_render;
+import rmlui_vulkan;
+import rml;
 import std;
 
 namespace ee_vulkan {
@@ -52,10 +54,13 @@ export namespace ee_vulkan {
         void Init() override;
         void Shutdown() override;
 
+        constexpr Rml::RenderInterface* getRenderInterface() noexcept override {return &*rmlRenderInterface;}
+
     protected:
-        void Clear() override;
+        void DrawBegin() override;
         void DrawMap() override;
         void DrawUI() override;
+        void DrawEnd() override;
         void ResizeWindow(int width, int height) override;
 
         void ApplyCamera() override;
@@ -65,24 +70,28 @@ export namespace ee_vulkan {
     private:
         const std::uint32_t MAX_FRAMES_IN_FLIGHT = 3;
 
-        bool isDrawing = false;
-
         lazy<vulkan_render::Context> context;
         vulkan_render::Surface surface;
         lazy<vulkan_render::Swapchain> swapchain;
         lazy<vulkan_render::RenderCommands> renderCommands;
+        lazy<vulkan_render::RenderPass> renderPass;
         lazy<vulkan_render::Pipeline> provincesPipeline;
+        lazy<vulkan_render::Pipeline> rmlPipeline;
         lazy<vulkan_render::SyncManager> syncManager;
 
         lazy<vulkan_render::Texture<vulkan_render::TextureMode::DEPTH>> depth;
         lazy<vulkan_render::Uniform<glm::mat4>> viewProjectionUniform;
         ProvinceMesh provinces;
 
+        lazy<ee_rml::RmlVulkan> rmlRenderInterface;
+
         std::size_t currentFrame = 0;
+        lazy<vulkan_render::FrameContext> frameContext;
 
         void RecreateSwapchain();
 
         void LoadProvincesMaterial();
+        void LoadRmlMaterial();
         void LoadProvinces();
         void UpdateData(std::uint32_t frame);
     };

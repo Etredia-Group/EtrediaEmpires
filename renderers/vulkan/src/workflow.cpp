@@ -1,40 +1,114 @@
 module vulkan_render;
 import utils;
 
+vulkan_render::RenderPass::RenderPass(
+    const Context &context,
+    const Swapchain &swapchain,
+    const Surface &surface,
+    const Texture<TextureMode::DEPTH> &depth
+) :
+    context(context),
+    swapchain(swapchain),
+    surface(surface),
+    handle(MakeInstance()) {
+    MakeFramebuffers(depth);
+}
+
+vk::raii::RenderPass vulkan_render::RenderPass::MakeInstance() const {
+    const vk::AttachmentDescription colorAttachmentDescription {
+        .format = surface.format.format,
+        .samples = vk::SampleCountFlagBits::e1, // No multisampling
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eStore,
+        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+        .initialLayout = vk::ImageLayout::eUndefined,
+        .finalLayout = vk::ImageLayout::ePresentSrcKHR
+    };
+
+    vk::AttachmentReference colorAttachmentRef {
+        .attachment = 0,
+        .layout = vk::ImageLayout::eColorAttachmentOptimal
+    };
+
+    const vk::AttachmentDescription depthAttachmentDescription {
+        .format = vk::Format::eD32SfloatS8Uint,
+        .samples = vk::SampleCountFlagBits::e1,
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eDontCare,
+        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare ,
+        .initialLayout = vk::ImageLayout::eUndefined,
+        .finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+    };
+
+    vk::AttachmentReference depthAttachmentRef {
+        .attachment = 1,
+        .layout = vk::ImageLayout::eDepthStencilAttachmentOptimal
+    };
+
+    vk::SubpassDescription subpass {
+        .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = &colorAttachmentRef,
+        .pDepthStencilAttachment = &depthAttachmentRef
+    };
+
+    vk::SubpassDependency dependency {
+        .srcSubpass = vk::SubpassExternal,
+        .dstSubpass = 0,
+        .srcStageMask = vk::Flags(vk::PipelineStageFlagBits::eColorAttachmentOutput) | vk::PipelineStageFlagBits::eLateFragmentTests,
+        .dstStageMask = vk::Flags(vk::PipelineStageFlagBits::eColorAttachmentOutput) | vk::PipelineStageFlagBits::eEarlyFragmentTests,
+        .srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+        .dstAccessMask = vk::Flags(vk::AccessFlagBits::eColorAttachmentWrite) | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+    };
+
+    std::array attachments = {colorAttachmentDescription, depthAttachmentDescription};
+    const vk::RenderPassCreateInfo baseRenderPassInfo {
+        .attachmentCount = static_cast<std::uint32_t>(attachments.size()),
+        .pAttachments = attachments.data(),
+        .subpassCount = 1,
+        .pSubpasses = &subpass,
+        .dependencyCount = 1,
+        .pDependencies = &dependency
+    };
+
+    return context.device.handle.createRenderPass(baseRenderPassInfo);
+}
+
 vulkan_render::Pipeline::Pipeline(
     const Context &context,
     const Surface &surface,
     const Swapchain &swapchain,
-    const Texture<TextureMode::DEPTH> &depth,
     const PipelineConfig &config,
+    const RenderPass &renderPass,
     const ShaderProgram &shaderProgram,
     const std::uint32_t maxFramesInFlight
 ) : context(context),
     surface(surface),
     swapchain(swapchain),
+    renderPass(renderPass),
     maxFramesInFlight(maxFramesInFlight),
     descriptorsLayout(MakeDescriptorsLayout(config)),
     layout(MakeLayout(config)),
-    renderPass(MakerRenderPass()),
     handle(MakeInstance(config, shaderProgram)),
     viewport(config.defaultViewport),
     scissors(config.defaultScissors),
-    descriptorPool(MakeDescriptorPool(config.descriptors)),
+    descriptorPool(MakeDescriptorPool(config.descriptors, config.maxExtraDescriptorSets)),
     descriptorSets(MakeDescriptorSets()) {
-    MakeFramebuffers(depth);
     LOG(INFO, "Pipeline created");
 }
 
 void vulkan_render::Pipeline::UpdateDescriptors(
     const std::vector<DescriptorInfo> &descriptors,
-    const std::uint32_t frame
-) {
+    const vk::DescriptorSet set
+) const {
     std::vector<vk::WriteDescriptorSet> writes;
     writes.reserve(descriptors.size());
 
     for (const auto &[info, bindingPosition, type] : descriptors) {
         vk::WriteDescriptorSet write {
-            .dstSet = descriptorSets[frame],
+            .dstSet = set,
             .dstBinding = bindingPosition,
             .dstArrayElement = 0,
             .descriptorCount = 1,
@@ -58,6 +132,21 @@ void vulkan_render::Pipeline::UpdateDescriptors(
     }
 
     context.device.handle.updateDescriptorSets(writes, 0);
+}
+
+void vulkan_render::Pipeline::UpdateDescriptors(
+    const std::vector<DescriptorInfo> &descriptors,
+    const std::uint32_t frame
+) {
+    UpdateDescriptors(descriptors, descriptorSets[frame]);
+}
+
+vk::raii::DescriptorSets vulkan_render::Pipeline::AllocateDescriptorSet() const {
+    return vk::raii::DescriptorSets(context.device.handle, {
+        .descriptorPool = descriptorPool,
+        .descriptorSetCount = 1,
+        .pSetLayouts = &*descriptorsLayout
+    });
 }
 
 vulkan_render::PipelineConfig vulkan_render::Pipeline::MakeConfig(
@@ -88,7 +177,7 @@ vulkan_render::PipelineConfig vulkan_render::Pipeline::MakeConfig(
         .vertexBindingDescriptionCount = 1,
         .pVertexBindingDescriptions = &bindings.vertexBinding,
         .vertexAttributeDescriptionCount = bindings.vertexAttributesCount,
-        .pVertexAttributeDescriptions = &bindings.vertexAttributes
+        .pVertexAttributeDescriptions = bindings.vertexAttributes.data()
     };
 
     config.inputAssemblyInfo = {
@@ -229,7 +318,7 @@ vk::raii::Pipeline vulkan_render::Pipeline::MakeInstance(
             .pColorBlendState = &config.colorBlendInfo,
             .pDynamicState = &config.dynamicStateInfo,
             .layout = layout,
-            .renderPass = renderPass,
+            .renderPass = renderPass.handle,
             .basePipelineHandle = nullptr,
             .basePipelineIndex = -1,
         },
@@ -243,7 +332,10 @@ vk::raii::Pipeline vulkan_render::Pipeline::MakeInstance(
     return context.device.handle.createGraphicsPipeline(nullptr, pipelineInfo.get());
 }
 
-vk::raii::DescriptorPool vulkan_render::Pipeline::MakeDescriptorPool(const DescriptorBindings &descriptors) {
+vk::raii::DescriptorPool vulkan_render::Pipeline::MakeDescriptorPool(
+    const DescriptorBindings &descriptors,
+    const std::uint32_t maxExtraDescriptorSet
+) {
     descriptorCounts.clear();
     for (const vk::DescriptorSetLayoutBinding &binding : descriptors) {
         descriptorCounts[binding.descriptorType] += binding.descriptorCount;
@@ -254,13 +346,13 @@ vk::raii::DescriptorPool vulkan_render::Pipeline::MakeDescriptorPool(const Descr
     for (const auto &[type, count] : descriptorCounts) {
         poolSizes.push_back({
             .type = type,
-            .descriptorCount = count * maxFramesInFlight
+            .descriptorCount = count * (maxFramesInFlight + maxExtraDescriptorSet)
         });
     }
 
     return context.device.handle.createDescriptorPool({
         .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-        .maxSets = static_cast<std::uint32_t>(maxFramesInFlight),
+        .maxSets = (maxFramesInFlight + maxExtraDescriptorSet),
         .poolSizeCount = static_cast<std::uint32_t>(poolSizes.size()),
         .pPoolSizes = poolSizes.data()
     });
@@ -279,76 +371,14 @@ vk::raii::DescriptorSets vulkan_render::Pipeline::MakeDescriptorSets() const {
     );
 }
 
-vk::raii::RenderPass vulkan_render::Pipeline::MakerRenderPass() const {
-    const vk::AttachmentDescription colorAttachmentDescription {
-            .format = surface.format.format,
-            .samples = vk::SampleCountFlagBits::e1, // No multisampling
-            .loadOp = vk::AttachmentLoadOp::eClear,
-            .storeOp = vk::AttachmentStoreOp::eStore,
-            .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
-            .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
-            .initialLayout = vk::ImageLayout::eUndefined,
-            .finalLayout = vk::ImageLayout::ePresentSrcKHR
-    };
-
-    vk::AttachmentReference colorAttachmentRef {
-            .attachment = 0,
-            .layout = vk::ImageLayout::eColorAttachmentOptimal
-    };
-
-    const vk::AttachmentDescription depthAttachmentDescription {
-        .format = vk::Format::eD32SfloatS8Uint,
-        .samples = vk::SampleCountFlagBits::e1,
-        .loadOp = vk::AttachmentLoadOp::eClear,
-        .storeOp = vk::AttachmentStoreOp::eDontCare,
-        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
-        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare ,
-        .initialLayout = vk::ImageLayout::eUndefined,
-        .finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
-    };
-
-    vk::AttachmentReference depthAttachmentRef {
-        .attachment = 1,
-        .layout = vk::ImageLayout::eDepthStencilAttachmentOptimal
-    };
-
-    vk::SubpassDescription subpass {
-        .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
-        .colorAttachmentCount = 1,
-        .pColorAttachments = &colorAttachmentRef,
-        .pDepthStencilAttachment = &depthAttachmentRef
-    };
-
-    vk::SubpassDependency dependency {
-        .srcSubpass = vk::SubpassExternal,
-        .dstSubpass = 0,
-        .srcStageMask = vk::Flags(vk::PipelineStageFlagBits::eColorAttachmentOutput) | vk::PipelineStageFlagBits::eLateFragmentTests,
-        .dstStageMask = vk::Flags(vk::PipelineStageFlagBits::eColorAttachmentOutput) | vk::PipelineStageFlagBits::eEarlyFragmentTests,
-        .srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-        .dstAccessMask = vk::Flags(vk::AccessFlagBits::eColorAttachmentWrite) | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-    };
-
-    std::array attachments = {colorAttachmentDescription, depthAttachmentDescription};
-    const vk::RenderPassCreateInfo baseRenderPassInfo {
-        .attachmentCount = static_cast<std::uint32_t>(attachments.size()),
-        .pAttachments = attachments.data(),
-        .subpassCount = 1,
-        .pSubpasses = &subpass,
-        .dependencyCount = 1,
-        .pDependencies = &dependency
-    };
-
-    return context.device.handle.createRenderPass(baseRenderPassInfo);
-}
-
-void vulkan_render::Pipeline::MakeFramebuffers(const Texture<TextureMode::DEPTH> &depth) {
+void vulkan_render::RenderPass::MakeFramebuffers(const Texture<TextureMode::DEPTH> &depth) {
     framebuffers.reserve(swapchain.frameViews.size());
     for (const vk::raii::ImageView &frameView : swapchain.frameViews)
     {
         std::array attachments = {*frameView, *depth.view};
 
         vk::FramebufferCreateInfo frameBufferInfo {
-            .renderPass = renderPass,
+            .renderPass = handle,
             .attachmentCount = static_cast<std::uint32_t>(attachments.size()),
             .pAttachments = attachments.data(),
             .width = surface.extent.width,

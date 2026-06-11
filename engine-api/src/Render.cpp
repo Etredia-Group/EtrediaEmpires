@@ -25,10 +25,17 @@ void ee_engine::IRenderer::RegisterMapMesh(MapMesh *mapMesh) {
     this->mapMesh = mapMesh;
 }
 
+void ee_engine::IRenderer::SetUIContext(Rml::Context *rmlContext) {
+    this->rmlContext = rmlContext;
+}
+
 void ee_engine::IRenderer::Draw() {
-    Clear();
+    if (!isDrawing) return;
+
+    DrawBegin();
     DrawMap();
     DrawUI();
+    DrawEnd();
 }
 
 void ee_engine::IRenderer::ResizeWindow(const int width, const int height) {

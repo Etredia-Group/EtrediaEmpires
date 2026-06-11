@@ -9,6 +9,9 @@ import VulkanRender;
 import GLFWInput;
 import std;
 
+constexpr std::uint32_t SCREEN_WIDTH = 800;
+constexpr std::uint32_t SCREEN_HEIGHT = 600;
+
 int main(int argc, char **argv) {
     // Setup P7 logger
     Logger::Init(P7_SINK P7_LOGS_PATH);
@@ -22,7 +25,7 @@ int main(int argc, char **argv) {
     // Vulkan only
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "Etredia Empires", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Etredia Empires", nullptr, nullptr);
 
     if (!window)
         LOG(CRITICAL, "GLFW Window failed");
@@ -57,9 +60,17 @@ int main(int argc, char **argv) {
         provincesMaterial.vertexShaderAssetID);
     ee_assets::AssetShader& fragProv = Engine::assetManager->FindOnce<ee_assets::AssetShader>(
         provincesMaterial.fragmentShaderAssetID);
+    const ee_assets::AssetMaterial& rmlMaterial =
+        Engine::assetManager->FindOnce<ee_assets::AssetMaterial>("assets/materials/rmlui.mat");
+    ee_assets::AssetShader& vertUI = Engine::assetManager->FindOnce<ee_assets::AssetShader>(
+        rmlMaterial.vertexShaderAssetID);
+    ee_assets::AssetShader& fragUI = Engine::assetManager->FindOnce<ee_assets::AssetShader>(
+        rmlMaterial.fragmentShaderAssetID);
     Engine::renderer->RegisterMaterials({
         .vertProvinces = &vertProv,
-        .fragProvinces = &fragProv
+        .fragProvinces = &fragProv,
+        .vertRml = &vertUI,
+        .fragRml = &fragUI
     });
 
     Engine::renderer->Init();
@@ -80,9 +91,15 @@ int main(int argc, char **argv) {
     Engine::client->Init();
     Engine::client->Start();
 
+    //Setup UI
+    Engine::ui = Allocate<UI>(*Engine::renderer->getRenderInterface(), SCREEN_WIDTH, SCREEN_HEIGHT);
+    Engine::renderer->SetUIContext(Engine::ui->getContext());
+
     // Game loop
     ee_engine::RendererCommand renderCmdBuffer;
     while (!glfwWindowShouldClose(window)) {
+        Engine::ui->Update();
+
         Engine::renderer->ProcessQueue(renderCmdBuffer);
         Engine::renderer->Draw();
 
@@ -101,3 +118,4 @@ int main(int argc, char **argv) {
 }
 
 // TODO: Leaks detection
+// TODO: Detach engine and engine-api from Rml

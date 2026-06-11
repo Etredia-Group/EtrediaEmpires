@@ -1,0 +1,7 @@
+.root {
+    background-color: #C0C0C0;
+    color: red;
+    font-size: 14px;
+    height: 50%;
+    width: 50%;
+}

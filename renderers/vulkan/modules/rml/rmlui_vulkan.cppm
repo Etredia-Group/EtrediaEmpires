@@ -1,18 +1,14 @@
-/**
- * Do not include <RmlUi/Core.h> in module .cpp implementation
- * to prevent MSVC internal compiler error
- */
-
 module;
 
-#include <RmlUi/Core.h>
+#include <glm/glm.hpp>
 
 export module rmlui_vulkan;
 import vulkan_render;
 import utils;
+import rml;
 import std;
 
-namespace  ee_rml {
+namespace ee_rml {
     template <typename T> using lazy = std::optional<T>;
 
     struct GeometryMesh {
@@ -30,60 +26,64 @@ namespace  ee_rml {
 }
 
 export namespace ee_rml {
+    struct RmlVertexLayout {
+        constexpr static std::size_t stride = sizeof(Rml::Vertex);
+        constexpr static std::size_t offsetPos = offsetof(Rml::Vertex, position);
+        constexpr static std::size_t offsetColor = offsetof(Rml::Vertex, colour);
+        constexpr static std::size_t offsetUV = offsetof(Rml::Vertex, tex_coord);
+    };
+
+    struct RmlTransformGeometry {
+        glm::mat4 mvp;
+        glm::vec2 translate;
+    };
 
     struct RenderContext {
         vulkan_render::Context &context;
+        vulkan_render::Surface &surface;
         vulkan_render::RenderCommands &commands;
+        vulkan_render::Pipeline &pipeline;
     };
 
     class RmlVulkan final : public Rml::RenderInterface {
     public:
-        explicit RmlVulkan(RenderContext &renderContext) : renderer(renderContext) {}
+        explicit RmlVulkan(RenderContext renderContext);
 
         Rml::CompiledGeometryHandle CompileGeometry(
-            const Rml::Span<const Rml::Vertex> vertices,
-            const Rml::Span<const std::int32_t> indices
-        ) override {
-            GeometryMesh *mesh = Allocate<GeometryMesh>();
-            mesh->vertices.emplace(renderer.context, vertices.size());
-            mesh->indices.emplace(renderer.context, indices.size());
-
-            std::ranges::copy(vertices, mesh->vertices->content.data());
-            std::ranges::copy(indices, mesh->indices->content.data());
-
-            renderer.commands.SubmitStagingBuffer(*mesh->vertices);
-            renderer.commands.SubmitStagingBuffer(*mesh->indices);
-
-            return reinterpret_cast<Rml::CompiledGeometryHandle>(mesh);
-        }
+            Rml::Span<const Rml::Vertex> vertices,
+            Rml::Span<const std::int32_t> indices
+        ) override;
 
         void RenderGeometry(
             Rml::CompiledGeometryHandle geometry,
             Rml::Vector2f translation,
             Rml::TextureHandle texture
-        ) override {
+        ) override;
 
-        }
+        void ReleaseGeometry(Rml::CompiledGeometryHandle geometry) override;
 
-        void ReleaseGeometry(const Rml::CompiledGeometryHandle geometry) override {
-            Deallocate(reinterpret_cast<GeometryMesh*>(geometry));
-        };
-
-        Rml::TextureHandle LoadTexture(Rml::Vector2i &texture_dimensions, const Rml::String &source) override {return 0;}
+        Rml::TextureHandle LoadTexture(Rml::Vector2i &texture_dimensions, const Rml::String &source) override;
 
         Rml::TextureHandle GenerateTexture(
             Rml::Span<const std::uint8_t> source,
             Rml::Vector2i source_dimensions
-        ) override  {return 0;}
+        ) override;
 
-        void ReleaseTexture(Rml::TextureHandle texture) override {}
+        void ReleaseTexture(Rml::TextureHandle texture) override;
 
-        void EnableScissorRegion(bool enable) override {}
+        void EnableScissorRegion(bool enable) override;
 
-        void SetScissorRegion(Rml::Rectanglei region) override {}
+        void SetScissorRegion(Rml::Rectanglei region) override;
+
+        void SetFrameContext(vulkan_render::FrameContext *frameContext);
 
     private:
-        RenderContext &renderer;
+        RenderContext renderer;
+        vulkan_render::FrameContext *frameContext = nullptr;
+        bool scissorEnabled = false;
+        vulkan_render::Sampler sampler;
+        std::unordered_map<Rml::TextureHandle, vk::raii::DescriptorSets> textures;
+        vulkan_render::RenderTexture defaultTexture;
     };
 
 }

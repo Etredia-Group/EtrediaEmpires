@@ -2,11 +2,12 @@
 
 <head>
     <link type="text/css" href="../base.rcss" />
+    <link type="text/css" href="test.rcss" />
 </head>
 
 <body>
-    <div>
-        <p>Hello World!</p>
+    <div class="root">
+        HELLO WORLD
     </div>
 </body>
 

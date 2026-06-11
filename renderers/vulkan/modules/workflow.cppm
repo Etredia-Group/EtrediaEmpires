@@ -36,6 +36,7 @@ export namespace vulkan_render {
         static constexpr vk::Format VEC2 = vk::Format::eR32G32Sfloat;
         static constexpr vk::Format VEC3 = vk::Format::eR32G32B32Sfloat;
         static constexpr vk::Format VEC4 = vk::Format::eR32G32B32A32Sfloat;
+        static constexpr vk::Format UVEC4 = vk::Format::eR8G8B8A8Unorm;
 
         ShaderAttributeFormat() = delete;
     };
@@ -46,7 +47,7 @@ export namespace vulkan_render {
     struct ShaderBindings {
         vk::VertexInputBindingDescription vertexBinding;
         std::uint32_t vertexAttributesCount;
-        vk::VertexInputAttributeDescription vertexAttributes;
+        std::vector<vk::VertexInputAttributeDescription> vertexAttributes;
     };
 
     /**
@@ -67,6 +68,7 @@ export namespace vulkan_render {
         std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachmentStates;
         std::vector<vk::DynamicState> dynamicStates;
         std::vector<vk::DescriptorSetLayoutBinding> descriptors;
+        std::uint32_t maxExtraDescriptorSets = 0;
 
         vk::Viewport defaultViewport;
         vk::Rect2D defaultScissors;
@@ -84,6 +86,26 @@ export namespace vulkan_render {
 }
 
 export namespace vulkan_render {
+    class RenderPass {
+    public:
+        const Context &context;
+        const Swapchain &swapchain;
+        const Surface &surface;
+
+        vk::raii::RenderPass handle;
+        std::vector<vk::raii::Framebuffer> framebuffers;
+
+        RenderPass(
+            const Context &context,
+            const Swapchain &swapchain,
+            const Surface &surface,
+            const Texture<TextureMode::DEPTH> &depth
+        );
+    private:
+        vk::raii::RenderPass MakeInstance() const;
+        void MakeFramebuffers(const Texture<TextureMode::DEPTH> &depth);
+    };
+
     /**
      * Vulkan pipeline constructed on context, shaders and descriptors.
      */
@@ -92,11 +114,11 @@ export namespace vulkan_render {
         const Context &context;
         const Surface &surface;
         const Swapchain &swapchain;
+        const RenderPass &renderPass;
         const std::uint32_t maxFramesInFlight;
         DescriptorCounts descriptorCounts;
 
         vk::raii::DescriptorSetLayout descriptorsLayout;
-        vk::raii::RenderPass renderPass;
         vk::raii::PipelineLayout layout;
         vk::raii::Pipeline handle;
 
@@ -105,8 +127,6 @@ export namespace vulkan_render {
 
         vk::raii::DescriptorPool descriptorPool;
         vk::raii::DescriptorSets descriptorSets;
-
-        std::vector<vk::raii::Framebuffer> framebuffers;
 
         /**
          * Initialize Pipeline on shaders and their input.
@@ -121,13 +141,15 @@ export namespace vulkan_render {
             const Context &context,
             const Surface &surface,
             const Swapchain &swapchain,
-            const Texture<TextureMode::DEPTH> &depth,
             const PipelineConfig &config,
+            const RenderPass &renderPass,
             const ShaderProgram &shaderProgram,
             std::uint32_t maxFramesInFlight
         );
 
+        void UpdateDescriptors(const std::vector<DescriptorInfo> &descriptors, vk::DescriptorSet set) const;
         void UpdateDescriptors(const std::vector<DescriptorInfo> &descriptors, std::uint32_t frame);
+        vk::raii::DescriptorSets AllocateDescriptorSet() const;
 
         /**
          * Construct default pipeline configuration for given shaders input layout.
@@ -148,10 +170,11 @@ export namespace vulkan_render {
         vk::raii::DescriptorSetLayout MakeDescriptorsLayout(const PipelineConfig &config) const;
         vk::raii::PipelineLayout MakeLayout(const PipelineConfig &config) const;
         vk::raii::Pipeline MakeInstance(const PipelineConfig &config, const ShaderProgram &shaderProgram) const;
-        vk::raii::DescriptorPool MakeDescriptorPool(const DescriptorBindings &descriptors);
+        vk::raii::DescriptorPool MakeDescriptorPool(
+            const DescriptorBindings &descriptors,
+            std::uint32_t maxExtraDescriptorSet
+        );
         vk::raii::DescriptorSets MakeDescriptorSets() const;
-        vk::raii::RenderPass MakerRenderPass() const;
-        void MakeFramebuffers(const Texture<TextureMode::DEPTH> &depth);
     };
 
 }

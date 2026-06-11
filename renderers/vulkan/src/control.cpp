@@ -79,6 +79,7 @@ void vulkan_render::RenderCommands::SubmitTexture(
     const Texture<TextureMode::PARTIAL> &texture
 ) const {
     const Command cmd(buffer.context, graphicsPool);
+    cmd.Begin();
 
     const vk::BufferImageCopy copyRegion {
         .bufferOffset = 0,
@@ -105,6 +106,7 @@ void vulkan_render::RenderCommands::TranslateTextureLayout(
     const vk::ImageLayout &to
 ) const {
     const Command cmd(texture.context, graphicsPool);
+    cmd.Begin();
 
     vk::ImageMemoryBarrier barrier {
         .oldLayout = from,
@@ -229,4 +231,36 @@ vk::Result vulkan_render::SyncManager::AcquireNextImage(
 
     imageIndex = newImageIndex;
     return result;
+}
+
+vulkan_render::FrameContext::FrameContext(
+    const RenderPass &renderPass,
+    const Surface &surface,
+    const RenderCommands &renderCommands,
+    const std::uint32_t imageIndex,
+    const std::uint32_t currentFrame,
+    const std::span<vk::ClearValue> clearValues
+) {
+    this->imageIndex = imageIndex;
+    this->currentFrame = currentFrame;
+
+    renderCommand = &renderCommands.graphicsBuffers[currentFrame];
+    renderCommand->handle.reset();
+    renderCommand->Begin();
+
+    renderCommand->handle.beginRenderPass({
+        .renderPass = renderPass.handle,
+        .framebuffer = renderPass.framebuffers[imageIndex],
+        .renderArea = {
+            .offset = {.x = 0, .y = 0},
+            .extent = surface.extent
+        },
+        .clearValueCount = static_cast<std::uint32_t>(clearValues.size()),
+        .pClearValues = clearValues.data()
+    }, vk::SubpassContents::eInline);
+}
+
+void vulkan_render::FrameContext::Complete() const {
+    renderCommand->handle.endRenderPass();
+    renderCommand->handle.end();
 }

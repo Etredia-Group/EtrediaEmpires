@@ -7,12 +7,16 @@ export module Render;
 import utils;
 import views;
 import AssetData;
+import rml;
 import std;
 
 export namespace ee_engine {
     struct ShaderRefs {
         ee_assets::AssetShader *vertProvinces;
         ee_assets::AssetShader *fragProvinces;
+
+        ee_assets::AssetShader *vertRml;
+        ee_assets::AssetShader *fragRml;
     };
 
     struct CameraTransform {
@@ -54,6 +58,7 @@ export namespace ee_engine {
         void RegisterMaterials(const ShaderRefs& shaders);
         void RegisterMapMesh(MapMesh *mapMesh);
 
+        void SetUIContext(Rml::Context *rmlContext);
         virtual void Init() = 0;
         virtual void Shutdown() = 0;
         void Draw();
@@ -61,12 +66,15 @@ export namespace ee_engine {
         virtual void ResizeWindow(int width, int height);
         void SetCamera(const CameraTransform& camera);
 
+        virtual constexpr Rml::RenderInterface* getRenderInterface() noexcept = 0;
+
         constexpr CameraTransform getCamera() const noexcept { return camera; };
         glm::vec2 ScreenToWorld(float screenX, float screenY) const;
         glm::vec2 ScreenToWorld(const glm::vec2& screenPos) const;
 
     protected:
-        bool _isReady;
+        bool _isReady = false;
+        bool isDrawing = false;
         int screenWidth, screenHeight;
         float screenAspect;
         CameraTransform camera;
@@ -77,6 +85,8 @@ export namespace ee_engine {
         MapMesh *mapMesh;
         ShaderRefs shaders;
 
+        Rml::Context *rmlContext;
+
         struct RegionRanges {
             std::size_t offset;
             std::size_t provincesCount;
@@ -86,9 +96,10 @@ export namespace ee_engine {
 
         explicit IRenderer(GLFWwindow *window);
 
-        virtual void Clear() = 0;
+        virtual void DrawBegin() = 0;
         virtual void DrawMap() = 0;
         virtual void DrawUI() = 0;
+        virtual void DrawEnd() = 0;
 
         virtual void ApplyCamera() = 0;
 

@@ -5,6 +5,7 @@ module;
 export module Engine;
 export import Render;
 export import Input;
+export import UI;
 export import AssetManager;
 export import Client;
 
@@ -18,14 +19,22 @@ export
         inline static ee_engine::IInput *input;
         inline static AssetManager *assetManager;
         inline static ee_engine::IRenderer *renderer;
+        inline static UI *ui;
         inline static Client *client;
 
         static void Shutdown() {
+            renderer->Shutdown();
+
             if (input != nullptr)
                 Deallocate(input);
+            input = nullptr;
+
+            if (ui != nullptr) {
+                Deallocate(ui);
+            }
+            ui = nullptr;
 
             if (renderer != nullptr) {
-                renderer->Shutdown();
                 Deallocate(renderer);
             }
             renderer = nullptr;

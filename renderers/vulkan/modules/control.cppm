@@ -5,6 +5,7 @@
 
 export module vulkan_render:control;
 import :hardware;
+import :workflow;
 import :resources;
 import :data;
 import std;
@@ -66,7 +67,6 @@ export namespace vulkan_render {
         );
     };
 
-    //TODO: sync2 with timeline-semaphore(s)
     class SyncManager {
     public:
         const Context &context;
@@ -85,5 +85,22 @@ export namespace vulkan_render {
             std::size_t currentFrame,
             std::uint32_t &imageIndex
         ) const;
+    };
+
+    class FrameContext {
+    public:
+        const Command *renderCommand;
+        std::uint32_t imageIndex;
+        std::uint32_t currentFrame;
+
+        FrameContext(
+            const RenderPass &renderPass,
+            const Surface &surface,
+            const RenderCommands &renderCommands,
+            std::uint32_t imageIndex,
+            std::uint32_t currentFrame,
+            std::span<vk::ClearValue> clearValues
+        );
+        void Complete() const;
     };
 }

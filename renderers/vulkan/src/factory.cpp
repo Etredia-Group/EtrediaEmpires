@@ -1,3 +1,7 @@
+module;
+
+#include <glm/glm.hpp>
+
 module vulkan_render;
 import utils;
 
@@ -86,13 +90,13 @@ void vulkan_render::ResourcesFactory::SetupFrames(const Context &context, Swapch
     LOG(INFO, "Frame views are ready.");
 }
 
-vulkan_render::Texture<vulkan_render::TextureMode::RENDER> vulkan_render::DataFactory::CreateRenderTexture(
+vulkan_render::RenderTexture vulkan_render::DataFactory::CreateRenderTexture(
     const Context &context,
     const RenderCommands &commands,
     const std::uint32_t width, const std::uint32_t height,
-    const std::span<std::byte> textureData
+    const std::span<const std::byte> textureData
 ) {
-    Texture<TextureMode::PARTIAL> texture(context, width, height, vk::Format::eR8G8B8A8Srgb);
+    PartialTexture texture(context, width, height, vk::Format::eR8G8B8A8Srgb);
     const Buffer<
         std::byte,
         vk::BufferUsageFlagBits::eTransferSrc,
@@ -114,4 +118,17 @@ vulkan_render::Texture<vulkan_render::TextureMode::RENDER> vulkan_render::DataFa
     texture.Init(vk::ImageAspectFlagBits::eColor);
 
     return std::move(texture);
+}
+
+vulkan_render::RenderTexture vulkan_render::DataFactory::CreateRenderTexture(
+    const Context &context,
+    const RenderCommands &commands
+) {
+    glm::u8vec4 pixel = {255, 255, 255, 255};
+    return CreateRenderTexture(
+        context,
+        commands,
+        1, 1,
+        std::span(reinterpret_cast<std::byte*>(&pixel), 4)
+    );
 }

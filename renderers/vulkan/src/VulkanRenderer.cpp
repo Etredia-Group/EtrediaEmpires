@@ -4,13 +4,14 @@ module;
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <RmlUi/Core/Core.h>
 
 module VulkanRender;
 import utils;
 
 ee_vulkan::VulkanRenderer::VulkanRenderer(GLFWwindow *window) : IRenderer(window) {
     std::uint32_t glfwExtensionsCount;
-    const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionsCount);
+    const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionsCount);
 
     context.emplace(
         "EtrediaEmpires",
@@ -42,13 +43,24 @@ ee_vulkan::VulkanRenderer::~VulkanRenderer() {}
 
 void ee_vulkan::VulkanRenderer::Init() {
     depth.emplace(*context, surface);
+    renderPass.emplace(*context, *swapchain, surface, *depth);
 
     LoadProvincesMaterial();
+    LoadRmlMaterial();
+
+    ee_rml::RenderContext rmlContext {
+        .context = *context,
+        .surface = surface,
+        .commands = *renderCommands,
+        .pipeline = *rmlPipeline
+    };
+    rmlRenderInterface.emplace(rmlContext);
 
     viewProjectionUniform.emplace(*context, MAX_FRAMES_IN_FLIGHT);
 
     LoadProvinces();
 
+    _isReady = true;
     isDrawing = true;
 }
 
@@ -56,11 +68,7 @@ void ee_vulkan::VulkanRenderer::Shutdown() {
     context->device.handle.waitIdle();
 }
 
-void ee_vulkan::VulkanRenderer::Clear() {}
-
-void ee_vulkan::VulkanRenderer::DrawMap() {
-    if (!isDrawing) return;
-
+void ee_vulkan::VulkanRenderer::DrawBegin() {
     syncManager->WaitInFlightFence(currentFrame);
 
     std::uint32_t imageIndex = 0;
@@ -78,43 +86,32 @@ void ee_vulkan::VulkanRenderer::DrawMap() {
             LOG(ERROR, "Failed to get next image index. Code: %d", result);
             break;
     }
+    syncManager->WaitImageInFlight(currentFrame, imageIndex);
 
     UpdateData(currentFrame);
 
-    syncManager->WaitImageInFlight(currentFrame, imageIndex);
-
-    const vulkan_render::Command &renderCommand = renderCommands->graphicsBuffers[currentFrame];
-    renderCommand.handle.reset();
-    renderCommand.Begin();
-
     std::array clears = {DrawConfig::CLEAR_COLOR, DrawConfig::CLEAR_DEPTH};
-    renderCommand.handle.beginRenderPass({
-        .renderPass = provincesPipeline->renderPass,
-        .framebuffer = provincesPipeline->framebuffers[imageIndex],
-        .renderArea = {
-            .offset = {.x = 0, .y = 0},
-            .extent = surface.extent
-        },
-        .clearValueCount = static_cast<std::uint32_t>(clears.size()),
-        .pClearValues = clears.data()
-    }, vk::SubpassContents::eInline);
+    frameContext.emplace(vulkan_render::FrameContext(*renderPass, surface, *renderCommands, imageIndex, currentFrame, clears));
+    rmlRenderInterface->SetFrameContext(&*frameContext);
+}
 
-    renderCommand.handle.bindPipeline(vk::PipelineBindPoint::eGraphics, provincesPipeline->handle);
-    renderCommand.handle.setViewport(0, {provincesPipeline->viewport});
-    renderCommand.handle.setScissor(0, {provincesPipeline->scissors});
+void ee_vulkan::VulkanRenderer::DrawMap() {
+    frameContext->renderCommand->handle.bindPipeline(vk::PipelineBindPoint::eGraphics, provincesPipeline->handle);
+    frameContext->renderCommand->handle.setViewport(0, {provincesPipeline->viewport});
+    frameContext->renderCommand->handle.setScissor(0, {provincesPipeline->scissors});
 
-    renderCommand.handle.bindVertexBuffers(
+    frameContext->renderCommand->handle.bindVertexBuffers(
         0,
         {provinces.vertices->handle},
         {0}
     );
-    renderCommand.handle.bindIndexBuffer(
+    frameContext->renderCommand->handle.bindIndexBuffer(
         provinces.indices->handle,
         0,
         vk::IndexType::eUint32
     );
 
-    renderCommand.handle.bindDescriptorSets(
+    frameContext->renderCommand->handle.bindDescriptorSets(
         vk::PipelineBindPoint::eGraphics,
         provincesPipeline->layout,
         0,
@@ -122,20 +119,26 @@ void ee_vulkan::VulkanRenderer::DrawMap() {
         {}
     );
 
-    renderCommand.handle.drawIndexedIndirect(
+    frameContext->renderCommand->handle.drawIndexedIndirect(
         provinces.indirectCommands->handle,
         0,
         provinces.indirectCommands->content.size(),
         provinces.indirectCommands->elementSize
     );
+}
 
-    renderCommand.handle.endRenderPass();
-    renderCommand.handle.end();
+void ee_vulkan::VulkanRenderer::DrawUI() {
+    frameContext->renderCommand->handle.bindPipeline(vk::PipelineBindPoint::eGraphics, rmlPipeline->handle);
+    rmlContext->Render();
+}
+
+void ee_vulkan::VulkanRenderer::DrawEnd() {
+    frameContext->Complete();
 
     context->device.handle.resetFences({syncManager->inFlightFences[currentFrame]});
 
     vk::CommandBufferSubmitInfo cmdSubmitInfo {
-        .commandBuffer = renderCommand.handle
+        .commandBuffer = frameContext->renderCommand->handle
     };
     vk::SemaphoreSubmitInfo waitSemaphoreInfo {
         .semaphore = syncManager->imageAvailable[currentFrame],
@@ -162,7 +165,7 @@ void ee_vulkan::VulkanRenderer::DrawMap() {
             .pWaitSemaphores = &signalSemaphoreInfo.semaphore,
             .swapchainCount = 1,
             .pSwapchains = swapchains,
-            .pImageIndices = &imageIndex
+            .pImageIndices = &frameContext->imageIndex
         })
     ) {
         case vk::Result::eSuccess:
@@ -179,10 +182,8 @@ void ee_vulkan::VulkanRenderer::DrawMap() {
             break;
     }
 
-	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
-
-void ee_vulkan::VulkanRenderer::DrawUI() {}
 
 void ee_vulkan::VulkanRenderer::ResizeWindow(const int width, const int height) {
     IRenderer::ResizeWindow(width, height);
@@ -216,10 +217,11 @@ void ee_vulkan::VulkanRenderer::RecreateSwapchain() {
     swapchain = vulkan_render::ResourcesFactory::CreateSwapchain(*context, surface);
     depth.emplace(*context, surface);
     LoadProvincesMaterial();
+    LoadRmlMaterial();
 }
 
 void ee_vulkan::VulkanRenderer::LoadProvincesMaterial() {
-    constexpr vulkan_render::ShaderBindings shaderBindings {
+    const vulkan_render::ShaderBindings shaderBindings {
         .vertexBinding = {
             .binding = 0,
             .stride = sizeof(glm::vec2),
@@ -227,10 +229,12 @@ void ee_vulkan::VulkanRenderer::LoadProvincesMaterial() {
         },
         .vertexAttributesCount = 1,
         .vertexAttributes = {
-            .location = 0,
-            .binding = 0,
-            .format = vulkan_render::ShaderAttributeFormat::VEC2,
-            .offset = 0
+            {
+                .location = 0,
+                .binding = 0,
+                .format = vulkan_render::ShaderAttributeFormat::VEC2,
+                .offset = 0
+            }
         }
     };
 
@@ -270,9 +274,76 @@ void ee_vulkan::VulkanRenderer::LoadProvincesMaterial() {
         *context,
         surface,
         *swapchain,
-        *depth,
         provincesMaterial,
+        *renderPass,
         provincesShader,
+        MAX_FRAMES_IN_FLIGHT
+    );
+}
+
+void ee_vulkan::VulkanRenderer::LoadRmlMaterial() {
+    const vulkan_render::ShaderBindings shaderBindings {
+        .vertexBinding = {
+            .binding = 0,
+            .stride = ee_rml::RmlVertexLayout::stride,
+            .inputRate = vk::VertexInputRate::eVertex
+        },
+        .vertexAttributesCount = 3,
+        .vertexAttributes ={
+            {
+                .location = 0,
+                .binding = 0,
+                .format = vulkan_render::ShaderAttributeFormat::VEC2,
+                .offset = ee_rml::RmlVertexLayout::offsetPos
+            },
+            {
+                .location = 1,
+                .binding = 0,
+                .format = vulkan_render::ShaderAttributeFormat::UVEC4,
+                .offset = ee_rml::RmlVertexLayout::offsetColor
+            },
+            {
+                .location = 2,
+                .binding = 0,
+                .format = vulkan_render::ShaderAttributeFormat::VEC2,
+                .offset = ee_rml::RmlVertexLayout::offsetUV
+            }
+        }
+    };
+
+    const vk::DescriptorSetLayoutBinding texture {
+        .binding = 1,
+        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
+        .pImmutableSamplers = nullptr
+    };
+
+    const vk::PushConstantRange model {
+        .stageFlags = vk::ShaderStageFlagBits::eVertex,
+        .offset = 0,
+        .size = sizeof(ee_rml::RmlTransformGeometry)
+    };
+
+    vulkan_render::PipelineConfig rmlMaterial = vulkan_render::Pipeline::MakeConfig(
+        surface,
+        shaderBindings,
+        {texture},
+        model
+    );
+    rmlMaterial.maxExtraDescriptorSets = 100; //TODO: remove magic const
+    vulkan_render::ShaderProgram rmlShader {
+        .vertex = {reinterpret_cast<std::byte*>(shaders.vertRml->content), shaders.vertRml->size},
+        .fragment = {reinterpret_cast<std::byte*>(shaders.fragRml->content), shaders.fragRml->size}
+    };
+
+    rmlPipeline.emplace(
+        *context,
+        surface,
+        *swapchain,
+        rmlMaterial,
+        *renderPass,
+        rmlShader,
         MAX_FRAMES_IN_FLIGHT
     );
 }
