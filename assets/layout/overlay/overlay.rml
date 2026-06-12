@@ -1,0 +1,43 @@
+<rml>
+
+<head>
+    <link type="text/css" href="../base.rcss" />
+    <link type="text/css" href="../game.rcss" />
+    <link type="text/css" href="overlay.rcss" />
+</head>
+
+<body>
+    <div id="header">
+        <div class="flag">
+
+        </div>
+
+        <div class="stats">
+            <div class="value block"><span>17,3 млн</span></div>
+            <div class="value block"><span>138 млрд</span></div>
+            <div class="value block"><span>€ 95 млн</span></div>
+        </div>
+
+        <div id="calendar">
+            <div class="value block"><span>01.01.1980</span></div>
+            <div id="speed-buttons">
+                <div class="speed">0</div>
+                <div class="speed">1</div>
+                <div class="speed">2</div>
+                <div class="speed">3</div>
+                <div class="speed">4</div>
+                <div class="speed">5</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="department-tabs">
+        <div class="department"></div>
+        <div class="department"></div>
+        <div class="department"></div>
+        <div class="department"></div>
+        <div class="department"></div>
+    </div>
+</body>
+
+</rml>

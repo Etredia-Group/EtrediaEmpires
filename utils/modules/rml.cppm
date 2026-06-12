@@ -19,6 +19,7 @@ export namespace Rml {
     using Rml::CompiledGeometryHandle;
     using Rml::Vector2f;
     using Rml::Vector2i;
+    using Rml::Matrix4f;
     using Rml::ColourbPremultiplied;
     using Rml::String;
     using Rml::Rectanglei;

@@ -75,6 +75,8 @@ export namespace ee_rml {
 
         void SetScissorRegion(Rml::Rectanglei region) override;
 
+        void SetTransform(const Rml::Matrix4f *transform) override;
+
         void SetFrameContext(vulkan_render::FrameContext *frameContext);
 
     private:
@@ -84,6 +86,7 @@ export namespace ee_rml {
         vulkan_render::Sampler sampler;
         std::unordered_map<Rml::TextureHandle, vk::raii::DescriptorSets> textures;
         vulkan_render::RenderTexture defaultTexture;
+        glm::mat4 currentTransform = glm::mat4(1.0f);
     };
 
 }

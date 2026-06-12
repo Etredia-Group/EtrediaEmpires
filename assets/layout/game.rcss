@@ -1,0 +1,20 @@
+.block {
+    display: flex;
+    flex-direction: row;
+    border: 2px outset;
+
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+
+.value {
+    width: 8em;
+    height: 2em;
+
+    background-color: black;
+    color: white;
+    font-size: 16px;
+    border-color: #1d2749;
+    border-radius: 8px;
+}

@@ -89,7 +89,7 @@ void ee_rml::RmlVulkan::RenderGeometry(
         .mvp = glm::ortho(
             0.0f, static_cast<float>(renderer.surface.extent.width),
             0.0f, static_cast<float>(renderer.surface.extent.height)
-        ),
+        ) * currentTransform,
         .translate = glm::vec2(translation.x, translation.y)
     };
 
@@ -164,6 +164,15 @@ void ee_rml::RmlVulkan::SetScissorRegion(const Rml::Rectanglei region) {
 
     renderer.pipeline.scissors.offset = {x, y};
     renderer.pipeline.scissors.extent = {width, height};
+}
+
+void ee_rml::RmlVulkan::SetTransform(const Rml::Matrix4f *transform) {
+    if (transform != nullptr) {
+        std::memcpy(&currentTransform[0][0], transform->data(), sizeof(glm::mat4));
+    }
+    else {
+        currentTransform = glm::mat4(1.0f);
+    }
 }
 
 void ee_rml::RmlVulkan::SetFrameContext(vulkan_render::FrameContext *frameContext) {

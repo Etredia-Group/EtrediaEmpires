@@ -9,8 +9,8 @@ import VulkanRender;
 import GLFWInput;
 import std;
 
-constexpr std::uint32_t SCREEN_WIDTH = 800;
-constexpr std::uint32_t SCREEN_HEIGHT = 600;
+constexpr std::uint32_t SCREEN_WIDTH = 1920;
+constexpr std::uint32_t SCREEN_HEIGHT = 800;
 
 int main(int argc, char **argv) {
     // Setup P7 logger

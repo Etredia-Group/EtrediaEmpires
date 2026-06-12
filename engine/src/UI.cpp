@@ -9,7 +9,7 @@ UI::UI(Rml::RenderInterface &renderer, const std::uint32_t width, const std::uin
 
     Rml::LoadFontFace("assets/fonts/ARIAL.TTF");
 
-    currentDocument = context->LoadDocument("assets/layout/test/test.rml");
+    currentDocument = context->LoadDocument("assets/layout/overlay/overlay.rml");
     currentDocument->Show();
 }
 
