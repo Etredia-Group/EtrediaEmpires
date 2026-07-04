@@ -28,11 +28,11 @@ export
         ee_assets::AssetType type = ee_assets::BINARY;
 
         std::atomic<bool> isReady;
-        AssetAddress *resourceAddress;
+        std::atomic<AssetAddress*> resourceAddress;
 
         explicit AssetInfo(void *resource) {
             this->resourceAddress = Allocate<AssetAddress>();
-            this->resourceAddress->resource.store(resource);
+            this->resourceAddress.load(std::memory_order_relaxed)->resource.store(resource);
         }
 
         AssetInfo(const AssetInfo&) = delete;
@@ -40,7 +40,7 @@ export
 
         AssetInfo(AssetInfo&& other) noexcept :
             type(other.type),
-            resourceAddress(other.resourceAddress) {
+            resourceAddress(other.resourceAddress.load(std::memory_order_relaxed)) {
             isReady.store(other.isReady.load(std::memory_order_relaxed), std::memory_order_relaxed);
 
             other.resourceAddress = nullptr;
@@ -50,7 +50,7 @@ export
         AssetInfo& operator=(AssetInfo&& other) noexcept {
             if (this != &other) {
                 type = other.type;
-                resourceAddress = other.resourceAddress;
+                resourceAddress = other.resourceAddress.load(std::memory_order_relaxed);
                 isReady.store(other.isReady.load(std::memory_order_relaxed), std::memory_order_relaxed);
 
                 other.resourceAddress = nullptr;
@@ -105,7 +105,7 @@ export
             }
         }
 
-        void LoadAsync(ee_assets::AssetType type, const std::filesystem::path& path) {
+        void LoadAsync(const ee_assets::AssetType type, const std::filesystem::path& path) {
             AssetStreamCommand command;
             command.type = AssetStreamCommand::LOAD;
             command.targetPath = path;
@@ -150,21 +150,22 @@ export
             return Get<T>(Find(id));
         }
 
-        void Redirect(const AssetHandle& handle, void *resource) const {
+        // ReSharper disable once CppMemberFunctionMayBeConst
+        void Redirect(const AssetHandle& handle, void *resource) {
             const AssetInfo& asset = activeAssets[handle.slot];
-            if (asset.resourceAddress == nullptr) {
+            AssetAddress *address = asset.resourceAddress.load(std::memory_order_relaxed);
+            if (address == nullptr) {
                 LOG(WARNING, "Attempt to redirect empty handle");
                 return;
             }
 
-            // TODO: LEAK! Free old resource after redirecting handler to other resource
-            if (asset.resourceAddress->resource.load() != nullptr) {
-                void *oldResource = asset.resourceAddress->resource.exchange(nullptr, std::memory_order_acq_rel);
-                //if (oldResource)
-                //Deallocate(oldResource);
-            }
-
-            asset.resourceAddress->resource.store(resource);
+            if (
+                void *oldResource = address->resource.exchange(
+                    resource,
+                    std::memory_order_acq_rel
+                )
+            )
+                Deallocate(oldResource);
         }
 
         // Returned resource reference should not be stored
@@ -184,7 +185,7 @@ export
         void Free(const AssetHandle& handle) {
             AssetInfo& asset = activeAssets[handle.slot];
             Redirect(handle, nullptr);
-            Deallocate(asset.resourceAddress);
+            Deallocate(asset.resourceAddress.load(std::memory_order_relaxed));
             asset.resourceAddress = nullptr;
 
             freeAssetSlots.push_back(handle.slot);
@@ -192,57 +193,24 @@ export
 
     protected:
         void Update() override {
-            // TODO: FinishLoadTasks()
-            for (AssetLoadingEntry& entry : loadingEntries) {
-                if (entry.fileOwner->PollReady(*entry.file)) {
-                    AssetInfo& asset = activeAssets[entry.handle.slot];
-
-                    switch (asset.type) {
-                    case ee_assets::MAP_MESH:
-                        FinishLoadCapnprotoDeserialize(entry, mapMeshesStorage);
-                        break;
-                    case ee_assets::SAVE:
-                        FinishLoadCapnprotoDeserialize(entry, savesStorage);
-                        break;
-
-                    case ee_assets::SHADER:
-                        FinishLoadConstruct(entry, shadersStorage);
-                        break;
-                    case ee_assets::MATERIAL:
-                        FinishLoadCapnprotoDeserialize(entry, materialsStorage);
-                        break;
-                    case ee_assets::IMAGE:
-                        break;
-
-                    case ee_assets::BINARY:
-                    default:
-                        FinishLoadConstruct(entry, binaryStorage);
-                        break;
-                    }
-
-                    entry.fileOwner->Close(*entry.file);
-#ifndef NDEBUG
-                    LOG(INFO, "Asset loaded: [%hs]", entry.file->debugPath.generic_u8string().c_str());
-#endif
-                    entry.file = nullptr;
-                    asset.isReady.store(true);
-                }
-            }
-
-            std::erase_if(loadingEntries, [](const AssetLoadingEntry& entry) {
-                return entry.file == nullptr;
-            });
+            FinishLoadTasks();
         }
 
         void Release() override {
             for (const AssetInfo& asset : activeAssets) {
-                //TODO: LEAK! Free resource
-                if (asset.resourceAddress->resource.load() != nullptr) {
-                    void *resource = asset.resourceAddress->resource.exchange(nullptr, std::memory_order_acq_rel);
-                    //if (resource)
-                    //Deallocate(resource);
+                if (
+                    AssetAddress* address = asset.resourceAddress.load(std::memory_order_relaxed);
+                    address != nullptr
+                ) {
+                    if (
+                        void *resource = address->resource.exchange(
+                            nullptr,
+                            std::memory_order_acq_rel
+                        )
+                    )
+                        Deallocate(resource);
+                    Deallocate(address);
                 }
-                Deallocate(asset.resourceAddress);
             }
             activeAssets.clear();
 
@@ -289,7 +257,7 @@ export
             std::size_t assetPos = 0;
             if (freeAssetSlots.size() > 0) {
                 assetPos = freeAssetSlots.back();
-                Deallocate(activeAssets[assetPos].resourceAddress);
+                Deallocate(activeAssets[assetPos].resourceAddress.load(std::memory_order_relaxed));
                 activeAssets[assetPos] = std::move(asset);
                 freeAssetSlots.pop_back();
             }
@@ -342,9 +310,55 @@ export
                 return;
 
             if (command.out != nullptr)
-                command.out->store(activeAssets[command.target.slot].resourceAddress->resource);
+                command.out->store(
+                    activeAssets[command.target.slot].resourceAddress.load(std::memory_order_relaxed)->resource
+                );
 
             command.type = AssetStreamCommand::COMPLETED;
+        }
+
+        void FinishLoadTasks() {
+            diskSystem->PollLoads();
+
+            for (AssetLoadingEntry& entry : loadingEntries) {
+                if (entry.file->isCompleted) {
+                    AssetInfo& asset = activeAssets[entry.handle.slot];
+
+                    switch (asset.type) {
+                        case ee_assets::MAP_MESH:
+                            FinishLoadCapnprotoDeserialize(entry, mapMeshesStorage);
+                            break;
+                        case ee_assets::SAVE:
+                            FinishLoadCapnprotoDeserialize(entry, savesStorage);
+                            break;
+
+                        case ee_assets::SHADER:
+                            FinishLoadConstruct(entry, shadersStorage);
+                            break;
+                        case ee_assets::MATERIAL:
+                            FinishLoadCapnprotoDeserialize(entry, materialsStorage);
+                            break;
+                        case ee_assets::IMAGE:
+                            break;
+
+                        case ee_assets::BINARY:
+                        default:
+                            FinishLoadConstruct(entry, binaryStorage);
+                            break;
+                    }
+
+                    entry.fileOwner->Close(*entry.file);
+#ifndef NDEBUG
+                    LOG(INFO, "Asset loaded: [%hs]", entry.file->debugPath.generic_u8string().c_str());
+#endif
+                    entry.file = nullptr;
+                    asset.isReady.store(true);
+                }
+            }
+
+            std::erase_if(loadingEntries, [](const AssetLoadingEntry& entry) {
+                return entry.file == nullptr;
+            });
         }
 
         template <ee_assets::Asset T>

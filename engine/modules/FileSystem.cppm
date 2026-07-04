@@ -15,18 +15,29 @@ export
         std::uint8_t *data = nullptr;
         std::uint8_t *buffer = nullptr;
 
+        bool isCompleted = false;
+        bool isClosing = false;
+
 #ifndef NDEBUG
         std::filesystem::path debugPath;
 #endif
 
 #ifdef _WIN32
         HANDLE win32Handle = INVALID_HANDLE_VALUE;
-        OVERLAPPED overlapped;
 #endif
 
 #ifdef __linux__
 #endif
     };
+
+#ifdef _WIN32
+    struct IOContext {
+        OVERLAPPED overlapped;
+        FileHandle *file;
+        std::size_t currentOffset;
+    };
+#endif
+
 
     class IFileSystem {
     public:
@@ -41,7 +52,7 @@ export
 
         virtual void ReadAsync(FileHandle& file, std::uint32_t bufferSize, std::uint32_t flags) = 0;
 
-        virtual bool PollReady(FileHandle& file) = 0;
+        virtual void PollLoads() = 0;
 
         virtual void Close(FileHandle& file) = 0;
 
@@ -55,12 +66,26 @@ export
 
     class NativeFileSystem final : public IFileSystem {
     public:
-        FileHandle& Open(const std::filesystem::path& path, std::uint32_t flags) override;
+        NativeFileSystem();
+        ~NativeFileSystem() override;
 
-        void ReadAsync(FileHandle& file, std::uint32_t bufferSize, std::uint32_t flags) override;
+        FileHandle& Open(const std::filesystem::path &path, std::uint32_t flags) override;
 
-        bool PollReady(FileHandle& file) override;
+        void ReadAsync(FileHandle &file, std::uint32_t bufferSize, std::uint32_t flags) override;
 
-        void Close(FileHandle& file) override;
+        void PollLoads() override;
+
+        void Close(FileHandle &file) override;
+
+    private:
+
+#ifdef _WIN32
+        HANDLE iocpHandle = INVALID_HANDLE_VALUE;
+
+        bool HandleChunk(IOContext *context, DWORD bytesTransferred, bool success);
+        void IssueRead(IOContext *context);
+#endif
+
+        void FreeFile(FileHandle &file);
     };
 }
