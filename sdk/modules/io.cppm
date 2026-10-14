@@ -28,6 +28,21 @@ export namespace ee_data
     )
 }
 
+export namespace ee_economy {
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+        Resource,
+        tag,
+        baseCost
+    )
+
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+        EnterpriseDefinition,
+        productionRecipe,
+        constructionRecipe,
+        constructionSpeed
+    )
+}
+
 export namespace ee_assets
 {
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
@@ -39,6 +54,16 @@ export namespace ee_assets
         AssetMaterial,
         vertexShaderAssetID,
         fragmentShaderAssetID
+    )
+
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+        AssetResourceList,
+        content
+    )
+
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+        AssetEnterpriseList,
+        content
     )
 }
 

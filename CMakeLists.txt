@@ -22,7 +22,10 @@ add_subdirectory(sdk)
 add_subdirectory(p7lib)
 add_subdirectory(utils)
 
-#add_subdirectory(server/lib)
+add_subdirectory(economy)
+
+add_subdirectory(server/lib)
+add_subdirectory(server/dedicated)
 add_subdirectory(engine-api)
 
 # add_subdirectory(renderers/magnum-renderer)

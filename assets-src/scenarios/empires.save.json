@@ -2,23 +2,80 @@
   "content": {
     "subjects": [
       {
-        "tag": "FSC",
-        "color": "#FF0000",
+        "tag": "UCB",
+        "color": "#F7EF00",
         "regions": [
-          "pepene",
-          "scarna"
+          "dineria",
+          "minderia",
+          "ragland",
+          "trinadia",
+          "kostyania",
+          "nikland",
+          "perdania",
+          "eddoran",
+          "inderia",
+          "arstinia",
+          "zerandia",
+          "levea",
+          "berland",
+          "kurilliland",
+          "irtazlin",
+          "akvaria",
+          "retorria",
+          "north_rachia",
+          "south_rachia",
+          "tirandia",
+          "sverlopa",
+          "strogskia",
+          "fillirand",
+          "mgahvatia",
+          "glednar",
+          "kima"
         ]
       },
       {
-        "tag": "UCB",
-        "color": "#0000FF",
+        "tag": "FSC",
+        "color": "#AB5177",
         "regions": [
-          "dineria",
-          "perdania",
-          "arstinia",
           "alende",
-          "zerandia",
-          "mgahvatia"
+          "pepene",
+          "kuilemberg",
+          "gardol",
+          "diosis",
+          "bartil",
+          "scarna",
+          "dabreg",
+          "scenra",
+          "prakirol",
+          "illeton"
+        ]
+      },
+      {
+        "tag": "TRP",
+        "color": "#F77D93",
+        "regions": [
+          "barlakir",
+          "assental",
+          "castle-viktor",
+          "sector-kaya",
+          "castle-avens"
+        ]
+      },
+      {
+        "tag": "SFL",
+        "color": "#392986",
+        "regions": [
+          "nanec",
+          "paradizna",
+          "dalovburg",
+          "koberec",
+          "kichka_menrosh",
+          "chenec",
+          "ishkivat",
+          "samac",
+          "shkadozhiv",
+          "zaknishce",
+          "saranchet"
         ]
       }
     ]

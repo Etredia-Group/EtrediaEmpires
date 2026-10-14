@@ -1,5 +1,6 @@
 export module AssetData;
 export import GameData;
+export import Economy;
 export import views;
 import std;
 
@@ -13,6 +14,8 @@ export namespace ee_assets {
 
         MAP_MESH,
         SAVE,
+        RESOURCE_LIST,
+        ENTERPRISE_LIST,
 
         SHADER,
         MATERIAL,
@@ -39,6 +42,18 @@ export namespace ee_assets {
         using asset_tag = AssetTag;
 
         ee_data::GameState content;
+    };
+
+    struct AssetResourceList {
+        using asset_tag = AssetTag;
+
+        ee_economy::ResourceList content;
+    };
+
+    struct AssetEnterpriseList {
+        using asset_tag = AssetTag;
+
+        ee_economy::EnterpriseList content;
     };
 
     using AssetShader = AssetBinary;

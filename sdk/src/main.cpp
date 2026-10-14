@@ -117,6 +117,10 @@ int main(const int argc, char **argv) {
             IfNotExluded(excludedTypes, "scenarios", [jsonCompiler, src, out] {
                 CompileJson<ee_assets::AssetSave>(jsonCompiler, "scenarios", src, out);
             });
+            IfNotExluded(excludedTypes, "economy", [jsonCompiler, src, out] {
+                CompileJson<ee_assets::AssetResourceList>(jsonCompiler, "economy/resources", src, out);
+                CompileJson<ee_assets::AssetEnterpriseList>(jsonCompiler, "economy/enterprises", src, out);
+            });
 
             constexpr ee_sdk::MapMeshCompiler mapMeshCompiler;
             IfNotExluded(excludedTypes, "map", [mapMeshCompiler, src, out] {

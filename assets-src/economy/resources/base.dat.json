@@ -1,0 +1,12 @@
+{
+  "content": [
+    {
+      "tag": "coal",
+      "baseCost": 10
+    },
+    {
+      "tag": "oil",
+      "baseCost": 50
+    }
+  ]
+}

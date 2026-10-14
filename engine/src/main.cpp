@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     Engine::assetManager->LoadDir(ee_assets::MATERIAL, "assets/materials");
 
     // Load assets
-    Engine::assetManager->LoadAsync(ee_assets::MAP_MESH, "assets/map/regions.map");
+    Engine::assetManager->LoadAsync(ee_assets::MAP_MESH, "assets/map/ee.map");
     Engine::assetManager->LoadAsync(ee_assets::SAVE, "assets/scenarios/empires.save");
 
     // Setup input manager
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     // Setup renderer
     Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_vulkan::VulkanRenderer>(window));
 
-    ee_assets::AssetMapMesh& regions = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/regions.map");
+    ee_assets::AssetMapMesh& regions = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/ee.map");
     Engine::renderer->RegisterMapMesh(&regions.content);
 
     //TODO: ShaderRefs builder from set of AssetMaterial

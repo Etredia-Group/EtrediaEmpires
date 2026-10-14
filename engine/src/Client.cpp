@@ -15,8 +15,9 @@ void Client::Init() const {
 
     // TEST
     ee_assets::AssetSave& asset = Engine::assetManager->Get<ee_assets::AssetSave>(save);
-    ViewModelSubject(asset.content.subjects[0]);
-    ViewModelSubject(asset.content.subjects[1]);
+    for (const ee_data::Subject &subject : asset.content.subjects) {
+        ViewModelSubject(subject);
+    }
 }
 
 const IDataChannel* Client::GetConnection() const {

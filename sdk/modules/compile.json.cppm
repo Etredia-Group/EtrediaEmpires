@@ -66,7 +66,8 @@ export namespace ee_sdk {
             return
                 key == "tag" ||
                 key.ends_with("AssetID") ||
-                key.ends_with("Type");
+                key.ends_with("Type") ||
+                key.ends_with("Recipe");
         }
 
         static void CompileHashes(const std::basic_string<char> &key, json &value) {
@@ -112,7 +113,7 @@ export namespace ee_sdk {
             std::from_chars(colorStrPointer, colorStrPointer + 2, g, 16); colorStrPointer += 2;
             std::from_chars(colorStrPointer, colorStrPointer + 2, b, 16); colorStrPointer += 2;
 
-            hex = colorToHex(r, g, b);
+            hex = colorToHex(r, g, b, true);
 
             LOG(INFO, "COMPILED COLOR: Replace string [%hs] with 0x[%X] (RGB %d, %d, %d) color", colorStr, hex, r, g, b);
             value = hex;
