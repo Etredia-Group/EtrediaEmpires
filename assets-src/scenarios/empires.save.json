@@ -3,7 +3,7 @@
     "subjects": [
       {
         "tag": "UCB",
-        "color": "#F7EF00",
+        "color": "#E5EA5D",
         "regions": [
           "dineria",
           "minderia",
@@ -22,20 +22,21 @@
           "irtazlin",
           "akvaria",
           "retorria",
-          "north_rachia",
-          "south_rachia",
+          "north-rachia",
+          "south-rachia",
           "tirandia",
           "sverlopa",
           "strogskia",
           "fillirand",
           "mgahvatia",
           "glednar",
-          "kima"
+          "kima",
+          "egrinda"
         ]
       },
       {
         "tag": "FSC",
-        "color": "#AB5177",
+        "color": "#D88CC9",
         "regions": [
           "alende",
           "pepene",
@@ -46,36 +47,110 @@
           "scarna",
           "dabreg",
           "scenra",
-          "prakirol",
-          "illeton"
+          "prakirol"
         ]
       },
       {
         "tag": "TRP",
-        "color": "#F77D93",
+        "color": "#C8ABCC",
         "regions": [
           "barlakir",
           "assental",
           "castle-viktor",
           "sector-kaya",
-          "castle-avens"
+          "castle-avens",
+          "castle-ulviun"
         ]
       },
       {
-        "tag": "SFL",
-        "color": "#392986",
+        "tag": "ISH",
+        "color": "#EADCC5",
         "regions": [
+          "langat",
+          "illeton",
           "nanec",
           "paradizna",
           "dalovburg",
           "koberec",
-          "kichka_menrosh",
+          "kichka-menrosh",
           "chenec",
           "ishkivat",
           "samac",
           "shkadozhiv",
           "zaknishce",
-          "saranchet"
+          "saranchet",
+          "chron",
+          "right-ribnica",
+          "headwaters",
+          "drakat",
+          "doroshchegar",
+          "kontsk",
+          "karabshet",
+          "port-belfa",
+          "priozersk",
+          "zallesk",
+          "zelenov",
+          "kzhechen",
+          "nizhnesibursk",
+          "elnino",
+          "labina",
+          "gynska-sobota",
+          "sarabutolgo-gyt",
+          "bakly",
+          "hodeska",
+          "zagorie",
+          "sinitsyno",
+          "barkino",
+          "tral",
+          "enterba",
+          "yuglave",
+          "marak",
+          "bakhansk"
+        ]
+      },
+      {
+        "tag": "IID",
+        "color": "#AD3832",
+        "regions": [
+          "tornfkills",
+          "newpillia",
+          "dokbog",
+          "pitiwos",
+          "palave",
+          "orosbund",
+          "translat-edi",
+          "bardaslot",
+          "prekaris",
+          "fardont",
+          "steel-frontier",
+          "doox-island",
+          "gigafacility",
+          "praeter",
+          "dvadechreta",
+          "kechukmagna",
+          "ksiplovkur",
+          "rahadon",
+          "erashdipidipibund",
+          "labanav",
+          "redriver",
+          "dookland",
+          "bergsland"
+        ]
+      },
+      {
+        "tag": "KAR",
+        "color": "#A4B5D8",
+        "regions": [
+          "bargental",
+          "bretesse",
+          "bloydorp",
+          "karlsborg",
+          "gekelen",
+          "kilborg",
+          "paulkerhen",
+          "tordheim",
+          "sankt-mikhel",
+          "nederborn"
         ]
       }
     ]
