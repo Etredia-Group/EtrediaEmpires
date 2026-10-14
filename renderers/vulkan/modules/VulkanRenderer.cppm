@@ -16,13 +16,40 @@ namespace ee_vulkan {
     constexpr std::uint64_t TIMEOUT = std::numeric_limits<std::uint64_t>::max();
 
     struct DrawConfig {
-        static constexpr vk::ClearValue CLEAR_COLOR = {.color = {std::array{1.0f, 1.0f, 1.0f, 1.0f}}};
+        // Deep ocean color (linear). Normally hidden by the ocean plane drawn with the provinces.
+        static constexpr vk::ClearValue CLEAR_COLOR = {.color = {std::array{0.007f, 0.122f, 0.474f, 1.0f}}};
         static constexpr vk::ClearValue CLEAR_DEPTH = {.depthStencil = {1.0f, 0}};
     };
 
+    /**
+     * Vertex of a province polygon. Normal is the outward miter of the province contour,
+     * used by the shader to slightly grow polygons before clipping them against the province raster.
+     */
+    struct ProvinceVertex {
+        glm::vec2 position;
+        glm::vec2 normal;
+    };
+
+    /**
+     * Per-frame data of the map shaders (std140 layout, see provinces-flat shaders).
+     */
+    struct MapUniform {
+        glm::mat4 viewProjection;
+        glm::mat4 inverseViewProjection;
+        /// x, y: framebuffer size; z: world units per screen pixel; w: 1 if the target is sRGB.
+        glm::vec4 viewport;
+        /// x, y: world position of province raster texel (0, 0) center; z, w: province raster size in texels.
+        glm::vec4 raster;
+        /// x: map pixels per province raster texel; y: raster texels per coast field texel; z, w: coast field size.
+        glm::vec4 coast;
+        /// x: instance index of the ocean plane.
+        glm::uvec4 info;
+    };
+    static_assert(sizeof(MapUniform) == 192, "MapUniform must match std140 layout of the map shaders");
+
     struct ProvinceMesh {
         lazy<vulkan_render::Buffer<
-            glm::vec2,
+            ProvinceVertex,
             vk::BufferUsageFlagBits::eVertexBuffer,
             vulkan_render::BufferMode::STAGING_ACCESS
         >> vertices;
@@ -42,6 +69,24 @@ namespace ee_vulkan {
             vk::BufferUsageFlagBits::eIndirectBuffer,
             vulkan_render::BufferMode::STAGING_ACCESS
         >> indirectCommands;
+
+        /// Province index + 1 for every map pixel, 0 for water (R16/R32 uint).
+        lazy<vulkan_render::PartialTexture> provinceIds;
+        /// Signed distance to the coastline in province raster texels, positive in water (R16 float).
+        lazy<vulkan_render::PartialTexture> coastDistance;
+        vk::raii::Sampler nearestSampler = nullptr;
+        vk::raii::Sampler linearSampler = nullptr;
+
+        /// World position of the center of province raster texel (0, 0).
+        glm::ivec2 rasterOrigin {0, 0};
+        glm::uvec2 rasterSize {1, 1};
+        /// Map pixels per province raster texel (more than 1 for maps exceeding texture limits).
+        std::uint32_t rasterTexelSize = 1;
+        glm::uvec2 coastFieldSize {1, 1};
+        /// Province raster texels per coast distance field texel.
+        std::uint32_t coastFieldFactor = 1;
+        /// Index of the ocean plane in the storage buffer and in the instances of multi-draw.
+        std::uint32_t oceanInstance = 0;
     };
 }
 
@@ -80,7 +125,7 @@ export namespace ee_vulkan {
         lazy<vulkan_render::SyncManager> syncManager;
 
         lazy<vulkan_render::Texture<vulkan_render::TextureMode::DEPTH>> depth;
-        lazy<vulkan_render::Uniform<glm::mat4>> viewProjectionUniform;
+        lazy<vulkan_render::Uniform<MapUniform>> mapUniform;
         ProvinceMesh provinces;
 
         lazy<ee_rml::RmlVulkan> rmlRenderInterface;
@@ -93,6 +138,11 @@ export namespace ee_vulkan {
         void LoadProvincesMaterial();
         void LoadRmlMaterial();
         void LoadProvinces();
+        void LoadMapTextures(
+            const std::vector<std::uint32_t> &ids,
+            const std::vector<float> &coastField,
+            std::uint32_t provincesCount
+        );
         void UpdateData(std::uint32_t frame);
     };
 }
