@@ -1,8 +1,14 @@
-module;
+/*
+ * Specializations of non-standart types for reflect-cpp.
+ * Include it instead of <rfl/capnproto.hpp>.
+ * Do not move this header to module interface to avoid capnptoro compilation errors.
+ */
+
+#ifndef SERIALIZATION_HPP
+#define SERIALIZATION_HPP
+
 #include <glm/glm.hpp>
 #include <rfl/capnproto.hpp>
-
-export module utils:serialization;
 
 namespace rfl {
     template <glm::length_t length, typename T>
@@ -16,7 +22,7 @@ namespace rfl {
     };
 }
 
-export namespace rfl {
+namespace rfl {
     template <class ReaderType, class WriterType, class ProcessorsType>
     struct parsing::Parser<ReaderType, WriterType, glm::vec2, ProcessorsType>
         : CustomParser<ReaderType, WriterType, ProcessorsType, glm::vec2, GlmVecImpl<2, float>> {};
@@ -30,6 +36,4 @@ export namespace rfl {
         : CustomParser<ReaderType, WriterType, ProcessorsType, glm::vec4, GlmVecImpl<4, float>> {};
 }
 
-export namespace ee_utils {
-
-}
+#endif // SERIALIZATION_HPP

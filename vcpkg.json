@@ -3,7 +3,7 @@
     "cxxopts",
     "boost-lockfree",
     "xxhash",
-    "nlohmann-json",
+    "glaze",
     {
       "name": "reflectcpp",
       "features": [

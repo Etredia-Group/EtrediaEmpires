@@ -2,7 +2,7 @@ module;
 
 #include "compile_config.hpp"
 #include <xxhash.h>
-#include <rfl/capnproto.hpp>
+#include <ee_utils/serialization.hpp>
 
 export module AssetManager;
 export import AssetData;

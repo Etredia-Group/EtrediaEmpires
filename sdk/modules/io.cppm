@@ -1,83 +1,30 @@
 module;
 
-#include <nlohmann/json.hpp>
-#include <rfl/capnproto.hpp>
+#include <ee_utils/serialization.hpp>
 
 export module io;
 import utils;
+import glaze;
 import AssetData;
 import std;
 
-using json = nlohmann::json;
-
-export namespace ee_data
-{
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-        Subject,
-        tag,
-        color,
-        regions
-    )
-}
-
-export namespace ee_data
-{
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-        GameState,
-        subjects
-    )
-}
-
-export namespace ee_economy {
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-        Resource,
-        tag,
-        baseCost
-    )
-
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-        EnterpriseDefinition,
-        productionRecipe,
-        constructionRecipe,
-        constructionSpeed
-    )
-}
-
-export namespace ee_assets
-{
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-        AssetSave,
-        content
-    )
-
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-        AssetMaterial,
-        vertexShaderAssetID,
-        fragmentShaderAssetID
-    )
-
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-        AssetResourceList,
-        content
-    )
-
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-        AssetEnterpriseList,
-        content
-    )
-}
-
 export namespace ee_sdk {
-    std::optional<json> ReadJson(const std::filesystem::path &assetPath) {
+    std::optional<glz::json_t> ReadJson(const std::filesystem::path &assetPath) {
         std::ifstream fin(assetPath);
         if (!fin.is_open()) {
             LOG(ERROR, "Could not open output file: [%s]", assetPath.c_str());
             return std::nullopt;
         }
 
-        json data = json::parse(fin);
-
+        const std::string jsonStr{ std::istreambuf_iterator(fin), std::istreambuf_iterator<char>() };
         fin.close();
+
+        glz::json_t data;
+        if (glz::error_ctx error = glz::read_json(data, jsonStr)) {
+            LOG(ERROR, "Could not parse JSON: [%s]. [%s]", assetPath.c_str(), error.custom_error_message);
+            return std::nullopt;
+        }
+
         return data;
     }
 

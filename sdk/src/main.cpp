@@ -1,16 +1,13 @@
 #include <cxxopts.hpp>
-#include <nlohmann/json.hpp>
-// IT'S NEEDED FOR MSVC COMPILER TO NOT CRASH WITH C1001
-#include <rfl/capnproto.hpp>
 
 import utils;
+import glaze;
 import AssetData;
 import io;
 import compile.json;
 import compile.mapmesh;
 import std;
 
-using json = nlohmann::json;
 using path = std::filesystem::path;
 
 void IfNotExluded(const std::vector<path> &exluded, const path &a, const std::function<void()> &callback) {
@@ -27,11 +24,15 @@ void CompileJson(const ee_sdk::JsonCompiler &compiler, const path &relative, con
     for (const std::filesystem::directory_entry &asset : std::filesystem::directory_iterator(src/relative)) {
         if (!asset.is_regular_file()) continue;
 
-        std::optional<json> data = ee_sdk::ReadJson(asset.path());
+        std::optional<glz::json_t> data = ee_sdk::ReadJson(asset.path());
         if (!data.has_value()) continue;
 
         compiler.Compile(*data);
-        ee_sdk::WriteAsset(out/relative/asset.path().stem().filename(), data->get<TAsset>());
+        TAsset assetInstance{};
+        if (glz::error_ctx error = glz::read_json(assetInstance, *data)) {
+            LOG(ERROR, "JSON schema mismatch: [%s]. [%s]", asset.path().c_str(), error.custom_error_message);
+        }
+        ee_sdk::WriteAsset(out/relative/asset.path().stem().filename(), assetInstance);
     }
 }
 

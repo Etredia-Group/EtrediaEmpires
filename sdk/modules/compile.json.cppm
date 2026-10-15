@@ -1,14 +1,12 @@
 module;
 
 #include <xxhash.h>
-#include <nlohmann/json.hpp>
 
 export module compile.json;
 import utils;
+import glaze;
 import io;
 import std;
-
-using json = nlohmann::json;
 
 export namespace ee_sdk {
     class JsonCompiler
@@ -16,10 +14,10 @@ export namespace ee_sdk {
     public:
         explicit JsonCompiler(const std::filesystem::path &mappingsConfig) {
             for (
-                const json mappingsJson = ReadJson(mappingsConfig);
-                auto &[key, value] : mappingsJson.items()
+                const glz::json_t mappingsJson = ReadJson(mappingsConfig).value();
+                auto &[key, value] : mappingsJson.get_object()
             ) {
-                const char* color_str = value.get_ref<const std::string&>().c_str() + 1;
+                const char* color_str = value.get_string().c_str() + 1;
                 std::uint8_t b = 0, g = 0, r = 0;
                 std::uint32_t hex = 0;
 
@@ -33,7 +31,7 @@ export namespace ee_sdk {
             }
         }
 
-        void Compile(json &asset) const {
+        void Compile(glz::json_t &asset) const {
             CompileRecursive(asset, CompileHashes);
             CompileRecursive(asset, std::bind_front(&JsonCompiler::CompileMappings, this));
             CompileRecursive(asset, &CompileColors);
@@ -43,19 +41,19 @@ export namespace ee_sdk {
         std::unordered_map<std::string, std::uint32_t> mappings;
 
         static void CompileRecursive(
-           json &obj,
-           const std::function<void(const std::basic_string<char> &key, json &value)> &callback
+           glz::json_t &obj,
+           const std::function<void(const std::basic_string<char> &key, glz::json_t &value)> &callback
        )
         {
-            if (obj.is_array()) {for (auto &element : obj) CompileRecursive(element, callback); return;}
+            if (obj.is_array()) {for (auto &element : obj.get_array()) CompileRecursive(element, callback); return;}
             if (!obj.is_object()) {callback("", obj); return;}
 
-            for (auto &[key, value] : obj.items())
+            for (auto &[key, value] : obj.get_object())
             {
                 if (value.is_object())
                     CompileRecursive(value, callback);
                 else if (value.is_array())
-                    for (auto &element : value)
+                    for (auto &element : value.get_array())
                         CompileRecursive(element, callback);
                 else callback(key, value);
             }
@@ -70,11 +68,11 @@ export namespace ee_sdk {
                 key.ends_with("Recipe");
         }
 
-        static void CompileHashes(const std::basic_string<char> &key, json &value) {
+        static void CompileHashes(const std::basic_string<char> &key, glz::json_t &value) {
             if (!value.is_string()) return;
             if (!NeedsCompile(key)) return;
 
-            const std::filesystem::path linkPath = value;
+            const std::filesystem::path linkPath = value.get_string();
             const auto linkPath8 = linkPath.generic_u8string();
             std::uint32_t assetId = XXH32(linkPath8.data(), linkPath8.size(), 0);
 
@@ -82,9 +80,9 @@ export namespace ee_sdk {
             value = assetId;
         }
 
-        void CompileMappings(const std::basic_string<char> &, json &value) const {
+        void CompileMappings(const std::basic_string<char> &, glz::json_t &value) const {
             if (!value.is_string()) return;
-            const std::string& value_string = value.get_ref<const std::string&>();
+            const std::string& value_string = value.get_string();
 
             for (const auto &[name, toValue] : mappings)
             {
@@ -101,10 +99,10 @@ export namespace ee_sdk {
             }
         }
 
-        static void CompileColors(const std::basic_string<char> &, json &value) {
+        static void CompileColors(const std::basic_string<char> &, glz::json_t &value) {
             if (!value.is_string()) return;
 
-            const char *colorStr = value.get_ref<const std::string&>().c_str() + 1;
+            const char *colorStr = value.get_string().c_str() + 1;
             const char *colorStrPointer = colorStr;
             std::uint8_t b = 0, g = 0, r = 0;
             std::uint32_t hex = 0;
