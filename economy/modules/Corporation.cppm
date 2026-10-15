@@ -10,16 +10,18 @@ export namespace ee_economy {
     };
     using EnterpriseList = std::vector<EnterpriseDefinition>;
 
-    class Enterprise {
+    class EnterpriseBatch {
     public:
         EnterpriseDefinition definition;
-        std::uint32_t stateId;
+        std::uint32_t regionId;
+        std::uint8_t count;
         std::uint8_t damage;
+        std::uint8_t efficiency;
     };
 
     class Corporation {
     public:
-        std::vector<Enterprise> enterprises;
+        std::vector<EnterpriseBatch> enterprises;
     };
 
 }

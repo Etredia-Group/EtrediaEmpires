@@ -6,6 +6,8 @@ export namespace ee_economy {
     struct Resource {
         std::uint32_t tag;
         std::uint8_t baseCost;
+        std::uint8_t size;
+        std::uint8_t mass;
     };
     using ResourceList = std::vector<Resource>;
 
@@ -16,9 +18,8 @@ export namespace ee_economy {
             std::uint32_t tag;
             std::uint8_t cost;
         };
-        static constexpr std::size_t MAX_ENTRY_COUNT = 4;
-        Entry in[MAX_ENTRY_COUNT];
-        Entry out[MAX_ENTRY_COUNT];
+        std::vector<Entry> in;
+        std::vector<Entry> out;
     };
 
 }
