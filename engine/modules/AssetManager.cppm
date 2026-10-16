@@ -13,6 +13,13 @@ import std;
 
 export
 {
+    // Forward declarations
+
+    struct AssetOperations;
+    class AssetManager;
+
+    //
+
     struct AssetAddress {
         std::atomic<void*> resource;
     };
@@ -25,10 +32,9 @@ export
 
     class AssetInfo {
     public:
-        ee_assets::AssetType type = ee_assets::BINARY;
-
         std::atomic<bool> isReady;
         std::atomic<AssetAddress*> resourceAddress;
+        const AssetOperations *operations = nullptr;
 
         explicit AssetInfo(void *resource) {
             this->resourceAddress = Allocate<AssetAddress>();
@@ -39,8 +45,8 @@ export
         AssetInfo& operator=(const AssetInfo&) = delete;
 
         AssetInfo(AssetInfo&& other) noexcept :
-            type(other.type),
-            resourceAddress(other.resourceAddress.load(std::memory_order_relaxed)) {
+            resourceAddress(other.resourceAddress.load(std::memory_order_relaxed)),
+            operations(other.operations) {
             isReady.store(other.isReady.load(std::memory_order_relaxed), std::memory_order_relaxed);
 
             other.resourceAddress = nullptr;
@@ -49,8 +55,8 @@ export
 
         AssetInfo& operator=(AssetInfo&& other) noexcept {
             if (this != &other) {
-                type = other.type;
                 resourceAddress = other.resourceAddress.load(std::memory_order_relaxed);
+                operations = other.operations;
                 isReady.store(other.isReady.load(std::memory_order_relaxed), std::memory_order_relaxed);
 
                 other.resourceAddress = nullptr;
@@ -64,6 +70,11 @@ export
         AssetHandle handle;
         FileHandle *file;
         IFileSystem *fileOwner;
+    };
+
+    struct AssetOperations {
+        void (*Finish)(AssetManager&, AssetLoadingEntry&);
+        void (*Destroy)(void*);
     };
 
     struct AssetStreamCommand : ee_utils::WorkerCommand {
@@ -80,7 +91,7 @@ export
         AssetHandle target;
         std::uint32_t targetId = AssetHandle::INVALID_ASSET_ID;
         std::filesystem::path targetPath;
-        ee_assets::AssetType targetType = ee_assets::BINARY;
+        const AssetOperations *operations = nullptr;
         std::atomic<void*> *out = nullptr;
     };
 
@@ -98,18 +109,20 @@ export
             Deallocate(diskSystem);
         }
 
-        void LoadDir(const ee_assets::AssetType type, const std::filesystem::path& path) {
+        template <ee_assets::Asset T>
+        void LoadDir(const std::filesystem::path& path) {
             for (const std::filesystem::directory_entry& entry : std::filesystem::recursive_directory_iterator(path)) {
                 if (entry.is_directory()) continue;
-                LoadAsync(type, entry.path());
+                LoadAsync<T>(entry.path());
             }
         }
 
-        void LoadAsync(const ee_assets::AssetType type, const std::filesystem::path& path) {
+        template <ee_assets::Asset T>
+        void LoadAsync(const std::filesystem::path& path) {
             AssetStreamCommand command;
             command.type = AssetStreamCommand::LOAD;
             command.targetPath = path;
-            command.targetType = type;
+            command.operations = OperationsFor<T>();
 
             Request(command);
         }
@@ -165,7 +178,7 @@ export
                     std::memory_order_acq_rel
                 )
             )
-                Deallocate(oldResource);
+                asset.operations->Destroy(oldResource);
         }
 
         // Returned resource reference should not be stored
@@ -208,7 +221,7 @@ export
                             std::memory_order_acq_rel
                         )
                     )
-                        Deallocate(resource);
+                        asset.operations->Destroy(resource);
                     Deallocate(address);
                 }
             }
@@ -217,13 +230,6 @@ export
             for (AssetHandle *& handle : assetsMapping | std::views::values)
                 Deallocate(handle);
             assetsMapping.clear();
-
-            binaryStorage.clear();
-            mapMeshesStorage.clear();
-            shadersStorage.clear();
-            materialsStorage.clear();
-            savesStorage.clear();
-            configStorage.clear();
         }
 
     private:
@@ -235,13 +241,7 @@ export
         std::vector<std::size_t> freeAssetSlots;
         std::vector<AssetLoadingEntry> loadingEntries;
 
-        //TODO: Are these storages useless?
-        std::vector<ee_assets::AssetBinary*> binaryStorage;
-        std::vector<ee_assets::AssetSave*> savesStorage;
-        std::vector<ee_assets::AssetMapMesh*> mapMeshesStorage;
-        std::vector<ee_assets::AssetShader*> shadersStorage;
-        std::vector<ee_assets::AssetMaterial*> materialsStorage;
-        std::vector<void*> configStorage;
+        template <ee_assets::Asset T> static const AssetOperations* OperationsFor();
 
         void LoadCmd(AssetStreamCommand& command) {
             LOG(INFO, "LOAD command: [%hs]", command.targetPath.generic_u8string().c_str());
@@ -255,7 +255,7 @@ export
 
             AssetHandle *handle = Allocate<AssetHandle>();
             AssetInfo asset(nullptr);
-            asset.type = command.targetType;
+            asset.operations = command.operations;
 
             std::size_t assetPos = 0;
             if (freeAssetSlots.size() > 0) {
@@ -327,35 +327,7 @@ export
                 if (entry.file->isCompleted) {
                     AssetInfo& asset = activeAssets[entry.handle.slot];
 
-                    switch (asset.type) {
-                        case ee_assets::MAP_MESH:
-                            FinishLoadCapnprotoDeserialize(entry, mapMeshesStorage);
-                            break;
-                        case ee_assets::SAVE:
-                            FinishLoadCapnprotoDeserialize(entry, savesStorage);
-                            break;
-
-                        case ee_assets::CONFIG_RESOURCE_LIST:
-                            FinishLoadCapnprotoDeserialize<ee_assets::AssetResourceList>(entry, configStorage);
-                            break;
-                        case ee_assets::CONFIG_ENTERPRISE_LIST:
-                            FinishLoadCapnprotoDeserialize<ee_assets::AssetEnterpriseList>(entry, configStorage);
-                            break;
-
-                        case ee_assets::SHADER:
-                            FinishLoadConstruct(entry, shadersStorage);
-                            break;
-                        case ee_assets::MATERIAL:
-                            FinishLoadCapnprotoDeserialize(entry, materialsStorage);
-                            break;
-                        case ee_assets::IMAGE:
-                            break;
-
-                        case ee_assets::BINARY:
-                        default:
-                            FinishLoadConstruct(entry, binaryStorage);
-                            break;
-                    }
+                    asset.operations->Finish(*this, entry);
 
                     entry.fileOwner->Close(*entry.file);
 #ifndef NDEBUG
@@ -371,58 +343,13 @@ export
             });
         }
 
-        template <ee_assets::Asset T>
-        void FinishLoadConstruct(AssetLoadingEntry& loaded, std::vector<T*>& storage) {
-            T *resource = Allocate<T>(loaded.file->data, loaded.file->size);
-            storage.push_back(resource);
-            Redirect(loaded.handle, storage.back());
-        }
+        template <ee_assets::Asset T> static void FinishLoadAsset(AssetManager &self, AssetLoadingEntry &loaded);
+        template <ee_assets::Asset T> void FinishLoadConstruct(AssetLoadingEntry& loaded);
+        template <ee_assets::Asset T> void FinishLoadCapnprotoDeserialize(AssetLoadingEntry& loaded);
 
         template <ee_assets::Asset T>
-        void FinishLoadCapnprotoDeserialize(AssetLoadingEntry& loaded, std::vector<T*>& storage) {
-            FinishLoadCapnprotoDeserialize<T, T>(loaded, storage);
-        }
-
-        template <ee_assets::Asset T, typename U>
-        void FinishLoadCapnprotoDeserialize(AssetLoadingEntry& loaded, std::vector<U*>& storage) {
-            try {
-                if (rfl::Result<T> result = rfl::capnproto::read<T>(
-                    reinterpret_cast<const char*>(loaded.file->data),
-                    loaded.file->size
-                )) {
-                    storage.push_back(Allocate<T>(std::move(*result)));
-                    Redirect(loaded.handle, storage.back());
-                }
-                else {
-#if !defined(NDEBUG)
-                    LOG(
-                        ERROR,
-                        "Failed to read asset: [%s]. [%hs]",
-                        loaded.file->debugPath.c_str(),
-                        result.error().what().c_str()
-                    );
-#else
-                    LOG(ERROR, "Failed to read asset: ID[%d]. [%hs]", loaded.file->id, result.error().what().c_str());
-#endif
-                }
-            } catch (std::exception e) {
-                storage.push_back(Allocate<T>());
-                Redirect(loaded.handle, storage.back());
-#if !defined(NDEBUG)
-                LOG(ERROR, "Failed to read asset: [%s]. [%hs]", loaded.file->debugPath.c_str(), e.what());
-#else
-                LOG(ERROR, "Failed to read asset: ID[%d]. [%hs]", loaded.file->id, e.what());
-#endif
-            }
-        }
-
-        template <ee_assets::Asset T>
-        void ClearStorage(std::vector<T*>& storage) {
-            for (T * & resource : storage) {
-                if (resource != nullptr)
-                    Deallocate(resource);
-            }
-            storage.clear();
+        static void DestroyAsset(void *asset) {
+            Deallocate(static_cast<T*>(asset));
         }
     };
 }

@@ -12,11 +12,11 @@ import std;
 
 export namespace ee_engine {
     struct ShaderRefs {
-        ee_assets::AssetShader *vertProvinces;
-        ee_assets::AssetShader *fragProvinces;
+        ee_assets::Shader *vertProvinces;
+        ee_assets::Shader *fragProvinces;
 
-        ee_assets::AssetShader *vertRml;
-        ee_assets::AssetShader *fragRml;
+        ee_assets::Shader *vertRml;
+        ee_assets::Shader *fragRml;
     };
 
     struct CameraTransform {

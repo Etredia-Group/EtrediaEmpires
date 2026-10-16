@@ -1,3 +1,13 @@
+/*
+ * To define new asset:
+ * - Define struct with "using asset_tag = AssetTag".
+ * - Add template specialization in engine/AssetManager.cpp registry TODO: Move registry to engine-api
+ * - Assets loads in Cap'n Proto format by default.
+ * - If asset needs custom construction logic from raw binary:
+ * - | define and implement constructor (std::uint8_t * & source, std::size_t sourceSize)
+ * - | in AssetData.cpp
+ */
+
 export module AssetData;
 export import GameData;
 export import Economy;
@@ -9,58 +19,43 @@ export namespace ee_assets {
 
     template <typename T> concept Asset = requires { typename T::asset_tag; };
 
-    enum AssetType {
-        BINARY,
-
-        MAP_MESH,
-        SAVE,
-
-        CONFIG_RESOURCE_LIST,
-        CONFIG_ENTERPRISE_LIST,
-
-
-        SHADER,
-        MATERIAL,
-        IMAGE
-    };
-
-    struct AssetBinary {
+    struct Binary {
         using asset_tag = AssetTag;
 
         std::uint8_t *content = nullptr;
         std::size_t size = 0;
 
-        AssetBinary(std::uint8_t * & source, std::size_t sourceSize);
-        ~AssetBinary();
+        Binary(std::uint8_t * & source, std::size_t sourceSize);
+        ~Binary();
     };
 
-    struct AssetMapMesh {
+    struct MapMesh {
         using asset_tag = AssetTag;
 
         ee_engine::MapMesh content;
     };
 
-    struct AssetSave {
+    struct Save {
         using asset_tag = AssetTag;
 
         ee_data::GameState content;
     };
 
-    struct AssetResourceList {
+    struct ResourceList {
         using asset_tag = AssetTag;
 
         ee_economy::ResourceList content;
     };
 
-    struct AssetEnterpriseList {
+    struct EnterpriseList {
         using asset_tag = AssetTag;
 
         ee_economy::EnterpriseList content;
     };
 
-    using AssetShader = AssetBinary;
+    using Shader = Binary;
 
-    struct AssetMaterial {
+    struct Material {
         using asset_tag = AssetTag;
 
         std::uint32_t vertexShaderAssetID;

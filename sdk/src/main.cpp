@@ -48,7 +48,7 @@ void CompileMaps(const ee_sdk::MapMeshCompiler &compiler, const path &relative, 
 
         ee_sdk::WriteAsset(
             out/relative/asset.path().stem().filename(),
-            ee_assets::AssetMapMesh{ .content = compiler.CompileBMP(*data) }
+            ee_assets::MapMesh{ .content = compiler.CompileBMP(*data) }
         );
     }
 }
@@ -113,14 +113,14 @@ int main(const int argc, char **argv) {
 
             const ee_sdk::JsonCompiler jsonCompiler(src/"regions.json");
             IfNotExluded(excludedTypes, "materials", [jsonCompiler, src, out] {
-                CompileJson<ee_assets::AssetMaterial>(jsonCompiler, "materials", src, out);
+                CompileJson<ee_assets::Material>(jsonCompiler, "materials", src, out);
             });
             IfNotExluded(excludedTypes, "scenarios", [jsonCompiler, src, out] {
-                CompileJson<ee_assets::AssetSave>(jsonCompiler, "scenarios", src, out);
+                CompileJson<ee_assets::Save>(jsonCompiler, "scenarios", src, out);
             });
             IfNotExluded(excludedTypes, "economy", [jsonCompiler, src, out] {
-                CompileJson<ee_assets::AssetResourceList>(jsonCompiler, "economy/resources", src, out);
-                CompileJson<ee_assets::AssetEnterpriseList>(jsonCompiler, "economy/enterprises", src, out);
+                CompileJson<ee_assets::ResourceList>(jsonCompiler, "economy/resources", src, out);
+                CompileJson<ee_assets::EnterpriseList>(jsonCompiler, "economy/enterprises", src, out);
             });
 
             constexpr ee_sdk::MapMeshCompiler mapMeshCompiler;

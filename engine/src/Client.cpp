@@ -14,7 +14,7 @@ void Client::Init() const {
     }
 
     // TEST
-    ee_assets::AssetSave& asset = Engine::assetManager->Get<ee_assets::AssetSave>(save);
+    ee_assets::Save& asset = Engine::assetManager->Get<ee_assets::Save>(save);
     for (const ee_data::Subject &subject : asset.content.subjects) {
         ViewModelSubject(subject);
     }

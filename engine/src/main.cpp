@@ -39,11 +39,11 @@ int main(int argc, char **argv) {
     Engine::assetManager->Start();
 
     // Load assets
-    Engine::assetManager->LoadDir(ee_assets::SHADER, "assets/shaders");
-    Engine::assetManager->LoadDir(ee_assets::MATERIAL, "assets/materials");
-    Engine::assetManager->LoadAsync(ee_assets::MAP_MESH, "assets/map/ee.map");
-    Engine::assetManager->LoadAsync(ee_assets::SAVE, "assets/scenarios/empires.save");
-    Engine::assetManager->LoadDir(ee_assets::CONFIG_RESOURCE_LIST, "assets/economy/resources");
+    Engine::assetManager->LoadDir<ee_assets::Shader>("assets/shaders");
+    Engine::assetManager->LoadDir<ee_assets::Material>("assets/materials");
+    Engine::assetManager->LoadAsync<ee_assets::MapMesh>("assets/map/ee.map");
+    Engine::assetManager->LoadAsync<ee_assets::Save>("assets/scenarios/empires.save");
+    Engine::assetManager->LoadDir<ee_assets::ResourceList>("assets/economy/resources");
 
     // Setup input manager
     Engine::input = Allocate<GLFWInput>(Actions::mappings);
@@ -51,21 +51,21 @@ int main(int argc, char **argv) {
     // Setup renderer
     Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_vulkan::VulkanRenderer>(window));
 
-    ee_assets::AssetMapMesh& regions = Engine::assetManager->FindOnce<ee_assets::AssetMapMesh>("assets/map/ee.map");
+    ee_assets::MapMesh& regions = Engine::assetManager->FindOnce<ee_assets::MapMesh>("assets/map/ee.map");
     Engine::renderer->RegisterMapMesh(&regions.content);
 
     //TODO: ShaderRefs builder from set of AssetMaterial
-    const ee_assets::AssetMaterial& provincesMaterial =
-        Engine::assetManager->FindOnce<ee_assets::AssetMaterial>("assets/materials/provinces.mat");
-    ee_assets::AssetShader& vertProv = Engine::assetManager->FindOnce<ee_assets::AssetShader>(
+    const ee_assets::Material& provincesMaterial =
+        Engine::assetManager->FindOnce<ee_assets::Material>("assets/materials/provinces.mat");
+    ee_assets::Shader& vertProv = Engine::assetManager->FindOnce<ee_assets::Shader>(
         provincesMaterial.vertexShaderAssetID);
-    ee_assets::AssetShader& fragProv = Engine::assetManager->FindOnce<ee_assets::AssetShader>(
+    ee_assets::Shader& fragProv = Engine::assetManager->FindOnce<ee_assets::Shader>(
         provincesMaterial.fragmentShaderAssetID);
-    const ee_assets::AssetMaterial& rmlMaterial =
-        Engine::assetManager->FindOnce<ee_assets::AssetMaterial>("assets/materials/rmlui.mat");
-    ee_assets::AssetShader& vertUI = Engine::assetManager->FindOnce<ee_assets::AssetShader>(
+    const ee_assets::Material& rmlMaterial =
+        Engine::assetManager->FindOnce<ee_assets::Material>("assets/materials/rmlui.mat");
+    ee_assets::Shader& vertUI = Engine::assetManager->FindOnce<ee_assets::Shader>(
         rmlMaterial.vertexShaderAssetID);
-    ee_assets::AssetShader& fragUI = Engine::assetManager->FindOnce<ee_assets::AssetShader>(
+    ee_assets::Shader& fragUI = Engine::assetManager->FindOnce<ee_assets::Shader>(
         rmlMaterial.fragmentShaderAssetID);
     Engine::renderer->RegisterMaterials({
         .vertProvinces = &vertProv,
