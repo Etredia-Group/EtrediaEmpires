@@ -14,8 +14,10 @@ export namespace ee_assets {
 
         MAP_MESH,
         SAVE,
-        RESOURCE_LIST,
-        ENTERPRISE_LIST,
+
+        CONFIG_RESOURCE_LIST,
+        CONFIG_ENTERPRISE_LIST,
+
 
         SHADER,
         MATERIAL,

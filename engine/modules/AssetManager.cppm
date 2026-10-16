@@ -222,6 +222,8 @@ export
             mapMeshesStorage.clear();
             shadersStorage.clear();
             materialsStorage.clear();
+            savesStorage.clear();
+            configStorage.clear();
         }
 
     private:
@@ -233,17 +235,18 @@ export
         std::vector<std::size_t> freeAssetSlots;
         std::vector<AssetLoadingEntry> loadingEntries;
 
+        //TODO: Are these storages useless?
         std::vector<ee_assets::AssetBinary*> binaryStorage;
         std::vector<ee_assets::AssetSave*> savesStorage;
         std::vector<ee_assets::AssetMapMesh*> mapMeshesStorage;
         std::vector<ee_assets::AssetShader*> shadersStorage;
         std::vector<ee_assets::AssetMaterial*> materialsStorage;
+        std::vector<void*> configStorage;
 
         void LoadCmd(AssetStreamCommand& command) {
             LOG(INFO, "LOAD command: [%hs]", command.targetPath.generic_u8string().c_str());
 
             /* TODO: process path to select FS */
-            /* TODO: select between async load and sync job task */
 
             //Async load of full file without mmap in one thread
             FileHandle& file = diskSystem->Open(command.targetPath, IFileSystem::FILE_OPEN_READ);
@@ -332,6 +335,13 @@ export
                             FinishLoadCapnprotoDeserialize(entry, savesStorage);
                             break;
 
+                        case ee_assets::CONFIG_RESOURCE_LIST:
+                            FinishLoadCapnprotoDeserialize<ee_assets::AssetResourceList>(entry, configStorage);
+                            break;
+                        case ee_assets::CONFIG_ENTERPRISE_LIST:
+                            FinishLoadCapnprotoDeserialize<ee_assets::AssetEnterpriseList>(entry, configStorage);
+                            break;
+
                         case ee_assets::SHADER:
                             FinishLoadConstruct(entry, shadersStorage);
                             break;
@@ -370,6 +380,11 @@ export
 
         template <ee_assets::Asset T>
         void FinishLoadCapnprotoDeserialize(AssetLoadingEntry& loaded, std::vector<T*>& storage) {
+            FinishLoadCapnprotoDeserialize<T, T>(loaded, storage);
+        }
+
+        template <ee_assets::Asset T, typename U>
+        void FinishLoadCapnprotoDeserialize(AssetLoadingEntry& loaded, std::vector<U*>& storage) {
             try {
                 if (rfl::Result<T> result = rfl::capnproto::read<T>(
                     reinterpret_cast<const char*>(loaded.file->data),

@@ -37,12 +37,13 @@ int main(int argc, char **argv) {
     // Setup Asset Manager
     Engine::assetManager = Allocate<AssetManager>();
     Engine::assetManager->Start();
-    Engine::assetManager->LoadDir(ee_assets::SHADER, "assets/shaders");
-    Engine::assetManager->LoadDir(ee_assets::MATERIAL, "assets/materials");
 
     // Load assets
+    Engine::assetManager->LoadDir(ee_assets::SHADER, "assets/shaders");
+    Engine::assetManager->LoadDir(ee_assets::MATERIAL, "assets/materials");
     Engine::assetManager->LoadAsync(ee_assets::MAP_MESH, "assets/map/ee.map");
     Engine::assetManager->LoadAsync(ee_assets::SAVE, "assets/scenarios/empires.save");
+    Engine::assetManager->LoadDir(ee_assets::CONFIG_RESOURCE_LIST, "assets/economy/resources");
 
     // Setup input manager
     Engine::input = Allocate<GLFWInput>(Actions::mappings);

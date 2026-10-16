@@ -2,11 +2,15 @@
   "content": [
     {
       "tag": "coal",
-      "baseCost": 10
+      "baseCost": 10,
+      "size": 0,
+      "mass": 0
     },
     {
       "tag": "oil",
-      "baseCost": 50
+      "baseCost": 50,
+      "size": 0,
+      "mass": 0
     }
   ]
 }
