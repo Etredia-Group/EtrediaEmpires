@@ -16,10 +16,10 @@ export namespace ee_economy {
 
         struct Entry {
             std::uint32_t tag;
-            std::uint8_t cost;
+            std::uint8_t count;
         };
         std::vector<Entry> in;
         std::vector<Entry> out;
     };
-
+    using ProductionRecipeList = std::vector<ProductionRecipe>;
 }

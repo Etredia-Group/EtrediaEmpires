@@ -1,0 +1,22 @@
+{
+  "resources": [
+    {
+      "tag": "res0.1",
+      "baseCost": 10,
+      "size": 0,
+      "mass": 0
+    },
+    {
+      "tag": "res0.2",
+      "baseCost": 10,
+      "size": 0,
+      "mass": 0
+    },
+    {
+      "tag": "res1.1",
+      "baseCost": 10,
+      "size": 0,
+      "mass": 0
+    }
+  ]
+}

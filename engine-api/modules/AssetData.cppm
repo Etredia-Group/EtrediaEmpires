@@ -19,6 +19,8 @@ export namespace ee_assets {
 
     template <typename T> concept Asset = requires { typename T::asset_tag; };
 
+    // Engine assets
+
     struct Binary {
         using asset_tag = AssetTag;
 
@@ -35,24 +37,6 @@ export namespace ee_assets {
         ee_engine::MapMesh content;
     };
 
-    struct Save {
-        using asset_tag = AssetTag;
-
-        ee_data::GameState content;
-    };
-
-    struct ResourceList {
-        using asset_tag = AssetTag;
-
-        ee_economy::ResourceList content;
-    };
-
-    struct EnterpriseList {
-        using asset_tag = AssetTag;
-
-        ee_economy::EnterpriseList content;
-    };
-
     using Shader = Binary;
 
     struct Material {
@@ -60,5 +44,31 @@ export namespace ee_assets {
 
         std::uint32_t vertexShaderAssetID;
         std::uint32_t fragmentShaderAssetID;
+    };
+
+    // Gameplay assets
+
+    struct Save {
+        using asset_tag = AssetTag;
+
+        ee_data::GameState save;
+    };
+
+    struct ResourceList {
+        using asset_tag = AssetTag;
+
+        ee_economy::ResourceList resources;
+    };
+
+    struct FirmList {
+        using asset_tag = AssetTag;
+
+        ee_economy::FirmList firms;
+    };
+
+    struct ProductionRecipeList {
+        using asset_tag = AssetTag;
+
+        ee_economy::ProductionRecipeList recipes;
     };
 }

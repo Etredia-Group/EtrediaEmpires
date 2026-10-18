@@ -1,0 +1,10 @@
+{
+  "firms": [
+    {
+      "tag": "firm1",
+      "constructionRecipe": "firm1",
+      "productionRecipe": "resource1.1",
+      "constructionSpeed": 1
+    }
+  ]
+}

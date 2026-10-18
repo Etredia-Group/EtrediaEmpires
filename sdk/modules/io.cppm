@@ -21,7 +21,7 @@ export namespace ee_sdk {
 
         glz::json_t data;
         if (glz::error_ctx error = glz::read_json(data, jsonStr)) {
-            LOG(ERROR, "Could not parse JSON: [%s]. [%s]", assetPath.c_str(), error.custom_error_message);
+            LOG(ERROR, "Could not parse JSON: [%s]. Error: [%d]", assetPath.c_str(), error.ec);
             return std::nullopt;
         }
 

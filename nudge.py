@@ -654,10 +654,10 @@ class MainWindow(QMainWindow):
         path, _ = QFileDialog.getSaveFileName(self, "Сохранить страны", "subjects.json", "JSON (*.json)")
         if not path: return
         
-        data = {"content": {"subjects": []}}
+        data = {"save": {"subjects": []}}
         for tag in self.subjects_list:
             subj = self.subjects[tag]
-            data["content"]["subjects"].append({
+            data["save"]["subjects"].append({
                 "tag": tag,
                 "color": subj["color"],
                 "regions": subj["regions"]
@@ -675,12 +675,12 @@ class MainWindow(QMainWindow):
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
                 
-            if "content" not in data or "subjects" not in data["content"]:
-                raise ValueError("Ожидался формат с 'content' -> 'subjects'")
+            if "save" not in data or "subjects" not in data["save"]:
+                raise ValueError("Ожидался формат с 'save' -> 'subjects'")
                 
             self.subjects_list = []
             self.subjects = {}
-            for subj in data["content"]["subjects"]:
+            for subj in data["save"]["subjects"]:
                 tag = str(subj.get("tag", ""))
                 color = str(subj.get("color", "")).strip().upper()
                 regions = [str(r) for r in subj.get("regions", [])]

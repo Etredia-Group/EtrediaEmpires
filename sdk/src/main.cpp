@@ -30,7 +30,7 @@ void CompileJson(const ee_sdk::JsonCompiler &compiler, const path &relative, con
         compiler.Compile(*data);
         TAsset assetInstance{};
         if (glz::error_ctx error = glz::read_json(assetInstance, *data)) {
-            LOG(ERROR, "JSON schema mismatch: [%s]. [%s]", asset.path().c_str(), error.custom_error_message);
+            LOG(ERROR, "JSON schema mismatch: [%s]. Error: [%d]", asset.path().c_str(), error.ec);
         }
         ee_sdk::WriteAsset(out/relative/asset.path().stem().filename(), assetInstance);
     }
@@ -120,7 +120,8 @@ int main(const int argc, char **argv) {
             });
             IfNotExluded(excludedTypes, "economy", [jsonCompiler, src, out] {
                 CompileJson<ee_assets::ResourceList>(jsonCompiler, "economy/resources", src, out);
-                CompileJson<ee_assets::EnterpriseList>(jsonCompiler, "economy/enterprises", src, out);
+                CompileJson<ee_assets::FirmList>(jsonCompiler, "economy/firms", src, out);
+                CompileJson<ee_assets::ProductionRecipeList>(jsonCompiler, "economy/recipes", src, out);
             });
 
             constexpr ee_sdk::MapMeshCompiler mapMeshCompiler;

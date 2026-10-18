@@ -32,3 +32,4 @@ add_subdirectory(engine-api)
 add_subdirectory(renderers/vulkan)
 
 add_subdirectory(engine)
+add_subdirectory(tests)

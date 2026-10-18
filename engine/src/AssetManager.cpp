@@ -19,10 +19,11 @@ import FileSystem;
 
 template const AssetOperations* AssetManager::OperationsFor<ee_assets::Binary>();
 template const AssetOperations* AssetManager::OperationsFor<ee_assets::MapMesh>();
+template const AssetOperations* AssetManager::OperationsFor<ee_assets::Material>();
 template const AssetOperations* AssetManager::OperationsFor<ee_assets::Save>();
 template const AssetOperations* AssetManager::OperationsFor<ee_assets::ResourceList>();
-template const AssetOperations* AssetManager::OperationsFor<ee_assets::EnterpriseList>();
-template const AssetOperations* AssetManager::OperationsFor<ee_assets::Material>();
+template const AssetOperations* AssetManager::OperationsFor<ee_assets::FirmList>();
+template const AssetOperations* AssetManager::OperationsFor<ee_assets::ProductionRecipeList>();
 
 // Finish* methods implementation
 
