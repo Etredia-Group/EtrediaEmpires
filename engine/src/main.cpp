@@ -7,6 +7,7 @@ import Engine;
 import Actions;
 import VulkanRender;
 import GLFWInput;
+import rmlui_glfw;
 import std;
 
 constexpr std::uint32_t SCREEN_WIDTH = 1920;
@@ -93,8 +94,13 @@ int main(int argc, char **argv) {
     Engine::client->Start();
 
     //Setup UI
-    Engine::ui = Allocate<UI>(*Engine::renderer->getRenderInterface(), SCREEN_WIDTH, SCREEN_HEIGHT);
+    Engine::ui = Allocate<UI>(
+        *Engine::renderer->getRenderInterface(),
+        *Engine::input->getSystemInterface(),
+        SCREEN_WIDTH, SCREEN_HEIGHT
+    );
     Engine::renderer->SetUIContext(Engine::ui->getContext());
+    Engine::input->SetUIHandlers(ee_rml::MakeInputHandlers(Engine::ui->getContext(), window));
 
     // Game loop
     ee_engine::RendererCommand renderCmdBuffer;

@@ -1,7 +1,14 @@
 module UI;
 
-UI::UI(Rml::RenderInterface &renderer, const std::uint32_t width, const std::uint32_t height) :
-    renderInterface(renderer) {
+UI::UI(
+    Rml::RenderInterface &renderer,
+    Rml::SystemInterface &input,
+    const std::uint32_t width,
+    const std::uint32_t height
+) :
+    renderInterface(renderer),
+    systemInterface(input) {
+    Rml::SetSystemInterface(&systemInterface);
     Rml::SetRenderInterface(&renderInterface);
 
     Rml::Initialise();

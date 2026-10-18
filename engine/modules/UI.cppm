@@ -5,7 +5,7 @@ import std;
 export {
     class UI {
     public:
-        UI(Rml::RenderInterface &renderer, std::uint32_t width, std::uint32_t height);
+        UI(Rml::RenderInterface &renderer, Rml::SystemInterface &input, std::uint32_t width, std::uint32_t height);
         ~UI();
 
         void Update() const;
@@ -14,6 +14,7 @@ export {
 
     private:
         Rml::RenderInterface &renderInterface;
+        Rml::SystemInterface &systemInterface;
         Rml::Context *context;
 
         Rml::ElementDocument *currentDocument;

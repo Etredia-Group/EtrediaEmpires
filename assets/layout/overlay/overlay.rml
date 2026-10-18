@@ -16,6 +16,8 @@
             <div class="value block"><span>17,3 млн</span></div>
             <div class="value block"><span>138 млрд</span></div>
             <div class="value block"><span>€ 95 млн</span></div>
+
+            <div class="value block"><input /></div>
         </div>
 
         <div id="calendar">
