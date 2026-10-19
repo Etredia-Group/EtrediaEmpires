@@ -71,18 +71,25 @@ void ee_engine::IRenderer::SetCamera(const CameraTransform& camera) {
     ApplyCamera();
 }
 
+void ee_engine::IRenderer::RequestProvincePick(const float screenX, const float screenY) {
+    RequestProvincePickAt(ScreenToWorld(screenX, screenY));
+}
+
+void ee_engine::IRenderer::ClearProvincePick() {
+    RequestProvincePickAt(std::nullopt);
+}
+
 glm::vec2 ee_engine::IRenderer::ScreenToWorld(const float screenX, const float screenY) const {
     return ScreenToWorld(glm::vec2(screenX, screenY));
 }
 
 glm::vec2 ee_engine::IRenderer::ScreenToWorld(const glm::vec2& screenPos) const {
-    float x = 2.0f * screenPos.x / screenWidth - 1.0f;
-    float y = -2.0f * screenPos.y / screenHeight + 1.0f;
+    const float x = 2.0f * screenPos.x / screenWidth - 1.0f;
+    const float y = 2.0f * screenPos.y / screenHeight - 1.0f;
+    //TODO: optional Y inversion for OpenGL backend support
 
-    glm::vec4 ndc(x, y, 0.0f, 1.0f);
-
-    glm::vec4 world = viewProjectionInversed * ndc;
-
+    const glm::vec4 ndc(x, y, 0.0f, 1.0f);
+    const glm::vec4 world = viewProjectionInversed * ndc;
     return glm::vec2(world) / world.w;
 }
 

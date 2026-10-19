@@ -41,6 +41,12 @@ GLFWInput::GLFWInput(const ee_engine::InputHandlers &handlers) : IInput(handlers
 
             const bool consumed = input->uiHandlers.mouseButton && input->uiHandlers.mouseButton(button, pressed);
             input->mouseUICaptured[button] = pressed ? consumed : false;
+
+            if (!input->mouseUICaptured[button]) {
+                if (action == GLFW_RELEASE) {
+                    GLFW_CALLBACK(click, input->mouseX, input->mouseY);
+                }
+            }
         }
     );
 
@@ -79,10 +85,37 @@ void GLFWInput::Poll() {
 
     lastMouseX = this->mouseX;
     lastMouseY = this->mouseY;
+
+    if (glfwGetWindowAttrib(Engine::window, GLFW_HOVERED)) {
+        auto [mouseX, mouseY] = WindowToFramebuffer(this->mouseX, this->mouseY);
+        handlers.mapHover(mouseX, mouseY);
+    }
+    else {
+        handlers.mapHoverEnd();
+    }
 }
 
-void GLFWInput::OnLeftMouseButton(std::uint32_t state) {}
-void GLFWInput::OnRightMouseButton(std::uint32_t state) {}
+void GLFWInput::OnLeftMouseButton(const std::uint32_t state) const {
+
+}
+
+void GLFWInput::OnRightMouseButton(const std::uint32_t state) const {
+    if (mouseUICaptured[GLFW_MOUSE_BUTTON_RIGHT]) return;
+
+    switch (state) {
+        case GLFW_PRESS:
+        {
+            if (
+                glfwGetKey(Engine::window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
+                glfwGetKey(Engine::window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS
+            ) {
+                handlers.mapScroll(mouseX, mouseY, lastMouseX, lastMouseY);
+            }
+            break;
+        }
+        default: ;
+    }
+}
 
 void GLFWInput::OnMiddleMouseButton(const std::uint32_t state) const {
     if (mouseUICaptured[GLFW_MOUSE_BUTTON_MIDDLE]) return;
@@ -93,12 +126,18 @@ void GLFWInput::OnMiddleMouseButton(const std::uint32_t state) const {
             handlers.mapScroll(mouseX, mouseY, lastMouseX, lastMouseY);
             break;
         }
-
-        case GLFW_RELEASE:
-        {
-            break;
-        }
-
         default: ;
     }
+}
+
+ee_engine::Pos GLFWInput::WindowToFramebuffer(float x, float y) {
+    std::int32_t windowWidth, windowHeight;
+    glfwGetWindowSize(Engine::window, &windowWidth, &windowHeight);
+    std::int32_t framebufferWidth, framebufferHeight;
+    glfwGetFramebufferSize(Engine::window, &framebufferWidth, &framebufferHeight);
+
+    return {
+        windowWidth > 0 ? x * static_cast<float>(framebufferWidth) / static_cast<float>(windowWidth) : x,
+        windowHeight > 0 ? y * static_cast<float>(framebufferHeight) / static_cast<float>(windowHeight) : y
+    };
 }

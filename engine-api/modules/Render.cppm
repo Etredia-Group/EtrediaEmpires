@@ -49,6 +49,11 @@ export namespace ee_engine {
         };
     };
 
+    struct ProvinceHit {
+        std::uint32_t provinceIndex;
+        std::uint32_t regionId;
+    };
+
     class IRenderer : public ee_utils::Worker<RendererCommand, RendererCommand::COMPLETED> {
     public:
         virtual ~IRenderer();
@@ -65,10 +70,13 @@ export namespace ee_engine {
 
         virtual void ResizeWindow(int width, int height);
         void SetCamera(const CameraTransform& camera);
+        void RequestProvincePick(float screenX, float screenY);
+        void ClearProvincePick();
 
         virtual constexpr Rml::RenderInterface* getRenderInterface() noexcept = 0;
 
         constexpr CameraTransform getCamera() const noexcept { return camera; };
+        constexpr std::optional<ProvinceHit> getHoveredProvince() const noexcept { return hoveredProvince; }
         glm::vec2 ScreenToWorld(float screenX, float screenY) const;
         glm::vec2 ScreenToWorld(const glm::vec2& screenPos) const;
 
@@ -93,6 +101,7 @@ export namespace ee_engine {
         };
 
         std::unordered_map<std::uint32_t /*id*/, RegionRanges> regionsMapping;
+        std::optional<ProvinceHit> hoveredProvince;
 
         explicit IRenderer(GLFWwindow *window);
 
@@ -104,6 +113,7 @@ export namespace ee_engine {
         virtual void ApplyCamera() = 0;
 
         virtual void UpdateProvinces(std::size_t offset, const std::vector<ProvinceSSBO>& data) = 0;
+        virtual void RequestProvincePickAt(std::optional<glm::vec2> worldPos) = 0;
 
     private:
         void UpdateRegionCmd(RendererCommand& command);

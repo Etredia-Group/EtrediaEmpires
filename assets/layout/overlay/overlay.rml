@@ -7,7 +7,7 @@
 </head>
 
 <body>
-    <div id="header">
+    <div id="header" class="panel">
         <div class="flag">
 
         </div>
@@ -33,7 +33,7 @@
         </div>
     </div>
 
-    <div id="department-tabs">
+    <div id="department-tabs" class="panel">
         <div class="department"></div>
         <div class="department"></div>
         <div class="department"></div>

@@ -49,8 +49,14 @@ namespace {
 
         ProvinceRaster(const Bounds &bounds, const std::int32_t mapPixelsPerTexel) : texelSize(mapPixelsPerTexel) {
             if (!bounds.IsEmpty()) {
-                const glm::ivec2 low(static_cast<std::int32_t>(std::floor(bounds.min.x)), static_cast<std::int32_t>(std::floor(bounds.min.y)));
-                const glm::ivec2 high(static_cast<std::int32_t>(std::ceil(bounds.max.x)), static_cast<std::int32_t>(std::ceil(bounds.max.y)));
+                const glm::ivec2 low(
+                    static_cast<std::int32_t>(std::floor(bounds.min.x)),
+                    static_cast<std::int32_t>(std::floor(bounds.min.y))
+                );
+                const glm::ivec2 high(
+                    static_cast<std::int32_t>(std::ceil(bounds.max.x)),
+                    static_cast<std::int32_t>(std::ceil(bounds.max.y))
+                );
                 origin = low - RASTER_PADDING * texelSize;
                 size = (high - low) / texelSize + 1 + 2 * RASTER_PADDING;
             }
@@ -60,14 +66,20 @@ namespace {
         /**
          * Smallest integer texel size that keeps the raster within texture limits and memory budget.
          */
-        static std::int32_t ChooseTexelSize(const Bounds &bounds, const std::uint32_t maxDimension, const std::uint64_t maxTexels) {
+        static std::int32_t ChooseTexelSize(
+            const Bounds &bounds,
+            const std::uint32_t maxDimension,
+            const std::uint64_t maxTexels
+        ) {
             if (bounds.IsEmpty()) return 1;
 
             const glm::vec2 extent = bounds.max - bounds.min + 1.0f;
             for (std::int32_t candidate = 1; ; ++candidate) {
                 const float step = static_cast<float>(candidate);
-                const std::uint64_t width = static_cast<std::uint64_t>(std::ceil(extent.x / step)) + 2 * RASTER_PADDING + 1;
-                const std::uint64_t height = static_cast<std::uint64_t>(std::ceil(extent.y / step)) + 2 * RASTER_PADDING + 1;
+                const std::uint64_t width =
+                    static_cast<std::uint64_t>(std::ceil(extent.x / step)) + 2 * RASTER_PADDING + 1;
+                const std::uint64_t height =
+                    static_cast<std::uint64_t>(std::ceil(extent.y / step)) + 2 * RASTER_PADDING + 1;
                 if (width <= maxDimension && height <= maxDimension && width * height <= maxTexels)
                     return candidate;
             }
@@ -164,7 +176,8 @@ namespace {
             }
             if (assigned == 0) return;
 
-            const bool enclosed = (neighbours[0] != 0 && neighbours[1] != 0) || (neighbours[2] != 0 && neighbours[3] != 0);
+            const bool enclosed = (neighbours[0] != 0 && neighbours[1] != 0) ||
+                (neighbours[2] != 0 && neighbours[3] != 0);
             if (sides < 3 && assigned < 5 && !enclosed) return;
 
             std::uint32_t best = 0;
@@ -195,8 +208,20 @@ namespace {
             candidates.clear();
             for (const auto &[i, id] : changes) {
                 ids[i] = id;
-                for (const std::size_t n : {i - 1, i + 1, i - width, i + width, i - width - 1, i - width + 1, i + width - 1, i + width + 1})
+                for (
+                    const std::size_t n : {
+                        i - 1,
+                        i + 1,
+                        i - width,
+                        i + width,
+                        i - width - 1,
+                        i - width + 1,
+                        i + width - 1,
+                        i + width + 1
+                    }
+                ) {
                     candidates.push_back(n);
+                }
             }
         }
     }
@@ -235,7 +260,11 @@ namespace {
 
                 for (const std::size_t n : {i - 1, i + 1, i - width, i + width}) {
                     if (ids[n] != 0) {
-                        const auto entry = std::ranges::find(shore, ids[n], &std::pair<std::uint32_t, std::uint32_t>::first);
+                        const auto entry = std::ranges::find(
+                            shore,
+                            ids[n],
+                            &std::pair<std::uint32_t, std::uint32_t>::first
+                        );
                         if (entry != shore.end()) ++entry->second;
                         else shore.emplace_back(ids[n], 1);
                     }
@@ -259,7 +288,11 @@ namespace {
                 continue;
             }
 
-            const auto dominant = std::ranges::max_element(shore, {}, &std::pair<std::uint32_t, std::uint32_t>::second);
+            const auto dominant = std::ranges::max_element(
+                shore,
+                {},
+                &std::pair<std::uint32_t, std::uint32_t>::second
+            );
             for (const std::size_t i : component) ids[i] = dominant->first;
         }
     }
@@ -277,8 +310,11 @@ namespace {
 
         const auto intersection = [f, v](const std::int32_t q, const std::int32_t index) {
             const std::int32_t p = v[index];
-            return ((f[q] + static_cast<float>(q) * static_cast<float>(q)) - (f[p] + static_cast<float>(p) * static_cast<float>(p)))
-                / (2.0f * static_cast<float>(q - p));
+            return (
+                f[q] +
+                static_cast<float>(q) * static_cast<float>(q) -
+                (f[p] + static_cast<float>(p) * static_cast<float>(p))
+            ) / (2.0f * static_cast<float>(q - p));
         };
 
         for (std::int32_t q = 1; q < n; ++q) {
@@ -328,8 +364,11 @@ namespace {
      * The field is sampled every factor texels of the province raster to bound memory on large maps.
      * The coastline is placed on the edges of the land texels.
      */
-    std::vector<float> MakeCoastDistanceField(const ProvinceRaster &raster, const std::int32_t factor, glm::ivec2 &fieldSize) {
-        constexpr float FAR = 1.0e20f;
+    std::vector<float> MakeCoastDistanceField(
+        const ProvinceRaster &raster,
+        const std::int32_t factor,
+        glm::ivec2 &fieldSize
+    ) {
         fieldSize = (raster.size - 1) / factor + 1;
         const std::size_t count = static_cast<std::size_t>(fieldSize.x) * static_cast<std::size_t>(fieldSize.y);
 
@@ -337,6 +376,7 @@ namespace {
         std::vector<float> toLand(count), toWater(count);
         for (std::int32_t y = 0; y < fieldSize.y; ++y) {
             for (std::int32_t x = 0; x < fieldSize.x; ++x) {
+                constexpr float FAR = 1.0e20f;
                 const std::size_t i = static_cast<std::size_t>(y) * fieldSize.x + x;
                 land[i] = raster.ids[static_cast<std::size_t>(y * factor) * raster.size.x + x * factor] != 0;
                 toLand[i] = land[i] ? 0.0f : FAR;
@@ -508,6 +548,8 @@ void ee_vulkan::VulkanRenderer::Shutdown() {
 void ee_vulkan::VulkanRenderer::DrawBegin() {
     syncManager->WaitInFlightFence(currentFrame);
 
+    ResolvePick(currentFrame);
+
     std::uint32_t imageIndex = 0;
     switch (vk::Result result = syncManager->AcquireNextImage(*swapchain, currentFrame, imageIndex)) {
         case vk::Result::eSuccess:
@@ -526,9 +568,12 @@ void ee_vulkan::VulkanRenderer::DrawBegin() {
     syncManager->WaitImageInFlight(currentFrame, imageIndex);
 
     UpdateData(currentFrame);
+    RecordPick(currentFrame);
 
     std::array clears = {DrawConfig::CLEAR_COLOR, DrawConfig::CLEAR_DEPTH};
-    frameContext.emplace(vulkan_render::FrameContext(*renderPass, surface, *renderCommands, imageIndex, currentFrame, clears));
+    frameContext.emplace(
+        vulkan_render::FrameContext(*renderPass, surface, *renderCommands, imageIndex, currentFrame, clears)
+    );
     rmlRenderInterface->SetFrameContext(&*frameContext);
 }
 
@@ -574,9 +619,13 @@ void ee_vulkan::VulkanRenderer::DrawEnd() {
 
     context->device.handle.resetFences({syncManager->inFlightFences[currentFrame]});
 
-    vk::CommandBufferSubmitInfo cmdSubmitInfo {
-        .commandBuffer = frameContext->renderCommand->handle
-    };
+    std::array<vk::CommandBufferSubmitInfo, 2> cmdSubmitInfo;
+    std::uint32_t cmdSubmitInfoCount = 0;
+    if (pick.recorded[currentFrame]) {
+        cmdSubmitInfo[cmdSubmitInfoCount++] = {.commandBuffer = pick.commands->buffers[currentFrame].handle};
+    }
+    cmdSubmitInfo[cmdSubmitInfoCount++] = {.commandBuffer = frameContext->renderCommand->handle};
+
     vk::SemaphoreSubmitInfo waitSemaphoreInfo {
         .semaphore = syncManager->imageAvailable[currentFrame],
         .stageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput
@@ -588,8 +637,8 @@ void ee_vulkan::VulkanRenderer::DrawEnd() {
     const vk::SubmitInfo2 submitInfo {
         .waitSemaphoreInfoCount = 1,
         .pWaitSemaphoreInfos = &waitSemaphoreInfo,
-        .commandBufferInfoCount = 1,
-        .pCommandBufferInfos = &cmdSubmitInfo,
+        .commandBufferInfoCount = cmdSubmitInfoCount,
+        .pCommandBufferInfos = cmdSubmitInfo.data(),
         .signalSemaphoreInfoCount = 1,
         .pSignalSemaphoreInfos = &signalSemaphoreInfo,
     };
@@ -631,14 +680,51 @@ void ee_vulkan::VulkanRenderer::ResizeWindow(const int width, const int height) 
 }
 
 void ee_vulkan::VulkanRenderer::ApplyCamera() {
-    viewProjection[1][1] *= -1;
-    viewProjectionInversed[1][1] *= -1;
+    viewProjection[0][1] *= -1.0f;
+    viewProjection[1][1] *= -1.0f;
+    viewProjection[2][1] *= -1.0f;
+    viewProjection[3][1] *= -1.0f;
+
+    viewProjectionInversed = glm::inverse(viewProjection);
 }
 
-void ee_vulkan::VulkanRenderer::UpdateProvinces(const std::size_t offset, const std::vector<ee_engine::ProvinceSSBO> &data) {
+void ee_vulkan::VulkanRenderer::UpdateProvinces(
+    const std::size_t offset,
+    const std::vector<ee_engine::ProvinceSSBO> &data
+) {
     const std::size_t elementOffset = offset / provinces.storage->elementSize;
     std::ranges::copy(data, provinces.storage->content.data() + elementOffset);
     renderCommands->SubmitStagingBuffer(*provinces.storage);
+}
+
+void ee_vulkan::VulkanRenderer::RequestProvincePickAt(const std::optional<glm::vec2> worldPos) {
+    if (pick.recorded.empty()) return;
+
+    if (!worldPos) {
+        hoveredProvince.reset();
+        pick.requested.reset();
+        pick.lastTexel.reset();
+        std::ranges::fill(pick.recorded, false);
+        return;
+    }
+
+    const glm::vec2 local =
+        (*worldPos - glm::vec2(provinces.rasterOrigin)) / static_cast<float>(provinces.rasterTexelSize);
+    const std::int64_t texelX = std::lround(local.x);
+    const std::int64_t texelY = std::lround(local.y);
+    if (texelX < 0 || texelY < 0 || texelX >= provinces.rasterSize.x || texelY >= provinces.rasterSize.y) {
+        hoveredProvince.reset();
+        pick.requested.reset();
+        pick.lastTexel.reset();
+        std::ranges::fill(pick.recorded, false);
+        return;
+    }
+
+    const glm::ivec2 texel(static_cast<std::int32_t>(texelX), static_cast<std::int32_t>(texelY));
+    if (pick.lastTexel == texel) return;
+
+    pick.requested = texel;
+    pick.lastTexel = texel;
 }
 
 void ee_vulkan::VulkanRenderer::RecreateSwapchain() {
@@ -969,7 +1055,11 @@ void ee_vulkan::VulkanRenderer::LoadMapTextures(
     // Province ids, 16 bit when possible
     if (provincesCount < std::numeric_limits<std::uint16_t>::max()) {
         std::vector<std::uint16_t> packed(ids.size());
-        std::ranges::transform(ids, packed.begin(), [](const std::uint32_t id) { return static_cast<std::uint16_t>(id); });
+        std::ranges::transform(
+            ids,
+            packed.begin(),
+            [](const std::uint32_t id) { return static_cast<std::uint16_t>(id); }
+        );
 
         provinces.provinceIds.emplace(*context, size.x, size.y, vk::Format::eR16Uint);
         upload(*provinces.provinceIds, std::as_bytes(std::span(packed)));
@@ -982,7 +1072,11 @@ void ee_vulkan::VulkanRenderer::LoadMapTextures(
     // Coast distance field, half floats
     {
         std::vector<std::uint16_t> packed(coastField.size());
-        std::ranges::transform(coastField, packed.begin(), [](const float distance) { return glm::packHalf1x16(distance); });
+        std::ranges::transform(
+            coastField,
+            packed.begin(),
+            [](const float distance) { return glm::packHalf1x16(distance); }
+        );
 
         provinces.coastDistance.emplace(*context, fieldSize.x, fieldSize.y, vk::Format::eR16Sfloat);
         upload(*provinces.coastDistance, std::as_bytes(std::span(packed)));
@@ -1020,6 +1114,8 @@ void ee_vulkan::VulkanRenderer::LoadMapTextures(
         .borderColor = vk::BorderColor::eFloatOpaqueBlack,
         .unnormalizedCoordinates = vk::False
     });
+
+    CreatePickReadback(provincesCount < std::numeric_limits<std::uint16_t>::max());
 }
 
 void ee_vulkan::VulkanRenderer::UpdateData(const std::uint32_t frame) {
@@ -1086,4 +1182,112 @@ void ee_vulkan::VulkanRenderer::UpdateData(const std::uint32_t frame) {
             .type = vk::DescriptorType::eCombinedImageSampler
         }
     }, frame);
+}
+
+void ee_vulkan::VulkanRenderer::CreatePickReadback(const bool idsPacked) {
+    pick.idsPacked = idsPacked;
+    pick.recorded.assign(MAX_FRAMES_IN_FLIGHT, false);
+
+    pick.buffer.emplace(*context, MAX_FRAMES_IN_FLIGHT);
+    pick.commands.emplace(*context, MAX_FRAMES_IN_FLIGHT);
+}
+
+void ee_vulkan::VulkanRenderer::RecordPick(const std::uint32_t frame) {
+    if (!pick.requested) return;
+
+    const glm::ivec2 texel = *pick.requested;
+    pick.requested.reset();
+
+    vulkan_render::Command &pickCommand = pick.commands->buffers[frame];
+    pickCommand.Reset();
+    pickCommand.Begin();
+
+    //TODO: simplify barriers using vulkan_render
+    const vk::ImageMemoryBarrier2 toTransferSource {
+        .srcStageMask = vk::PipelineStageFlagBits2::eFragmentShader,
+        .srcAccessMask = {},
+        .dstStageMask = vk::PipelineStageFlagBits2::eCopy,
+        .dstAccessMask = vk::AccessFlagBits2::eTransferRead,
+        .oldLayout = vk::ImageLayout::eReadOnlyOptimal,
+        .newLayout = vk::ImageLayout::eTransferSrcOptimal,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .image = provinces.provinceIds->handle,
+        .subresourceRange = {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0, .levelCount = 1,
+            .baseArrayLayer = 0, .layerCount = 1
+        }
+    };
+    pickCommand.handle.pipelineBarrier2({
+        .imageMemoryBarrierCount = 1,
+        .pImageMemoryBarriers = &toTransferSource
+    });
+
+    const vk::BufferImageCopy region {
+        .bufferOffset = frame * sizeof(std::uint32_t),
+        .bufferRowLength = 0,
+        .bufferImageHeight = 0,
+        .imageSubresource = {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1
+        },
+        .imageOffset = {texel.x, texel.y, 0},
+        .imageExtent = {1, 1, 1}
+    };
+    pickCommand.handle.copyImageToBuffer(
+        provinces.provinceIds->handle,
+        vk::ImageLayout::eTransferSrcOptimal,
+        pick.buffer->handle,
+        {region}
+    );
+
+    const vk::ImageMemoryBarrier2 toShaderRead {
+        .srcStageMask = vk::PipelineStageFlagBits2::eCopy,
+        .srcAccessMask = {},
+        .dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader,
+        .dstAccessMask = vk::AccessFlagBits2::eShaderRead,
+        .oldLayout = vk::ImageLayout::eTransferSrcOptimal,
+        .newLayout = vk::ImageLayout::eReadOnlyOptimal,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .image = provinces.provinceIds->handle,
+        .subresourceRange = {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0, .levelCount = 1,
+            .baseArrayLayer = 0, .layerCount = 1
+        }
+    };
+    const vk::MemoryBarrier2 toHost {
+        .srcStageMask = vk::PipelineStageFlagBits2::eCopy,
+        .srcAccessMask = vk::AccessFlagBits2::eTransferWrite,
+        .dstStageMask = vk::PipelineStageFlagBits2::eHost,
+        .dstAccessMask = vk::AccessFlagBits2::eHostRead
+    };
+    pickCommand.handle.pipelineBarrier2({
+        .memoryBarrierCount = 1, .pMemoryBarriers = &toHost,
+        .imageMemoryBarrierCount = 1, .pImageMemoryBarriers = &toShaderRead
+    });
+
+    pickCommand.End();
+    pick.recorded[frame] = true;
+}
+
+void ee_vulkan::VulkanRenderer::ResolvePick(const std::uint32_t frame) {
+    if (!pick.recorded[frame]) return;
+    pick.recorded[frame] = false;
+
+    std::uint32_t id = pick.buffer->content[frame];
+    if (pick.idsPacked) id &= 0xFFFFu;
+
+    if (id == 0) {
+        hoveredProvince.reset();
+        return;
+    }
+
+    const std::uint32_t provinceIndex = id - 1;
+    hoveredProvince.emplace(ee_engine::ProvinceHit{
+        .provinceIndex = provinceIndex,
+        .regionId = provinces.storage->content[provinceIndex].regionId
+    });
 }

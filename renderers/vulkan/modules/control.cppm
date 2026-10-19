@@ -48,6 +48,7 @@ export namespace vulkan_render {
          * Sets buffer in ready state to record command.
          */
         void Begin() const;
+        void End();
         /**
          * Sends recorded command to GPU queue.
          * @note vulkan_render::Command::Begin and
@@ -55,6 +56,10 @@ export namespace vulkan_render {
          * @param queue target.
          */
         void Submit(const vk::raii::Queue &queue) const;
+        void Reset() const;
+
+    private:
+        bool isEnd = false;
     };
 
     /**
@@ -100,6 +105,22 @@ export namespace vulkan_render {
             const vk::ImageLayout &from,
             const vk::ImageLayout &to
         ) const;
+
+    private:
+        static vk::raii::CommandPool MakePool(const Context &context, std::uint32_t queueFamily);
+        static std::vector<Command> MakeBuffers(
+            const Context &context,
+            const vk::raii::CommandPool &pool,
+            std::uint32_t size
+        );
+    };
+
+    class UserCommands {
+    public:
+        vk::raii::CommandPool pool;
+        std::vector<Command> buffers;
+
+        UserCommands(const Context &context, std::uint32_t maxFramesInFlight);
 
     private:
         static vk::raii::CommandPool MakePool(const Context &context, std::uint32_t queueFamily);

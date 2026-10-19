@@ -21,8 +21,15 @@ void vulkan_render::Command::Begin() const {
     });
 }
 
-void vulkan_render::Command::Submit(const vk::raii::Queue &queue) const {
+void vulkan_render::Command::End() {
     handle.end();
+    isEnd = true;
+}
+
+void vulkan_render::Command::Submit(const vk::raii::Queue &queue) const {
+    if (!isEnd) {
+        handle.end();
+    }
 
     vk::CommandBufferSubmitInfo cmdSubmitInfo {
         .commandBuffer = handle
@@ -42,6 +49,10 @@ void vulkan_render::Command::Submit(const vk::raii::Queue &queue) const {
     ) {
         LOG(WARNING, "Command buffer submit timeout. Code: %d", result);
     }
+}
+
+void vulkan_render::Command::Reset() const {
+    handle.reset();
 }
 
 vulkan_render::RenderCommands::RenderCommands(const Context &context, const std::uint32_t maxFramesInFlight) :
@@ -168,6 +179,39 @@ std::vector<vulkan_render::Command> vulkan_render::RenderCommands::MakeBuffers(
     std::vector<vk::raii::CommandBuffer> buffers = context.device.handle.allocateCommandBuffers({
         .commandPool = pool,
         .level = vk::CommandBufferLevel::ePrimary, //TODO: reuse some commands using SECONDARY
+        .commandBufferCount = size
+    });
+
+    std::vector<Command> result;
+    result.reserve(buffers.size());
+    for (vk::raii::CommandBuffer &buffer : buffers) {
+        result.emplace_back(context, std::move(buffer));
+    }
+
+    return result;
+}
+
+vulkan_render::UserCommands::UserCommands(const Context &context, const std::uint32_t maxFramesInFlight) :
+    pool(MakePool(context, context.physicalDevice.queueFamilies.graphics)) {
+    buffers = MakeBuffers(context, pool, maxFramesInFlight);
+    LOG(INFO, "Command buffers initialized.");
+}
+
+vk::raii::CommandPool vulkan_render::UserCommands::MakePool(const Context &context, const std::uint32_t queueFamily) {
+    return context.device.handle.createCommandPool({
+        .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+        .queueFamilyIndex = queueFamily,
+    });
+}
+
+std::vector<vulkan_render::Command> vulkan_render::UserCommands::MakeBuffers(
+    const Context &context,
+    const vk::raii::CommandPool &pool,
+    const std::uint32_t size
+) {
+    std::vector<vk::raii::CommandBuffer> buffers = context.device.handle.allocateCommandBuffers({
+        .commandPool = pool,
+        .level = vk::CommandBufferLevel::ePrimary,
         .commandBufferCount = size
     });
 

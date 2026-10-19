@@ -1,3 +1,7 @@
+.panel {
+    pointer-events: auto;
+}
+
 .block {
     display: flex;
     flex-direction: row;

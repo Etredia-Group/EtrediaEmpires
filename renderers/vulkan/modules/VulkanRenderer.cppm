@@ -70,10 +70,13 @@ namespace ee_vulkan {
             vulkan_render::BufferMode::STAGING_ACCESS
         >> indirectCommands;
 
+        // TODO: Check why Claude used PartialTexture.
+        //  Maybe there is need in DataTexture type in vulkan_render.
         /// Province index + 1 for every map pixel, 0 for water (R16/R32 uint).
         lazy<vulkan_render::PartialTexture> provinceIds;
         /// Signed distance to the coastline in province raster texels, positive in water (R16 float).
         lazy<vulkan_render::PartialTexture> coastDistance;
+        // TODO: vulkan_render
         vk::raii::Sampler nearestSampler = nullptr;
         vk::raii::Sampler linearSampler = nullptr;
 
@@ -87,6 +90,19 @@ namespace ee_vulkan {
         std::uint32_t coastFieldFactor = 1;
         /// Index of the ocean plane in the storage buffer and in the instances of multi-draw.
         std::uint32_t oceanInstance = 0;
+    };
+
+    struct PickReadback {
+        lazy<vulkan_render::Buffer<
+            std::uint32_t,
+            vk::BufferUsageFlagBits::eTransferDst,
+            vulkan_render::BufferMode::CPU_ACCESS
+        >> buffer;
+        lazy<vulkan_render::UserCommands> commands;
+        std::vector<bool> recorded;
+        std::optional<glm::ivec2> requested;
+        std::optional<glm::ivec2> lastTexel;
+        bool idsPacked = false;
     };
 }
 
@@ -111,6 +127,7 @@ export namespace ee_vulkan {
         void ApplyCamera() override;
 
         void UpdateProvinces(std::size_t offset, const std::vector<ee_engine::ProvinceSSBO>& data) override;
+        void RequestProvincePickAt(std::optional<glm::vec2> worldPos) override;
 
     private:
         const std::uint32_t MAX_FRAMES_IN_FLIGHT = 3;
@@ -127,6 +144,7 @@ export namespace ee_vulkan {
         lazy<vulkan_render::Texture<vulkan_render::TextureMode::DEPTH>> depth;
         lazy<vulkan_render::Uniform<MapUniform>> mapUniform;
         ProvinceMesh provinces;
+        PickReadback pick {};
 
         lazy<ee_rml::RmlVulkan> rmlRenderInterface;
 
@@ -143,6 +161,10 @@ export namespace ee_vulkan {
             const std::vector<float> &coastField,
             std::uint32_t provincesCount
         );
+
         void UpdateData(std::uint32_t frame);
+        void CreatePickReadback(bool idsPacked);
+        void RecordPick(std::uint32_t frame);
+        void ResolvePick(std::uint32_t frame);
     };
 }

@@ -4,8 +4,11 @@ import rml;
 
 export namespace ee_engine {
     struct InputHandlers {
+        std::function<void(float x, float y)> click;
         std::function<void(float dx, float dy)> zooming;
         std::function<void(float x, float y, float lastX, float lastY)> mapScroll;
+        std::function<void(float x, float y)> mapHover;
+        std::function<void()> mapHoverEnd;
     };
 
     struct UIInputHandlers {
@@ -16,6 +19,8 @@ export namespace ee_engine {
         std::function<bool(std::uint32_t codepoint)> text;
         std::function<void()> mouseLeave;
     };
+
+    using Pos = std::pair<float, float>;
 
     class IInput {
     public:

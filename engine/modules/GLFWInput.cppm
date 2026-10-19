@@ -21,8 +21,10 @@ export
     private:
         std::optional<ee_rml::RmlGLFW> rmlSystemInterface;
 
-        void OnLeftMouseButton(std::uint32_t state);
-        void OnRightMouseButton(std::uint32_t state);
+        void OnLeftMouseButton(std::uint32_t state) const;
+        void OnRightMouseButton(std::uint32_t state) const;
         void OnMiddleMouseButton(std::uint32_t state) const;
+
+        static ee_engine::Pos WindowToFramebuffer(float x, float y);
     };
 }

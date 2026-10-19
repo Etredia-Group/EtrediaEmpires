@@ -4,10 +4,15 @@ module;
 
 module Actions;
 import Engine;
+import utils;
+import std;
 
 ee_engine::InputHandlers Actions::mappings{
+    .click = Click,
     .zooming = Zoom,
-    .mapScroll = MapScroll
+    .mapScroll = MapScroll,
+    .mapHover = MapHover,
+    .mapHoverEnd = MapHoverEnd
 };
 
 void Actions::Zoom(const float dx, const float dy) {
@@ -24,4 +29,19 @@ void Actions::MapScroll(const float x, const float y, const float lastX, const f
     cam.position -= pos - lastPos;
 
     Engine::renderer->SetCamera(cam);
+}
+
+void Actions::MapHover(const float x, const float y) {
+    Engine::renderer->RequestProvincePick(x, y);
+}
+
+void Actions::MapHoverEnd() {
+    Engine::renderer->ClearProvincePick();
+}
+
+void Actions::Click(const float x, const float y) {
+    const std::optional<ee_engine::ProvinceHit> hit = Engine::renderer->getHoveredProvince();
+    if (!hit.has_value()) return;
+
+    LOG(INFO, "Clicked region %u", hit->regionId);
 }
