@@ -5,7 +5,7 @@ module;
 export module FileSystem;
 import std;
 
-export
+export namespace ee_engine
 {
     struct FileHandle {
         std::size_t id = 0;

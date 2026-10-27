@@ -36,59 +36,62 @@ int main(int argc, char **argv) {
     Engine::window = window;
 
     // Setup Asset Manager
-    Engine::assetManager = Allocate<AssetManager>();
+    Engine::assetManager = Allocate<ee_engine::AssetManager>(0);
     Engine::assetManager->Start();
 
     // Load assets
     Engine::assetManager->LoadDir<ee_assets::Shader>("assets/shaders");
     Engine::assetManager->LoadDir<ee_assets::Material>("assets/materials");
+    Engine::assetManager->LoadDir<ee_assets::Texture>("assets/gfx");
+    Engine::assetManager->LoadDir<ee_assets::ResourceList>("assets/economy/resources");
+
     Engine::assetManager->LoadAsync<ee_assets::MapMesh>("assets/map/ee.map");
     Engine::assetManager->LoadAsync<ee_assets::Save>("assets/scenarios/empires.save");
-    Engine::assetManager->LoadDir<ee_assets::ResourceList>("assets/economy/resources");
+
+    // Setup localization manager
+    Engine::localizer = Allocate<Localizer>("ru", *Engine::assetManager);
 
     // Setup input manager
     Engine::input = Allocate<GLFWInput>(Actions::mappings);
 
     // Setup renderer
     Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_vulkan::VulkanRenderer>(window));
+    Engine::renderer->RegisterAssetManager(*Engine::assetManager);
 
-    ee_assets::MapMesh& regions = Engine::assetManager->FindOnce<ee_assets::MapMesh>("assets/map/ee.map");
+    const ee_engine::AssetHandle regionsAsset = Engine::assetManager->Find("assets/map/ee.map");
+    ee_assets::MapMesh& regions = Engine::assetManager->Get<ee_assets::MapMesh>(regionsAsset);
     Engine::renderer->RegisterMapMesh(&regions.content);
 
     //TODO: ShaderRefs builder from set of AssetMaterial
-    const ee_assets::Material& provincesMaterial =
+    const ee_assets::Material &provincesMaterial =
         Engine::assetManager->FindOnce<ee_assets::Material>("assets/materials/provinces.mat");
-    ee_assets::Shader& vertProv = Engine::assetManager->FindOnce<ee_assets::Shader>(
-        provincesMaterial.vertexShaderAssetID);
-    ee_assets::Shader& fragProv = Engine::assetManager->FindOnce<ee_assets::Shader>(
-        provincesMaterial.fragmentShaderAssetID);
-    const ee_assets::Material& rmlMaterial =
+    const ee_engine::AssetHandle vertProv = Engine::assetManager->Find(provincesMaterial.vertexShaderAssetID);
+    const ee_engine::AssetHandle fragProv = Engine::assetManager->Find(provincesMaterial.fragmentShaderAssetID);
+    const ee_assets::Material &rmlMaterial =
         Engine::assetManager->FindOnce<ee_assets::Material>("assets/materials/rmlui.mat");
-    ee_assets::Shader& vertUI = Engine::assetManager->FindOnce<ee_assets::Shader>(
-        rmlMaterial.vertexShaderAssetID);
-    ee_assets::Shader& fragUI = Engine::assetManager->FindOnce<ee_assets::Shader>(
-        rmlMaterial.fragmentShaderAssetID);
+    const ee_engine::AssetHandle vertUI = Engine::assetManager->Find(rmlMaterial.vertexShaderAssetID);
+    const ee_engine::AssetHandle fragUI = Engine::assetManager->Find(rmlMaterial.fragmentShaderAssetID);
     Engine::renderer->RegisterMaterials({
-        .vertProvinces = &vertProv,
-        .fragProvinces = &fragProv,
-        .vertRml = &vertUI,
-        .fragRml = &fragUI
+        .vertProvinces = vertProv,
+        .fragProvinces = fragProv,
+        .vertRml = vertUI,
+        .fragRml = fragUI
     });
 
     Engine::renderer->Init();
     Engine::renderer->SetCamera({
-        .position = {1000.0f, 1000.0f},
         .zoom = 2000.0f
-        //.zoom = 1.0f
     });
 
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow*, const int width, const int height) {
         Engine::renderer->ResizeWindow(width, height);
     });
 
+    Engine::assetManager->Free(regionsAsset);
+
     // Setup Client
     Engine::client = Allocate<Client>();
-    const AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
+    const ee_engine::AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
     Engine::client->LoadSave(save);
     Engine::client->Init();
     Engine::client->Start();

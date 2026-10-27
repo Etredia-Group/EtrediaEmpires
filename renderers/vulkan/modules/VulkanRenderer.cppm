@@ -70,12 +70,10 @@ namespace ee_vulkan {
             vulkan_render::BufferMode::STAGING_ACCESS
         >> indirectCommands;
 
-        // TODO: Check why Claude used PartialTexture.
-        //  Maybe there is need in DataTexture type in vulkan_render.
         /// Province index + 1 for every map pixel, 0 for water (R16/R32 uint).
-        lazy<vulkan_render::PartialTexture> provinceIds;
+        lazy<vulkan_render::DataTexture> provinceIds;
         /// Signed distance to the coastline in province raster texels, positive in water (R16 float).
-        lazy<vulkan_render::PartialTexture> coastDistance;
+        lazy<vulkan_render::DataTexture> coastDistance;
         // TODO: vulkan_render
         vk::raii::Sampler nearestSampler = nullptr;
         vk::raii::Sampler linearSampler = nullptr;
@@ -116,6 +114,7 @@ export namespace ee_vulkan {
         void Shutdown() override;
 
         constexpr Rml::RenderInterface* getRenderInterface() noexcept override {return &*rmlRenderInterface;}
+        constexpr ee_engine::ProvinceSSBO& getRegionData(std::uint32_t id) const noexcept override;
 
     protected:
         void DrawBegin() override;

@@ -1,7 +1,3 @@
-module;
-
-#include <xxhash.h>
-
 export module compile.json;
 import utils;
 import glaze;
@@ -37,8 +33,22 @@ export namespace ee_sdk {
             CompileRecursive(asset, &CompileColors);
         }
 
+        /// Returns color (0xRRGGBB) registered for the name in regions.json, if any.
+        std::optional<std::uint32_t> FindMapping(const std::string_view name) const {
+            if (const auto it = mappings.find(name); it != mappings.end())
+                return it->second;
+            return std::nullopt;
+        }
+
     private:
-        std::unordered_map<std::string, std::uint32_t> mappings;
+        struct StringHash {
+            using is_transparent = void;
+            std::size_t operator()(const std::string_view s) const noexcept {
+                return std::hash<std::string_view>{}(s);
+            }
+        };
+
+        std::unordered_map<std::string, std::uint32_t, StringHash, std::equal_to<>> mappings;
 
         static void CompileRecursive(
            glz::json_t &obj,
@@ -74,28 +84,22 @@ export namespace ee_sdk {
 
             const std::filesystem::path linkPath = value.get_string();
             const auto linkPath8 = linkPath.generic_u8string();
-            std::uint32_t assetId = XXH32(linkPath8.data(), linkPath8.size(), 0);
-
-            LOG(INFO, "COMPILED HASH: Replace string [%s] with [%d] asset ID", linkPath.c_str(), assetId);
-            value = assetId;
+            std::uint32_t hash = HashData(linkPath8.data(), linkPath8.size());
+            LOG(INFO, "COMPILED HASH: Replace string [%s] with [%u] hash.", linkPath.c_str(), hash);
+            value = hash;
         }
 
         void CompileMappings(const std::basic_string<char> &, glz::json_t &value) const {
             if (!value.is_string()) return;
             const std::string& value_string = value.get_string();
 
-            for (const auto &[name, toValue] : mappings)
-            {
-                if (value_string == name)
-                {
-                    LOG(INFO, "COMPILED MAPPING: Replace string [%hs] with [0x%X] (%d) value",
-                        value_string.c_str(),
-                        toValue,
-                        toValue
-                    );
-                    value = toValue;
-                    break;
-                }
+            if (const std::optional<std::uint32_t> toValue = FindMapping(value_string)) {
+                LOG(INFO, "COMPILED MAPPING: Replace string [%hs] with [0x%X] (%u) value",
+                    value_string.c_str(),
+                    *toValue,
+                    *toValue
+                );
+                value = *toValue;
             }
         }
 
@@ -113,7 +117,8 @@ export namespace ee_sdk {
 
             hex = colorToHex(r, g, b, true);
 
-            LOG(INFO, "COMPILED COLOR: Replace string [%hs] with 0x[%X] (RGB %d, %d, %d) color", colorStr, hex, r, g, b);
+            LOG(INFO, "COMPILED COLOR: Replace string [%hs] with 0x[%X] (RGB %u, %u, %u) color",
+                colorStr, hex, r, g, b);
             value = hex;
         }
     };

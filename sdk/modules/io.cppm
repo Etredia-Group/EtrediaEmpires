@@ -1,5 +1,6 @@
 module;
 
+#include <xxhash.h>
 #include <ee_utils/serialization.hpp>
 
 export module io;
@@ -61,6 +62,10 @@ export namespace ee_sdk {
 
         fout.write(data.data(), data.size());
         fout.close();
+    }
+
+    constexpr std::uint32_t HashData(const void *data, const std::size_t length) {
+        return XXH32(data, length, 0);
     }
 
     constexpr std::uint32_t colorToHex(

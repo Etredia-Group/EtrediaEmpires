@@ -17,7 +17,6 @@
             <div class="value block"><span>138 млрд</span></div>
             <div class="value block"><span>€ 95 млн</span></div>
 
-            <div class="value block"><input /></div>
         </div>
 
         <div id="calendar">
@@ -34,12 +33,14 @@
     </div>
 
     <div id="department-tabs" class="panel">
-        <div class="department"></div>
-        <div class="department"></div>
-        <div class="department"></div>
-        <div class="department"></div>
-        <div class="department"></div>
+        <div class="department"><img src="../../gfx/overlay/button_politics.png" /></div>
+        <div class="department"><img src="../../gfx/overlay/button_economy.png" /></div>
+        <div class="department"><img src="../../gfx/overlay/button_army.png" /></div>
+        <div class="department"><img src="../../gfx/overlay/button_innovations.png" /></div>
+        <div class="department"><img src="../../gfx/overlay/button_production.png" /></div>
     </div>
+
+    <div id="popups-container"></div>
 </body>
 
 </rml>

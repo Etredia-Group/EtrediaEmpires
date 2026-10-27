@@ -17,6 +17,10 @@ ee_engine::IRenderer::IRenderer(GLFWwindow *window) {
 
 ee_engine::IRenderer::~IRenderer() {}
 
+void ee_engine::IRenderer::RegisterAssetManager(AssetManager &assetManager) {
+    this->assetManager = &assetManager;
+}
+
 void ee_engine::IRenderer::RegisterMaterials(const ShaderRefs& shaders) {
     this->shaders = shaders;
 }
@@ -104,14 +108,14 @@ void ee_engine::IRenderer::UpdateRegionCmd(RendererCommand& command) {
             command.region.id, command.region.data.regionId);
     }
 
-    RegionRanges mapping = regionsMapping[command.region.id];
+    const auto [offset, provincesCount] = regionsMapping[command.region.id];
     std::vector<ProvinceSSBO> buffer;
-    buffer.reserve(mapping.provincesCount);
-    for (std::size_t i = 0; i < mapping.provincesCount; i++) {
+    buffer.reserve(provincesCount);
+    for (std::size_t i = 0; i < provincesCount; i++) {
         buffer.push_back(command.region.data);
     }
 
-    UpdateProvinces(mapping.offset, buffer);
+    UpdateProvinces(offset, buffer);
 
     command.type = RendererCommand::COMPLETED;
 }

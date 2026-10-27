@@ -1,6 +1,5 @@
 module;
 
-#include "compile_config.hpp"
 #include <xxhash.h>
 #include <ee_utils/serialization.hpp>
 
@@ -11,7 +10,7 @@ import utils;
 import FileSystem;
 import std;
 
-export
+export namespace ee_engine
 {
     // Forward declarations
 
@@ -97,7 +96,9 @@ export
 
     class AssetManager final : public ee_utils::ThreadedWorker<AssetStreamCommand, AssetStreamCommand::COMPLETED> {
     public:
-        AssetManager() : ThreadedWorker(L"Assets Stream", 250) {
+        explicit AssetManager(const std::uint32_t hashSpace) :
+            ThreadedWorker(L"Assets Stream", 250),
+            ASSETS_HASH_SPACE(hashSpace) {
             commandsMapping[AssetStreamCommand::LOAD] = std::bind_front(&AssetManager::LoadCmd, this);
             commandsMapping[AssetStreamCommand::FIND] = std::bind_front(&AssetManager::FindCmd, this);
             commandsMapping[AssetStreamCommand::GET] = std::bind_front(&AssetManager::GetCmd, this);
@@ -235,6 +236,7 @@ export
     private:
         IFileSystem *diskSystem;
 
+        const std::uint32_t ASSETS_HASH_SPACE;
         std::vector<AssetInfo> activeAssets;
         std::unordered_map<std::filesystem::path, std::uint32_t> assetsIdMapping;
         std::unordered_map<std::uint32_t, AssetHandle*> assetsMapping;

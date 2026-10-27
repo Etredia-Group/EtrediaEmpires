@@ -3,6 +3,7 @@
     "cxxopts",
     "boost-lockfree",
     "xxhash",
+    "stb",
     "glaze",
     {
       "name": "reflectcpp",

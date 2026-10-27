@@ -153,7 +153,8 @@ export namespace vulkan_render {
     enum class TextureMode {
         PARTIAL,
         RENDER,
-        DEPTH
+        DEPTH,
+        DATA
     };
 
     template <TextureMode mode>
@@ -207,16 +208,32 @@ export namespace vulkan_render {
             context(from.context),
             width(from.width),
             height(from.height),
-            format(from.format),
             handle(std::move(from.handle)),
             view(std::move(from.view)),
-            memory(std::move(from.memory)) {
-            if (*from.view == nullptr) {
+            memory(std::move(from.memory)),
+            format(from.format) {
+            if (*view == nullptr) {
                 LOG(ERROR, "Corrupted render texture created, source data is not complete.");
             }
         }
 
-        void Init(const vk::ImageAspectFlags &flags) requires (mode == TextureMode::PARTIAL) {
+        Texture(
+            const Context &context,
+            const std::uint32_t width, const std::uint32_t height,
+            const vk::Format &format,
+            const vk::ImageUsageFlagBits usage = {}
+        ) requires (mode == TextureMode::DATA)
+        : context(context), width(width), height(height), format(format) {
+            MakeInstance(
+                vk::Flags(vk::ImageUsageFlagBits::eTransferDst) | vk::ImageUsageFlagBits::eSampled | usage,
+                vk::MemoryPropertyFlagBits::eDeviceLocal,
+                handle,
+                memory
+            );
+        }
+
+        void Init(const vk::ImageAspectFlags &flags)
+            requires (mode == TextureMode::PARTIAL || mode == TextureMode::DATA) {
             MakeView(flags);
         }
 
@@ -275,6 +292,7 @@ export namespace vulkan_render {
     using PartialTexture = Texture<TextureMode::PARTIAL>;
     using DepthTexture = Texture<TextureMode::DEPTH>;
     using RenderTexture = Texture<TextureMode::RENDER>;
+    using DataTexture = Texture<TextureMode::DATA>;
 
     template <typename T>
     class Uniform {

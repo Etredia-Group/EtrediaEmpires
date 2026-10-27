@@ -28,7 +28,7 @@ export
         const IDataChannel* GetConnection() const;
         void ConnectServer();
 
-        void LoadSave(AssetHandle save);
+        void LoadSave(ee_engine::AssetHandle save);
 
     protected:
         void Update() override;
@@ -36,7 +36,7 @@ export
 
     private:
         NetworkChannel *networkConnection = nullptr;
-        AssetHandle save;
+        ee_engine::AssetHandle save;
 
         void SendCmd(ClientCommand& command);
 

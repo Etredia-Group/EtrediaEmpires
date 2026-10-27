@@ -5,7 +5,7 @@ module;
 module FileSystem;
 import utils;
 
-IFileSystem::~IFileSystem() {
+ee_engine::IFileSystem::~IFileSystem() {
     for (FileHandle *handle : activeFiles)
         Deallocate(handle);
     for (FileHandle *handle : failedFiles)
@@ -14,7 +14,7 @@ IFileSystem::~IFileSystem() {
 
 #ifdef _WIN32
 
-NativeFileSystem::NativeFileSystem() {
+ee_engine::NativeFileSystem::NativeFileSystem() {
     iocpHandle = CreateIoCompletionPort(
         INVALID_HANDLE_VALUE,
         nullptr,
@@ -26,7 +26,7 @@ NativeFileSystem::NativeFileSystem() {
     }
 }
 
-NativeFileSystem::~NativeFileSystem() {
+ee_engine::NativeFileSystem::~NativeFileSystem() {
     // I have no idea why ReSharper think that this condition is always false
     // ReSharper disable once CppDFAConstantConditions
     if (iocpHandle != INVALID_HANDLE_VALUE && iocpHandle != nullptr) {
@@ -35,7 +35,7 @@ NativeFileSystem::~NativeFileSystem() {
     }
 }
 
-FileHandle& NativeFileSystem::Open(const std::filesystem::path& path, const std::uint32_t flags) {
+ee_engine::FileHandle& ee_engine::NativeFileSystem::Open(const std::filesystem::path& path, const std::uint32_t flags) {
     FileHandle *result = Allocate<FileHandle>();
 
 #ifndef NDEBUG
@@ -95,7 +95,7 @@ FileHandle& NativeFileSystem::Open(const std::filesystem::path& path, const std:
     return *result;
 }
 
-void NativeFileSystem::ReadAsync(FileHandle& file, const std::uint32_t bufferSize, const std::uint32_t flags) {
+void ee_engine::NativeFileSystem::ReadAsync(FileHandle& file, const std::uint32_t bufferSize, const std::uint32_t flags) {
     file.isCompleted = false;
     file.isClosing = false;
     file.bufferSize = bufferSize;
@@ -118,7 +118,7 @@ void NativeFileSystem::ReadAsync(FileHandle& file, const std::uint32_t bufferSiz
     }
 }
 
-void NativeFileSystem::PollLoads() {
+void ee_engine::NativeFileSystem::PollLoads() {
     DWORD bytesTransferred = 0;
     OVERLAPPED *overlapped = nullptr;
     ULONG_PTR ck = 999;
@@ -148,7 +148,7 @@ void NativeFileSystem::PollLoads() {
     }
 }
 
-void NativeFileSystem::Close(FileHandle& file) {
+void ee_engine::NativeFileSystem::Close(FileHandle& file) {
     if (file.win32Handle != INVALID_HANDLE_VALUE) {
         CancelIoEx(file.win32Handle, nullptr);
 
@@ -161,7 +161,7 @@ void NativeFileSystem::Close(FileHandle& file) {
     }
 }
 
-bool NativeFileSystem::HandleChunk(IOContext *context, const DWORD bytesTransferred, const bool success) {
+bool ee_engine::NativeFileSystem::HandleChunk(IOContext *context, const DWORD bytesTransferred, const bool success) {
     FileHandle &file = *context->file;
 
     if (!success) {
@@ -212,7 +212,7 @@ bool NativeFileSystem::HandleChunk(IOContext *context, const DWORD bytesTransfer
     return true;
 }
 
-void NativeFileSystem::IssueRead(IOContext *context) {
+void ee_engine::NativeFileSystem::IssueRead(IOContext *context) {
     // 64-bit offset is seperated for WinAPI
     context->overlapped.Offset = static_cast<DWORD>(context->currentOffset);
     context->overlapped.OffsetHigh = static_cast<DWORD>(context->currentOffset >> 32);
@@ -239,7 +239,7 @@ void NativeFileSystem::IssueRead(IOContext *context) {
 
 #endif
 
-void NativeFileSystem::FreeFile(FileHandle &file) {
+void ee_engine::NativeFileSystem::FreeFile(FileHandle &file) {
     if (file.buffer != nullptr) DeallocateArray(file.buffer);
     if (file.data != nullptr) DeallocateArray(file.data);
     file.buffer = nullptr;

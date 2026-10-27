@@ -42,7 +42,7 @@ GLFWInput::GLFWInput(const ee_engine::InputHandlers &handlers) : IInput(handlers
             const bool consumed = input->uiHandlers.mouseButton && input->uiHandlers.mouseButton(button, pressed);
             input->mouseUICaptured[button] = pressed ? consumed : false;
 
-            if (!input->mouseUICaptured[button]) {
+            if (button == GLFW_MOUSE_BUTTON_LEFT && !input->mouseUICaptured[button]) {
                 if (action == GLFW_RELEASE) {
                     GLFW_CALLBACK(click, input->mouseX, input->mouseY);
                 }

@@ -17,6 +17,10 @@ ee_rml::RmlVulkan::RmlVulkan(RenderContext renderContext) :
         //)
     ) {}
 
+ee_rml::RmlVulkan::~RmlVulkan() {
+    Flush(true);
+}
+
 Rml::CompiledGeometryHandle ee_rml::RmlVulkan::CompileGeometry(
     const Rml::Span<const Rml::Vertex> vertices,
     const Rml::Span<const std::int32_t> indices
@@ -110,12 +114,32 @@ void ee_rml::RmlVulkan::RenderGeometry(
 }
 
 void ee_rml::RmlVulkan::ReleaseGeometry(const Rml::CompiledGeometryHandle geometry) {
-    Deallocate(reinterpret_cast<GeometryMesh*>(geometry));
+    Defer([this, mesh = reinterpret_cast<GeometryMesh*>(geometry)] {
+        Deallocate(mesh);
+    });
 }
 
 Rml::TextureHandle ee_rml::RmlVulkan::LoadTexture(Rml::Vector2i &texture_dimensions, const Rml::String &source) {
+    const ee_assets::Texture &textureData = renderer.assetManager.FindOnce<ee_assets::Texture>(source);
 
-    return 1;
+    texture_dimensions.x = textureData.dimentionX;
+    texture_dimensions.y = textureData.dimentionY;
+
+    vulkan_render::RenderTexture *texture =
+        Allocate<vulkan_render::RenderTexture>(
+            std::move(
+                vulkan_render::DataFactory::CreateRenderTexture(
+                    renderer.context,
+                    renderer.commands,
+                    textureData.dimentionX,
+                    textureData.dimentionY,
+                    std::as_bytes(std::span{textureData.content, textureData.size}
+                )
+            )
+        )
+    );
+
+    return reinterpret_cast<Rml::TextureHandle>(texture);
 }
 
 Rml::TextureHandle ee_rml::RmlVulkan::GenerateTexture(
@@ -140,8 +164,14 @@ Rml::TextureHandle ee_rml::RmlVulkan::GenerateTexture(
 }
 
 void ee_rml::RmlVulkan::ReleaseTexture(const Rml::TextureHandle texture) {
-    textures.erase(texture);
-    Deallocate(reinterpret_cast<vulkan_render::RenderTexture*>(texture));
+    auto descriptor = textures.extract(texture);
+    Defer([
+        this,
+        descriptor = std::move(descriptor),
+        object = reinterpret_cast<vulkan_render::RenderTexture*>(texture)
+    ] {
+        Deallocate(object);
+    });
 }
 
 void ee_rml::RmlVulkan::EnableScissorRegion(const bool enable) {
@@ -177,4 +207,26 @@ void ee_rml::RmlVulkan::SetTransform(const Rml::Matrix4f *transform) {
 
 void ee_rml::RmlVulkan::SetFrameContext(vulkan_render::FrameContext *frameContext) {
     this->frameContext = frameContext;
+}
+
+void ee_rml::RmlVulkan::CollectGarbage() {
+    Flush(false);
+}
+
+void ee_rml::RmlVulkan::EndFrame() {
+    frameCounter++;
+}
+
+void ee_rml::RmlVulkan::Defer(std::move_only_function<void()> destroy) {
+    garbage.push_back({frameCounter, std::move(destroy)});
+}
+
+void ee_rml::RmlVulkan::Flush(bool all) {
+    while (
+        !garbage.empty() &&
+        (all || frameCounter - garbage.front().frame >= renderer.framesInFlight)
+    ) {
+        garbage.front().destroy();
+        garbage.pop_front();
+    }
 }

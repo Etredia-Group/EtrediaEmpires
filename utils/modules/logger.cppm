@@ -5,6 +5,7 @@
 
 module;
 
+#include <cstdio>
 #include <P7_Trace.h>
 #undef ERROR
 #undef TM
@@ -71,6 +72,7 @@ namespace logger {
         static void Init(const wchar_t *options,
                          const std::source_location& location = std::source_location::current()) {
             if (isReady) {
+                if (!trace) return;
                 trace->Trace(
                     0,
                     static_cast<eP7Trace_Level>(WARNING),
@@ -82,6 +84,9 @@ namespace logger {
                 );
                 return;
             }
+
+            std::setvbuf(stdout, nullptr, _IONBF, 0);
+            std::setvbuf(stderr, nullptr, _IONBF, 0);
 
             P7_Set_Crash_Handler();
             client = P7_Create_Client(options);

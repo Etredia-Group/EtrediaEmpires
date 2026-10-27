@@ -529,7 +529,10 @@ void ee_vulkan::VulkanRenderer::Init() {
         .context = *context,
         .surface = surface,
         .commands = *renderCommands,
-        .pipeline = *rmlPipeline
+        .pipeline = *rmlPipeline,
+
+        .assetManager = *assetManager,
+        .framesInFlight = MAX_FRAMES_IN_FLIGHT
     };
     rmlRenderInterface.emplace(rmlContext);
 
@@ -547,6 +550,7 @@ void ee_vulkan::VulkanRenderer::Shutdown() {
 
 void ee_vulkan::VulkanRenderer::DrawBegin() {
     syncManager->WaitInFlightFence(currentFrame);
+    rmlRenderInterface->CollectGarbage();
 
     ResolvePick(currentFrame);
 
@@ -643,6 +647,8 @@ void ee_vulkan::VulkanRenderer::DrawEnd() {
         .pSignalSemaphoreInfos = &signalSemaphoreInfo,
     };
     context->device.graphics.submit2({submitInfo}, syncManager->inFlightFences[currentFrame]);
+
+    rmlRenderInterface->EndFrame();
 
     vk::SwapchainKHR swapchains[] = {swapchain->handle};
     switch (
@@ -808,9 +814,13 @@ void ee_vulkan::VulkanRenderer::LoadProvincesMaterial() {
         {mapData, provincesSSBO, provinceIds, coastDistance},
         model
     );
+
+    ee_assets::Shader &vertProvinces = assetManager->Get<ee_assets::Shader>(shaders.vertProvinces);
+    ee_assets::Shader &fragProvinces = assetManager->Get<ee_assets::Shader>(shaders.fragProvinces);
+
     vulkan_render::ShaderProgram provincesShader {
-        .vertex = {reinterpret_cast<std::byte*>(shaders.vertProvinces->content), shaders.vertProvinces->size},
-        .fragment = {reinterpret_cast<std::byte*>(shaders.fragProvinces->content), shaders.fragProvinces->size}
+        .vertex = {reinterpret_cast<std::byte*>(vertProvinces.content), vertProvinces.size},
+        .fragment = {reinterpret_cast<std::byte*>(fragProvinces.content), fragProvinces.size}
     };
 
     provincesPipeline.emplace(
@@ -875,9 +885,13 @@ void ee_vulkan::VulkanRenderer::LoadRmlMaterial() {
         model
     );
     rmlMaterial.maxExtraDescriptorSets = 100; //TODO: remove magic const
+
+    ee_assets::Shader &vertRml = assetManager->Get<ee_assets::Shader>(shaders.vertRml);
+    ee_assets::Shader &fragRml = assetManager->Get<ee_assets::Shader>(shaders.fragRml);
+
     vulkan_render::ShaderProgram rmlShader {
-        .vertex = {reinterpret_cast<std::byte*>(shaders.vertRml->content), shaders.vertRml->size},
-        .fragment = {reinterpret_cast<std::byte*>(shaders.fragRml->content), shaders.fragRml->size}
+        .vertex = {reinterpret_cast<std::byte*>(vertRml.content), vertRml.size},
+        .fragment = {reinterpret_cast<std::byte*>(fragRml.content), fragRml.size}
     };
 
     rmlPipeline.emplace(
@@ -1031,7 +1045,7 @@ void ee_vulkan::VulkanRenderer::LoadMapTextures(
     const glm::uvec2 size = provinces.rasterSize;
     const glm::uvec2 fieldSize = provinces.coastFieldSize;
 
-    const auto upload = [this](vulkan_render::PartialTexture &texture, const std::span<const std::byte> data) {
+    const auto upload = [this](vulkan_render::DataTexture &texture, const std::span<const std::byte> data) {
         const vulkan_render::Buffer<
             std::byte,
             vk::BufferUsageFlagBits::eTransferSrc,
@@ -1061,11 +1075,23 @@ void ee_vulkan::VulkanRenderer::LoadMapTextures(
             [](const std::uint32_t id) { return static_cast<std::uint16_t>(id); }
         );
 
-        provinces.provinceIds.emplace(*context, size.x, size.y, vk::Format::eR16Uint);
+        provinces.provinceIds.emplace(
+            *context,
+            size.x,
+            size.y,
+            vk::Format::eR16Uint,
+            vk::ImageUsageFlagBits::eTransferSrc
+        );
         upload(*provinces.provinceIds, std::as_bytes(std::span(packed)));
     }
     else {
-        provinces.provinceIds.emplace(*context, size.x, size.y, vk::Format::eR32Uint);
+        provinces.provinceIds.emplace(
+            *context,
+            size.x,
+            size.y,
+            vk::Format::eR32Uint,
+            vk::ImageUsageFlagBits::eTransferSrc
+        );
         upload(*provinces.provinceIds, std::as_bytes(std::span(ids)));
     }
 
@@ -1119,6 +1145,9 @@ void ee_vulkan::VulkanRenderer::LoadMapTextures(
 }
 
 void ee_vulkan::VulkanRenderer::UpdateData(const std::uint32_t frame) {
+    const double seconds = glfwGetTime();
+    const std::uint64_t elapsedMs = static_cast<std::uint64_t>(seconds * 1000.0);
+
     MapUniform &mapData = mapUniform->buffers[frame].content[0];
 
     const float projectionScale = std::abs(viewProjection[0][0]) * static_cast<float>(surface.extent.width);
@@ -1142,7 +1171,12 @@ void ee_vulkan::VulkanRenderer::UpdateData(const std::uint32_t frame) {
         static_cast<float>(provinces.coastFieldSize.x),
         static_cast<float>(provinces.coastFieldSize.y)
     );
-    mapData.info = glm::uvec4(provinces.oceanInstance, 0, 0, 0);
+    mapData.info = glm::uvec4(
+        provinces.oceanInstance,
+        static_cast<std::uint32_t>(elapsedMs % 60000),
+        0,
+        0
+    );
 
     provincesPipeline->UpdateDescriptors({
         {
@@ -1290,4 +1324,10 @@ void ee_vulkan::VulkanRenderer::ResolvePick(const std::uint32_t frame) {
         .provinceIndex = provinceIndex,
         .regionId = provinces.storage->content[provinceIndex].regionId
     });
+}
+
+
+constexpr ee_engine::ProvinceSSBO& ee_vulkan::VulkanRenderer::getRegionData(const std::uint32_t id) const noexcept {
+    const RegionRanges provinces = regionsMapping.at(id);
+    return this->provinces.storage->content[provinces.offset / sizeof(ee_engine::ProvinceSSBO)];
 }

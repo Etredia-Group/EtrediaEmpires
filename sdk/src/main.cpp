@@ -36,6 +36,52 @@ void CompileJson(const ee_sdk::JsonCompiler &compiler, const path &relative, con
     }
 }
 
+void CompileLocale(const ee_sdk::JsonCompiler &compiler, const path &relative, const path &src, const path &out) {
+    LOG(INFO, "Start compiling %s...", relative.c_str());
+
+    for (
+        const std::filesystem::directory_entry &asset :
+        std::filesystem::recursive_directory_iterator(src/relative)
+    ) {
+        if (!asset.is_regular_file()) continue;
+
+        const path locFile = std::filesystem::relative(asset.path(), src/relative);
+        std::filesystem::create_directories((out/relative/locFile).parent_path());
+
+        std::optional<glz::json_t> data = ee_sdk::ReadJson(asset.path());
+        if (!data.has_value()) continue;
+
+        auto &loc = (*data)["loc"].get_object();
+        ee_assets::Localisation locAsset;
+        locAsset.loc.reserve(loc.size());
+
+        //TODO: compile.loc.cppm
+        for (auto &[key, value] : loc) {
+            ee_assets::Localisation::LocKey locKey = key;
+
+            if (key.size() > 1 && key[0] == '&') {
+                const std::string_view regionName = std::string_view(key).substr(1);
+                if (const std::optional<std::uint32_t> color = compiler.FindMapping(regionName)) {
+                    locKey = *color;
+
+                    LOG(INFO, "COMPILED COLOR KEY: Replace string [%hs] with [0x%X] (%u) color.",
+                        std::string(regionName).c_str(), *color, *color);
+                }
+                else {
+                    locKey = std::string(regionName);
+
+                    LOG(ERROR, "No color mapping for region [%hs] in [%s]",
+                        std::string(regionName).c_str(), asset.path().c_str());
+                }
+            }
+
+            locAsset.loc[std::move(locKey)] = std::move(value.get_string());
+        }
+
+        ee_sdk::WriteAsset((out/relative/locFile).replace_extension(), locAsset);
+    }
+}
+
 void CompileMaps(const ee_sdk::MapMeshCompiler &compiler, const path &relative, const path &src, const path &out) {
     LOG(INFO, "Start compiling %s...", relative.c_str());
 
@@ -56,7 +102,10 @@ void CompileMaps(const ee_sdk::MapMeshCompiler &compiler, const path &relative, 
 void CompileSPIRV(const path &compiler, const path &relative, const path &src, const path &out) {
     LOG(INFO, "Start compiling %s...", relative.c_str());
 
-    for (const std::filesystem::directory_entry &asset : std::filesystem::recursive_directory_iterator(src/relative)) {
+    for (
+        const std::filesystem::directory_entry &asset :
+        std::filesystem::recursive_directory_iterator(src/relative)
+    ) {
         if (!asset.is_regular_file()) continue;
 
         const path shader = std::filesystem::relative(asset.path(), src/relative);
@@ -112,20 +161,23 @@ int main(const int argc, char **argv) {
             const std::vector<path> &excludedPaths = cmd["exclude-path"].as<std::vector<path>>();
 
             const ee_sdk::JsonCompiler jsonCompiler(src/"regions.json");
-            IfNotExluded(excludedTypes, "materials", [jsonCompiler, src, out] {
+            IfNotExluded(excludedTypes, "materials", [&] {
                 CompileJson<ee_assets::Material>(jsonCompiler, "materials", src, out);
             });
-            IfNotExluded(excludedTypes, "scenarios", [jsonCompiler, src, out] {
+            IfNotExluded(excludedTypes, "scenarios", [&] {
                 CompileJson<ee_assets::Save>(jsonCompiler, "scenarios", src, out);
             });
-            IfNotExluded(excludedTypes, "economy", [jsonCompiler, src, out] {
+            IfNotExluded(excludedTypes, "economy", [&] {
                 CompileJson<ee_assets::ResourceList>(jsonCompiler, "economy/resources", src, out);
                 CompileJson<ee_assets::FirmList>(jsonCompiler, "economy/firms", src, out);
                 CompileJson<ee_assets::ProductionRecipeList>(jsonCompiler, "economy/recipes", src, out);
             });
+            IfNotExluded(excludedTypes, "localisation", [&] {
+               CompileLocale(jsonCompiler, "localisation", src, out);
+            });
 
             constexpr ee_sdk::MapMeshCompiler mapMeshCompiler;
-            IfNotExluded(excludedTypes, "map", [mapMeshCompiler, src, out] {
+            IfNotExluded(excludedTypes, "map", [&] {
                 CompileMaps(mapMeshCompiler, "map", src, out);
             });
 

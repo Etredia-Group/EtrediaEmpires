@@ -4,6 +4,7 @@ module;
 
 export module rmlui_vulkan;
 import vulkan_render;
+import AssetManager;
 import utils;
 import rml;
 import std;
@@ -43,11 +44,15 @@ export namespace ee_rml {
         vulkan_render::Surface &surface;
         vulkan_render::RenderCommands &commands;
         vulkan_render::Pipeline &pipeline;
+
+        ee_engine::AssetManager &assetManager;
+        std::uint32_t framesInFlight;
     };
 
     class RmlVulkan final : public Rml::RenderInterface {
     public:
         explicit RmlVulkan(RenderContext renderContext);
+        ~RmlVulkan() override;
 
         Rml::CompiledGeometryHandle CompileGeometry(
             Rml::Span<const Rml::Vertex> vertices,
@@ -79,6 +84,9 @@ export namespace ee_rml {
 
         void SetFrameContext(vulkan_render::FrameContext *frameContext);
 
+        void CollectGarbage();
+        void EndFrame();
+
     private:
         RenderContext renderer;
         vulkan_render::FrameContext *frameContext = nullptr;
@@ -87,6 +95,16 @@ export namespace ee_rml {
         std::unordered_map<Rml::TextureHandle, vk::raii::DescriptorSets> textures;
         vulkan_render::RenderTexture defaultTexture;
         glm::mat4 currentTransform = glm::mat4(1.0f);
+
+        struct Garbage {
+            std::uint64_t frame;
+            std::move_only_function<void()> destroy;
+        };
+        std::deque<Garbage> garbage;
+        std::uint64_t frameCounter = 0;
+
+        void Defer(std::move_only_function<void()> destroy);
+        void Flush(bool all);
     };
 
 }

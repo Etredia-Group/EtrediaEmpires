@@ -1,0 +1,28 @@
+<rml>
+
+<head>
+    <link type="text/css" href="../../base.rcss" />
+    <link type="text/css" href="../../game.rcss" />
+    <link type="text/css" href="region-info.rcss" />
+</head>
+
+<body data-model="RegionInfo">
+    <div id="region-info" class="panel">
+        <div id="region-header">
+            <div id="region-owner" class="flag section"></div>
+            <div id="region-name" class="section">
+                <span>{{name}} | ID: {{id}}</span>
+            </div>
+        </div>
+
+        <div id="region-description">
+            <div id="region-chart" class="flat-section"></div>
+            <div id="region-right" class="stack vertical">
+                <div id="region-stats" class="flat-section"></div>
+                <div id="region-controls" class="flat-section"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</rml>

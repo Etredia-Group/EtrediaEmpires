@@ -7,6 +7,7 @@ export import Render;
 export import Input;
 export import UI;
 export import AssetManager;
+export import Localizer;
 export import Client;
 
 import utils;
@@ -17,9 +18,10 @@ export
     public:
         inline static GLFWwindow *window;
         inline static ee_engine::IInput *input;
-        inline static AssetManager *assetManager;
+        inline static ee_engine::AssetManager *assetManager;
         inline static ee_engine::IRenderer *renderer;
         inline static UI *ui;
+        inline static Localizer *localizer;
         inline static Client *client;
 
         static void Shutdown() {
@@ -33,6 +35,11 @@ export
                 Deallocate(ui);
             }
             ui = nullptr;
+
+            if (localizer != nullptr) {
+                Deallocate(localizer);
+            }
+            localizer = nullptr;
 
             if (renderer != nullptr) {
                 Deallocate(renderer);
@@ -56,7 +63,6 @@ export
             thread = nullptr;
         }
 
-    private:
-        Engine();
+        Engine() = delete;
     };
 }

@@ -6,17 +6,17 @@ module;
 export module Render;
 import utils;
 import views;
-import AssetData;
+import AssetManager;
 import rml;
 import std;
 
 export namespace ee_engine {
     struct ShaderRefs {
-        ee_assets::Shader *vertProvinces;
-        ee_assets::Shader *fragProvinces;
+        AssetHandle vertProvinces;
+        AssetHandle fragProvinces;
 
-        ee_assets::Shader *vertRml;
-        ee_assets::Shader *fragRml;
+        AssetHandle vertRml;
+        AssetHandle fragRml;
     };
 
     struct CameraTransform {
@@ -60,7 +60,8 @@ export namespace ee_engine {
 
         constexpr bool isReady() const noexcept { return _isReady; }
 
-        void RegisterMaterials(const ShaderRefs& shaders);
+        void RegisterAssetManager(AssetManager &assetManager);
+        void RegisterMaterials(const ShaderRefs &shaders);
         void RegisterMapMesh(MapMesh *mapMesh);
 
         void SetUIContext(Rml::Context *rmlContext);
@@ -69,16 +70,17 @@ export namespace ee_engine {
         void Draw();
 
         virtual void ResizeWindow(int width, int height);
-        void SetCamera(const CameraTransform& camera);
+        void SetCamera(const CameraTransform &camera);
         void RequestProvincePick(float screenX, float screenY);
         void ClearProvincePick();
 
         virtual constexpr Rml::RenderInterface* getRenderInterface() noexcept = 0;
+        virtual constexpr ProvinceSSBO &getRegionData(std::uint32_t id) const noexcept = 0;
 
         constexpr CameraTransform getCamera() const noexcept { return camera; };
         constexpr std::optional<ProvinceHit> getHoveredProvince() const noexcept { return hoveredProvince; }
         glm::vec2 ScreenToWorld(float screenX, float screenY) const;
-        glm::vec2 ScreenToWorld(const glm::vec2& screenPos) const;
+        glm::vec2 ScreenToWorld(const glm::vec2 &screenPos) const;
 
     protected:
         bool _isReady = false;
@@ -90,6 +92,7 @@ export namespace ee_engine {
         glm::mat4 viewProjectionInversed;
 
         GLFWwindow *window;
+        AssetManager *assetManager;
         MapMesh *mapMesh;
         ShaderRefs shaders;
 
@@ -112,10 +115,10 @@ export namespace ee_engine {
 
         virtual void ApplyCamera() = 0;
 
-        virtual void UpdateProvinces(std::size_t offset, const std::vector<ProvinceSSBO>& data) = 0;
+        virtual void UpdateProvinces(std::size_t offset, const std::vector<ProvinceSSBO> &data) = 0;
         virtual void RequestProvincePickAt(std::optional<glm::vec2> worldPos) = 0;
 
     private:
-        void UpdateRegionCmd(RendererCommand& command);
+        void UpdateRegionCmd(RendererCommand &command);
     };
 }

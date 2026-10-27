@@ -5,7 +5,6 @@ set(EXE engine)
 # Find dependencies
 
 find_package(Boost REQUIRED COMPONENTS lockfree)
-find_package(xxHash CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(reflectcpp CONFIG REQUIRED)
@@ -21,7 +20,6 @@ target_link_libraries(${EXE} PUBLIC engine-api)
 target_link_libraries(${EXE} PUBLIC vulkan-renderer)
 
 target_link_libraries(${EXE} PRIVATE Boost::lockfree)
-target_link_libraries(${EXE} PRIVATE xxHash::xxhash)
 target_link_libraries(${EXE} PRIVATE p7)
 target_link_libraries(${EXE} PRIVATE glfw)
 target_link_libraries(${EXE} PRIVATE glm::glm)

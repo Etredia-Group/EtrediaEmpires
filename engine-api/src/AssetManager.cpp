@@ -17,24 +17,26 @@ import FileSystem;
 
 // Registry of assets
 
-template const AssetOperations* AssetManager::OperationsFor<ee_assets::Binary>();
-template const AssetOperations* AssetManager::OperationsFor<ee_assets::MapMesh>();
-template const AssetOperations* AssetManager::OperationsFor<ee_assets::Material>();
-template const AssetOperations* AssetManager::OperationsFor<ee_assets::Save>();
-template const AssetOperations* AssetManager::OperationsFor<ee_assets::ResourceList>();
-template const AssetOperations* AssetManager::OperationsFor<ee_assets::FirmList>();
-template const AssetOperations* AssetManager::OperationsFor<ee_assets::ProductionRecipeList>();
+template const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor<ee_assets::Binary>();
+template const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor<ee_assets::MapMesh>();
+template const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor<ee_assets::Material>();
+template const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor<ee_assets::Texture>();
+template const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor<ee_assets::Localisation>();
+template const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor<ee_assets::Save>();
+template const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor<ee_assets::ResourceList>();
+template const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor<ee_assets::FirmList>();
+template const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor<ee_assets::ProductionRecipeList>();
 
 // Finish* methods implementation
 
 template <ee_assets::Asset T>
-const AssetOperations* AssetManager::OperationsFor() {
-    static constexpr AssetOperations ops { &FinishLoadAsset<T>, &DestroyAsset<T> };
+const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor() {
+    static constexpr ee_engine::AssetOperations ops { &FinishLoadAsset<T>, &DestroyAsset<T> };
     return &ops;
 }
 
 template <ee_assets::Asset T>
-void AssetManager::FinishLoadAsset(AssetManager &self, AssetLoadingEntry &loaded) {
+void ee_engine::AssetManager::FinishLoadAsset(ee_engine::AssetManager &self, AssetLoadingEntry &loaded) {
     if constexpr (std::constructible_from<T, std::uint8_t*&, std::size_t>) {
         self.FinishLoadConstruct<T>(loaded);
     }
@@ -44,12 +46,12 @@ void AssetManager::FinishLoadAsset(AssetManager &self, AssetLoadingEntry &loaded
 }
 
 template <ee_assets::Asset T>
-void AssetManager::FinishLoadConstruct(AssetLoadingEntry& loaded) {
+void ee_engine::AssetManager::FinishLoadConstruct(AssetLoadingEntry& loaded) {
     Redirect(loaded.handle, Allocate<T>(loaded.file->data, loaded.file->size));
 }
 
 template <ee_assets::Asset T>
-void AssetManager::FinishLoadCapnprotoDeserialize(AssetLoadingEntry& loaded) {
+void ee_engine::AssetManager::FinishLoadCapnprotoDeserialize(AssetLoadingEntry& loaded) {
     try {
         if (rfl::Result<T> result = rfl::capnproto::read<T>(
             reinterpret_cast<const char*>(loaded.file->data),

@@ -18,6 +18,7 @@ layout(std140, binding = 0) uniform Camera {
 struct Province {
     uint regionId;
     uint color;
+    bool isSelected;
 };
 layout(std430, binding = 1) readonly buffer Data {
     Province provinces[];
@@ -52,6 +53,11 @@ const float GRID_STRENGTH_LAND  = 0.10;
 
 const int   COUNTRY_SHADE_RADIUS = 3;
 const float COUNTRY_SHADE = 0.82;
+
+// Selected province outline: thickness in raster texels, blink frequency in Hz.
+const float SELECT_OUTLINE_WIDTH = 2.5;   // covers 1, 1.41 and 2 texels -> ~2 px thick
+const float SELECT_BLINK_HZ      = 2.0;
+const vec3  SELECT_RED           = vec3(1.0, 0.1, 0.1);
 
 // ---------------------------------------------------------------------------------------------
 // Helpers
@@ -163,14 +169,15 @@ const ivec2 DIRECTIONS[8] = ivec2[](
 vec3 shadeLand(vec2 art, ivec2 texel, uint ownId) {
     uint ownColorBits = ownerColor(ownId);
     vec3 base = unpackColor(ownColorBits);
+    bool selected = provinces[ownId - 1u].isSelected;
 
-    // When zoomed out a raster texel gets smaller than a screen pixel; widen borders to stay visible.
     int stride = max(1, int(artPixelSize() + 0.5));
 
     bool coast = false;
     bool provinceBorder = false;
     bool countryBorder = false;
     float countryDistance = 1.0e6;
+    float outlineDistance = 1.0e6;   // distance to the nearest texel of another province / water
 
     for (int d = 0; d < 8; ++d) {
         bool axis = d < 4;
@@ -179,6 +186,8 @@ vec3 shadeLand(vec2 art, ivec2 texel, uint ownId) {
         for (int r = 1; r <= COUNTRY_SHADE_RADIUS; ++r) {
             uint neighbour = fetchProvince(texel + DIRECTIONS[d] * (r * stride));
             if (neighbour == ownId) continue;
+
+            outlineDistance = min(outlineDistance, float(r) * stepLength);
 
             if (neighbour == 0u) {
                 coast = coast || (axis && r == 1);
@@ -205,6 +214,12 @@ vec3 shadeLand(vec2 art, ivec2 texel, uint ownId) {
     color *= mix(COUNTRY_SHADE, 1.0, smoothstep(1.0, float(COUNTRY_SHADE_RADIUS) + 0.5, countryDistance));
 
     if (countryBorder) color = saturateColor(base, 1.6) * 0.9;
+
+    if (selected && outlineDistance <= SELECT_OUTLINE_WIDTH) {
+        float t = float(camera.info.y) * 0.001;
+        float pulse = 0.5 + 0.5 * sin(t * 6.28318530718 * SELECT_BLINK_HZ);
+        color = mix(color, SELECT_RED, pulse);
+    }
 
     color *= 1.0 - GRID_STRENGTH_LAND * gridMask(art);
     return color;

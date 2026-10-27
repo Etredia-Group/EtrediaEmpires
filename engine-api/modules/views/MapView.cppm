@@ -18,5 +18,6 @@ export namespace ee_engine {
     struct ProvinceSSBO {
         std::uint32_t regionId;
         std::uint32_t color;
+        std::uint32_t isSelected;
     };
 }

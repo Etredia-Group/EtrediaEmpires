@@ -90,21 +90,98 @@ export namespace vulkan_render {
          * @param buffer source data.
          * @param texture destination texture.
          */
+        template <TextureMode TMode>
+            requires (TMode == TextureMode::PARTIAL || TMode == TextureMode::DATA)
         void SubmitTexture(
             const BaseBuffer<BufferMode::STATIC> &buffer,
-            const Texture<TextureMode::PARTIAL> &texture
-        ) const;
+            const Texture<TMode> &texture
+            ) const {
+            const Command cmd(buffer.context, graphicsPool);
+            cmd.Begin();
+
+            const vk::BufferImageCopy copyRegion {
+                .bufferOffset = 0,
+                .bufferRowLength = 0,
+                .bufferImageHeight = 0,
+                .imageSubresource = {
+                    .aspectMask = vk::ImageAspectFlagBits::eColor,
+                    .mipLevel = 0,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1
+                },
+                .imageOffset = {0, 0, 0},
+                .imageExtent =  {texture.width, texture.height, 1}
+            };
+
+            cmd.handle.copyBufferToImage(buffer.handle, texture.handle, vk::ImageLayout::eTransferDstOptimal, {copyRegion});
+
+            cmd.Submit(buffer.context.device.graphics);
+        }
         /**
          * Changes texture image layout using pipeline barrier.
          * @param texture target.
          * @param from current layout.
          * @param to new layout.
          */
+        template <TextureMode TMode>
+            requires (TMode == TextureMode::PARTIAL || TMode == TextureMode::DATA)
         void TranslateTextureLayout(
-            const Texture<TextureMode::PARTIAL> &texture,
+            const Texture<TMode> &texture,
             const vk::ImageLayout &from,
             const vk::ImageLayout &to
-        ) const;
+            ) const {
+            const Command cmd(texture.context, graphicsPool);
+            cmd.Begin();
+
+            vk::ImageMemoryBarrier barrier {
+                .oldLayout = from,
+                .newLayout = to,
+                .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+                .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+                .image = texture.handle,
+                .subresourceRange = {
+                    .aspectMask = vk::ImageAspectFlagBits::eColor,
+                    .baseMipLevel = 0,
+                    .levelCount = 1,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1
+                },
+            };
+
+            vk::PipelineStageFlags sourceStage;
+            vk::PipelineStageFlags destinationStage;
+
+            if (from == vk::ImageLayout::eUndefined && to == vk::ImageLayout::eTransferDstOptimal) {
+                barrier.srcAccessMask = vk::AccessFlagBits::eNone;
+                barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+
+                sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+                destinationStage = vk::PipelineStageFlagBits::eTransfer;
+            } else if (
+                from == vk::ImageLayout::eTransferDstOptimal &&
+                (to == vk::ImageLayout::eReadOnlyOptimal || to == vk::ImageLayout::eShaderReadOnlyOptimal)
+            ) {
+                barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+                barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+                sourceStage = vk::PipelineStageFlagBits::eTransfer;
+                destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
+            } else {
+                LOG(ERROR, "Unsupported layout transition: %d -> %d.", from, to);
+                return;
+            }
+
+            cmd.handle.pipelineBarrier(
+                sourceStage, destinationStage,
+                vk::DependencyFlags(0),
+                nullptr,
+                nullptr,
+                {barrier}
+            );
+
+            cmd.Submit(texture.context.device.graphics);
+        }
+
 
     private:
         static vk::raii::CommandPool MakePool(const Context &context, std::uint32_t queueFamily);

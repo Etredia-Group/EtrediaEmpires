@@ -1,11 +1,12 @@
 /*
  * To define new asset:
  * - Define struct with "using asset_tag = AssetTag".
- * - Add template specialization in engine/AssetManager.cpp registry TODO: Move registry to engine-api
+ * - Add template specialization in engine/AssetManager.cpp registry. TODO: Move registry to engine-api
  * - Assets loads in Cap'n Proto format by default.
  * - If asset needs custom construction logic from raw binary:
  * - | define and implement constructor (std::uint8_t * & source, std::size_t sourceSize)
  * - | in AssetData.cpp
+ * - Make sure to add asset in SDK if it needs preprocessing.
  */
 
 export module AssetData;
@@ -39,11 +40,40 @@ export namespace ee_assets {
 
     using Shader = Binary;
 
+    struct Texture {
+        using asset_tag = AssetTag;
+
+        std::uint8_t *content = nullptr;
+        std::size_t size = 0;
+
+        std::int32_t dimentionX = 0, dimentionY = 0;
+        std::int32_t channels = 0;
+
+        Texture(std::uint8_t * & source, std::size_t sourceSize);
+        ~Texture();
+    };
+
     struct Material {
         using asset_tag = AssetTag;
 
         std::uint32_t vertexShaderAssetID;
         std::uint32_t fragmentShaderAssetID;
+    };
+
+    struct Localisation {
+        using asset_tag = AssetTag;
+
+        using LocKey = std::variant<std::string, std::uint32_t>;
+        struct LocKeyHash {
+            std::size_t operator()(const LocKey &key) const noexcept {
+                if (const std::uint32_t *color = std::get_if<std::uint32_t>(&key))
+                    return std::hash<std::uint32_t>{}(*color);
+                return std::hash<std::string_view>{}(std::get<std::string>(key));
+            }
+        };
+        using LocTable = std::unordered_map<LocKey, std::string, LocKeyHash>;
+
+        LocTable loc;
     };
 
     // Gameplay assets

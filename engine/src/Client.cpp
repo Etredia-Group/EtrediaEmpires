@@ -31,7 +31,7 @@ void Client::ConnectServer() {
     networkConnection = Allocate<NetworkChannel>();
 }
 
-void Client::LoadSave(const AssetHandle save) {
+void Client::LoadSave(const ee_engine::AssetHandle save) {
     this->save = save;
 }
 

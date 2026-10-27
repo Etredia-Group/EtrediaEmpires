@@ -43,5 +43,33 @@ void Actions::Click(const float x, const float y) {
     const std::optional<ee_engine::ProvinceHit> hit = Engine::renderer->getHoveredProvince();
     if (!hit.has_value()) return;
 
-    LOG(INFO, "Clicked region %u", hit->regionId);
+    const std::uint32_t &regionId = hit->regionId;
+    Rml::Binded<ee_engine::RegionInfo> &regionInfo = Engine::ui->regionInfo;
+    if (regionId == regionInfo.data.id) return;
+
+    if (regionInfo.data.id != 0) {
+        ee_engine::ProvinceSSBO lastRegionRenderData = Engine::renderer->getRegionData(regionInfo.data.id);
+        ee_engine::RendererCommand updateLastRegionCmd;
+        updateLastRegionCmd.type = ee_engine::RendererCommand::UPDATE_REGION;
+        updateLastRegionCmd.region.id = regionInfo.data.id;
+        lastRegionRenderData.isSelected = false;
+        updateLastRegionCmd.region.data = lastRegionRenderData;
+        Engine::renderer->Request(updateLastRegionCmd);
+    }
+
+    ee_engine::RendererCommand updateRegionCmd;
+    ee_engine::ProvinceSSBO regionRenderData = Engine::renderer->getRegionData(regionId);
+    updateRegionCmd.type = ee_engine::RendererCommand::UPDATE_REGION;
+    updateRegionCmd.region.id = regionId;
+    regionRenderData.isSelected = true;
+    updateRegionCmd.region.data = regionRenderData;
+    Engine::renderer->Request(updateRegionCmd);
+
+    Rml::ElementDocument *popup = Engine::ui->Popup("assets/layout/popups/region-info/region-info.rml");
+    regionInfo.data.id = regionId;
+    regionInfo.data.name = Engine::localizer->Localize(
+        "regions",
+        regionId
+    );
+    regionInfo.model.DirtyAllVariables();
 }
