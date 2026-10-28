@@ -36,10 +36,11 @@ void ee_engine::IRenderer::SetUIContext(Rml::Context *rmlContext) {
 void ee_engine::IRenderer::Draw() {
     if (!isDrawing) return;
 
-    DrawBegin();
-    DrawMap();
-    DrawUI();
-    DrawEnd();
+    if (DrawBegin()) {
+        DrawMap();
+        DrawUI();
+        DrawEnd();
+    }
 }
 
 void ee_engine::IRenderer::ResizeWindow(const int width, const int height) {

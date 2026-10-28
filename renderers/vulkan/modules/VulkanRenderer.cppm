@@ -117,7 +117,7 @@ export namespace ee_vulkan {
         constexpr ee_engine::ProvinceSSBO& getRegionData(std::uint32_t id) const noexcept override;
 
     protected:
-        void DrawBegin() override;
+        bool DrawBegin() override;
         void DrawMap() override;
         void DrawUI() override;
         void DrawEnd() override;
@@ -130,6 +130,7 @@ export namespace ee_vulkan {
 
     private:
         const std::uint32_t MAX_FRAMES_IN_FLIGHT = 3;
+        bool isSwapchainDirty = false;
 
         lazy<vulkan_render::Context> context;
         vulkan_render::Surface surface;

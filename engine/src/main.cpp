@@ -10,8 +10,8 @@ import GLFWInput;
 import rmlui_glfw;
 import std;
 
-constexpr std::uint32_t SCREEN_WIDTH = 1920;
-constexpr std::uint32_t SCREEN_HEIGHT = 800;
+constexpr std::uint32_t SCREEN_WIDTH = 900;
+constexpr std::uint32_t SCREEN_HEIGHT = 700;
 
 int main(int argc, char **argv) {
     // Setup P7 logger

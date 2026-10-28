@@ -198,6 +198,22 @@ vk::Result vulkan_render::SyncManager::AcquireNextImage(
     return result;
 }
 
+void vulkan_render::SyncManager::ResetSemaphores() {
+    const std::size_t maxFramesInFlight = inFlightFences.size();
+
+    imageAvailable.clear();
+    imageAvailable.reserve(maxFramesInFlight);
+    for (std::size_t i = 0; i < maxFramesInFlight; i++) {
+        imageAvailable.push_back(context.device.handle.createSemaphore({}));
+    }
+
+    renderFinished.clear();
+    renderFinished.reserve(maxFramesInFlight);
+    for (std::size_t i = 0; i < maxFramesInFlight; i++) {
+        renderFinished.push_back(context.device.handle.createSemaphore({}));
+    }
+}
+
 vulkan_render::FrameContext::FrameContext(
     const RenderPass &renderPass,
     const Surface &surface,

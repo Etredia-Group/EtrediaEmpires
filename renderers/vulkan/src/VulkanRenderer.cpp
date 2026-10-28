@@ -548,7 +548,12 @@ void ee_vulkan::VulkanRenderer::Shutdown() {
     context->device.handle.waitIdle();
 }
 
-void ee_vulkan::VulkanRenderer::DrawBegin() {
+bool ee_vulkan::VulkanRenderer::DrawBegin() {
+    if (isSwapchainDirty) {
+        RecreateSwapchain();
+        if (!isDrawing) return false;
+    }
+
     syncManager->WaitInFlightFence(currentFrame);
     rmlRenderInterface->CollectGarbage();
 
@@ -557,17 +562,17 @@ void ee_vulkan::VulkanRenderer::DrawBegin() {
     std::uint32_t imageIndex = 0;
     switch (vk::Result result = syncManager->AcquireNextImage(*swapchain, currentFrame, imageIndex)) {
         case vk::Result::eSuccess:
+        case vk::Result::eSuboptimalKHR:
             break;
 
         case vk::Result::eErrorOutOfDateKHR:
-        case vk::Result::eSuboptimalKHR:
             LOG(WARNING, "Swapchain needs to be recreated");
             RecreateSwapchain();
-            return;
+            return false;
 
         default:
             LOG(ERROR, "Failed to get next image index. Code: %d", result);
-            break;
+            return false;
     }
     syncManager->WaitImageInFlight(currentFrame, imageIndex);
 
@@ -579,6 +584,8 @@ void ee_vulkan::VulkanRenderer::DrawBegin() {
         vulkan_render::FrameContext(*renderPass, surface, *renderCommands, imageIndex, currentFrame, clears)
     );
     rmlRenderInterface->SetFrameContext(&*frameContext);
+
+    return true;
 }
 
 void ee_vulkan::VulkanRenderer::DrawMap() {
@@ -679,10 +686,12 @@ void ee_vulkan::VulkanRenderer::DrawEnd() {
 
 void ee_vulkan::VulkanRenderer::ResizeWindow(const int width, const int height) {
     IRenderer::ResizeWindow(width, height);
-    surface.extent = {
-        .width = static_cast<std::uint32_t>(screenWidth),
-        .height = static_cast<std::uint32_t>(screenHeight)
-    };
+
+    isDrawing = screenWidth > 0 && screenHeight > 0;
+    if (!isDrawing) return;
+
+    isSwapchainDirty = true;
+    rmlContext->SetDimensions({width, height});
 }
 
 void ee_vulkan::VulkanRenderer::ApplyCamera() {
@@ -735,18 +744,41 @@ void ee_vulkan::VulkanRenderer::RequestProvincePickAt(const std::optional<glm::v
 
 void ee_vulkan::VulkanRenderer::RecreateSwapchain() {
     // We should not render with minimized window
-    if (screenWidth == 0 || screenHeight == 0)
-    {
-        isDrawing = false;
-        return;
-    }
-    isDrawing = true;
+    if (screenWidth == 0 || screenHeight == 0) return;
 
     context->device.handle.waitIdle();
-    swapchain = vulkan_render::ResourcesFactory::CreateSwapchain(*context, surface);
+
+    context->surfaceCapabilities.capabilities =
+        context->physicalDevice.handle.getSurfaceCapabilitiesKHR(*surface.handle);
+    surface.extent = {
+        .width = static_cast<std::uint32_t>(screenWidth),
+        .height = static_cast<std::uint32_t>(screenHeight)
+    };
+
+    frameContext.reset();
+    renderPass.reset();
+    depth.reset();
+
+    swapchain.reset();
+    swapchain.emplace(vulkan_render::ResourcesFactory::CreateSwapchain(*context, surface));
     depth.emplace(*context, surface);
-    LoadProvincesMaterial();
-    LoadRmlMaterial();
+    renderPass.emplace(*context, *swapchain, surface, *depth);
+
+    syncManager->ResetSemaphores();
+    syncManager->imagesInFlight.assign(MAX_FRAMES_IN_FLIGHT, nullptr);
+
+    for (
+        vulkan_render::Pipeline *pipeline : {
+            &*provincesPipeline, &*rmlPipeline
+        }
+    ) {
+        pipeline->viewport.width = static_cast<float>(surface.extent.width);
+        pipeline->viewport.height = static_cast<float>(surface.extent.height);
+        pipeline->scissors.offset = {0, 0};
+        pipeline->scissors.extent = surface.extent;
+    }
+
+    isSwapchainDirty = false;
 }
 
 void ee_vulkan::VulkanRenderer::LoadProvincesMaterial() {

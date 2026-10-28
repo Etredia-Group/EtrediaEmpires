@@ -214,7 +214,7 @@ export namespace vulkan_render {
     class SyncManager {
     public:
         const Context &context;
-        const std::uint32_t TIMEOUT;
+        const std::uint64_t TIMEOUT;
 
         std::vector<vk::raii::Semaphore> imageAvailable;
         std::vector<vk::raii::Semaphore> renderFinished;
@@ -252,6 +252,8 @@ export namespace vulkan_render {
             std::size_t currentFrame,
             std::uint32_t &imageIndex
         ) const;
+
+        void ResetSemaphores();
     };
 
     class FrameContext {

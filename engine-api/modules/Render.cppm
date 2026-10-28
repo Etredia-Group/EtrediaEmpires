@@ -108,7 +108,7 @@ export namespace ee_engine {
 
         explicit IRenderer(GLFWwindow *window);
 
-        virtual void DrawBegin() = 0;
+        virtual bool DrawBegin() = 0;
         virtual void DrawMap() = 0;
         virtual void DrawUI() = 0;
         virtual void DrawEnd() = 0;
