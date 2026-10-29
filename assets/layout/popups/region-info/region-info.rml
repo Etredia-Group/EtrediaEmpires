@@ -1,8 +1,8 @@
 <rml>
 
 <head>
-    <link type="text/css" href="../../base.rcss" />
-    <link type="text/css" href="../../game.rcss" />
+    <link type="text/css" href="@ui/base.rcss" />
+    <link type="text/css" href="@ui/game.rcss" />
     <link type="text/css" href="region-info.rcss" />
 </head>
 

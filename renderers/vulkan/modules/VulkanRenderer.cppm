@@ -113,6 +113,8 @@ export namespace ee_vulkan {
         void Init() override;
         void Shutdown() override;
 
+        std::generator<float> LoadProvinces() override;
+
         constexpr Rml::RenderInterface* getRenderInterface() noexcept override {return &*rmlRenderInterface;}
         constexpr ee_engine::ProvinceSSBO& getRegionData(std::uint32_t id) const noexcept override;
 
@@ -155,7 +157,6 @@ export namespace ee_vulkan {
 
         void LoadProvincesMaterial();
         void LoadRmlMaterial();
-        void LoadProvinces();
         void LoadMapTextures(
             const std::vector<std::uint32_t> &ids,
             const std::vector<float> &coastField,

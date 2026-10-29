@@ -7,7 +7,7 @@ Client::Client() : ThreadedWorker(L"Client", 0) {
     commandsMapping[ClientCommand::SEND] = std::bind_front(&Client::SendCmd, this);
 }
 
-void Client::Init() const {
+std::generator<float> Client::Init() const {
     if (Engine::renderer == nullptr || !Engine::renderer->isReady()) {
         LOG(CRITICAL, "Renderer is not ready. Client cannot be created");
         throw std::logic_error("Renderer is not ready");
@@ -15,8 +15,11 @@ void Client::Init() const {
 
     // TEST
     ee_assets::Save& asset = Engine::assetManager->Get<ee_assets::Save>(save);
+    float saveLoadProgress = 0.0f;
     for (const ee_data::Subject &subject : asset.save.subjects) {
         ViewModelSubject(subject);
+        saveLoadProgress++;
+        co_yield saveLoadProgress / asset.save.subjects.size();
     }
 }
 

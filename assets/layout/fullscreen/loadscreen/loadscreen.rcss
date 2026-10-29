@@ -1,0 +1,57 @@
+#load-panel {
+    width: 100%;
+    height: 100%;
+}
+
+#load-panel * {
+    position: absolute;
+}
+
+#load-bg {
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
+#load-tooltip {
+    font-size: 26px;
+    width: 50%;
+    top: 50%;
+    left: 18px;
+}
+
+#load-bar {
+    top: 18px;
+    left: 18px;
+    width: 50%;
+    height: 42px;
+
+    flex-direction: column;
+    align-items: center;
+}
+
+#load-bar span {
+    position: relative;
+}
+
+#stage {
+    text-align: center;
+    text-transform: uppercase;
+    width: 100%;
+    font-size: 22px;
+}
+
+#progress-value {
+    text-align: center;
+    width: 100%;
+    font-size: 12px;
+}
+
+#progress {
+    height: 100%;
+    width: 50%;
+    position: absolute;
+
+    background-color: #3d5bb5;
+}

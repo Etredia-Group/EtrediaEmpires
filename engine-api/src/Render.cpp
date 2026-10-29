@@ -37,7 +37,9 @@ void ee_engine::IRenderer::Draw() {
     if (!isDrawing) return;
 
     if (DrawBegin()) {
-        DrawMap();
+        if (isMapLoaded) {
+            DrawMap();
+        }
         DrawUI();
         DrawEnd();
     }

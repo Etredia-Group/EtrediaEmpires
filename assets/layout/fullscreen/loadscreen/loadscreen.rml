@@ -1,0 +1,23 @@
+<rml>
+
+<head>
+    <link type="text/css" href="@ui/base.rcss" />
+    <link type="text/css" href="@ui/game.rcss" />
+    <link type="text/css" href="loadscreen.rcss" />
+</head>
+
+<body data-model="LoadingInfo">
+    <div id="load-panel">
+        <img id="load-bg" src="@gfx/loadscreens/doox.png" />
+        <div id="load-bar" class="section">
+            <div id="progress" data-style-width="progress + '%'" />
+            <span id="stage">{{stage}}</span>
+            <span id="progress-value">{{(progress | format(0))}}%</span>
+        </div>
+        <span id="load-tooltip">{{quote}}</span>
+    </div>
+
+    <div id="popups-container"></div>
+</body>
+
+</rml>

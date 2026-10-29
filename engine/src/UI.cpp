@@ -10,18 +10,12 @@ UI::UI(
     renderInterface(renderer),
     systemInterface(input),
     context(MakeContext(Rml::Vector2i(width, height))),
+    loadingInfo(*context),
     regionInfo(*context) {
 
     Rml::LoadFontFace("assets/fonts/ARIAL.TTF");
 
-    currentDocument = context->LoadDocument("assets/layout/overlay/overlay.rml");
-    popupsContatiner = currentDocument->GetElementById("popups-container");
-    if (!popupsContatiner) {
-        LOG(ERROR, "Layout does not contain popups-container element.");
-    }
     LoadPopups();
-
-    currentDocument->Show();
 }
 
 UI::~UI() {
@@ -32,19 +26,35 @@ void UI::Update() const {
     context->Update();
 }
 
-Rml::ElementDocument* UI::Popup(const std::string &asset, const bool isDraaggable) {
-    Rml::ElementDocument *popup;
+void UI::SwitchScene(const std::string &asset) {
+    Rml::ElementDocument *scene = FindOrLoadDocument(asset);
 
-    if (const auto cached = documents.find(asset); cached != documents.end()) {
-        popup = cached->second;
+    if (!scene) {
+        LOG(ERROR, "Failed to load scene [%hs]", asset.c_str());
+        return;
     }
-    else {
-        popup = context->LoadDocument(asset);
-        documents[asset] = popup;
+
+    if (currentDocument.document) {
+        currentDocument.document->Hide();
     }
+
+    currentDocument.document = scene;
+    currentDocument.asset = asset;
+    popupsContatiner = currentDocument.document->GetElementById("popups-container");
+    if (!popupsContatiner) {
+        LOG(ERROR, "Scene [%hs] does not contain popups-container element.", asset.c_str());
+    }
+
+    currentDocument.document->Show();
+
+    LOG(INFO, "Scene [%hs] loaded.", asset.c_str());
+}
+
+Rml::ElementDocument* UI::Popup(const std::string &asset, const bool isDraggable) {
+    Rml::ElementDocument *popup = FindOrLoadDocument(asset);
 
     if (!popup) {
-        LOG(ERROR, "Failed to load popup [%s]", asset);
+        LOG(ERROR, "Failed to load popup [%hs]", asset.c_str());
         return nullptr;
     }
 
@@ -58,6 +68,20 @@ Rml::Context* UI::MakeContext(const Rml::Vector2i dimentions) const {
 
     Rml::Initialise();
     return Rml::CreateContext("main", dimentions);
+}
+
+Rml::ElementDocument* UI::FindOrLoadDocument(const std::string &asset) {
+    Rml::ElementDocument *document;
+
+    if (const auto cached = documents.find(asset); cached != documents.end()) {
+        document = cached->second;
+    }
+    else {
+        document = context->LoadDocument(asset);
+        documents[asset] = document;
+    }
+
+    return document;
 }
 
 void UI::LoadPopups() {

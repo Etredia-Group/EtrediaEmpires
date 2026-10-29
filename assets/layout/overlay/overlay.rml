@@ -1,8 +1,8 @@
 <rml>
 
 <head>
-    <link type="text/css" href="../base.rcss" />
-    <link type="text/css" href="../game.rcss" />
+    <link type="text/css" href="@ui/base.rcss" />
+    <link type="text/css" href="@ui/game.rcss" />
     <link type="text/css" href="overlay.rcss" />
 </head>
 
@@ -33,11 +33,11 @@
     </div>
 
     <div id="department-tabs" class="panel">
-        <div class="department"><img src="../../gfx/overlay/button_politics.png" /></div>
-        <div class="department"><img src="../../gfx/overlay/button_economy.png" /></div>
-        <div class="department"><img src="../../gfx/overlay/button_army.png" /></div>
-        <div class="department"><img src="../../gfx/overlay/button_innovations.png" /></div>
-        <div class="department"><img src="../../gfx/overlay/button_production.png" /></div>
+        <div class="department"><img src="@gfx/overlay/button_politics.png" /></div>
+        <div class="department"><img src="@gfx/overlay/button_economy.png" /></div>
+        <div class="department"><img src="@gfx/overlay/button_army.png" /></div>
+        <div class="department"><img src="@gfx/overlay/button_innovations.png" /></div>
+        <div class="department"><img src="@gfx/overlay/button_production.png" /></div>
     </div>
 
     <div id="popups-container"></div>

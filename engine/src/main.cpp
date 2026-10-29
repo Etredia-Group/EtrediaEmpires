@@ -10,8 +10,8 @@ import GLFWInput;
 import rmlui_glfw;
 import std;
 
-constexpr std::uint32_t SCREEN_WIDTH = 900;
-constexpr std::uint32_t SCREEN_HEIGHT = 700;
+constexpr std::uint32_t SCREEN_WIDTH = 1200;
+constexpr std::uint32_t SCREEN_HEIGHT = 800;
 
 int main(int argc, char **argv) {
     // Setup P7 logger
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     Engine::assetManager = Allocate<ee_engine::AssetManager>(0);
     Engine::assetManager->Start();
 
-    // Load assets
+    // Start load assets
     Engine::assetManager->LoadDir<ee_assets::Shader>("assets/shaders");
     Engine::assetManager->LoadDir<ee_assets::Material>("assets/materials");
     Engine::assetManager->LoadDir<ee_assets::Texture>("assets/gfx");
@@ -48,19 +48,9 @@ int main(int argc, char **argv) {
     Engine::assetManager->LoadAsync<ee_assets::MapMesh>("assets/map/ee.map");
     Engine::assetManager->LoadAsync<ee_assets::Save>("assets/scenarios/empires.save");
 
-    // Setup localization manager
-    Engine::localizer = Allocate<Localizer>("ru", *Engine::assetManager);
-
-    // Setup input manager
-    Engine::input = Allocate<GLFWInput>(Actions::mappings);
-
     // Setup renderer
     Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_vulkan::VulkanRenderer>(window));
     Engine::renderer->RegisterAssetManager(*Engine::assetManager);
-
-    const ee_engine::AssetHandle regionsAsset = Engine::assetManager->Find("assets/map/ee.map");
-    ee_assets::MapMesh& regions = Engine::assetManager->Get<ee_assets::MapMesh>(regionsAsset);
-    Engine::renderer->RegisterMapMesh(&regions.content);
 
     //TODO: ShaderRefs builder from set of AssetMaterial
     const ee_assets::Material &provincesMaterial =
@@ -77,26 +67,19 @@ int main(int argc, char **argv) {
         .vertRml = vertUI,
         .fragRml = fragUI
     });
-
     Engine::renderer->Init();
-    Engine::renderer->SetCamera({
-        .zoom = 2000.0f
-    });
 
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow*, const int width, const int height) {
         Engine::renderer->ResizeWindow(width, height);
     });
 
-    Engine::assetManager->Free(regionsAsset);
+    // Setup localization manager
+    Engine::localizer = Allocate<Localizer>("ru", *Engine::assetManager);
 
-    // Setup Client
-    Engine::client = Allocate<Client>();
-    const ee_engine::AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
-    Engine::client->LoadSave(save);
-    Engine::client->Init();
-    Engine::client->Start();
+    // Setup input manager
+    Engine::input = Allocate<GLFWInput>(Actions::mappings);
 
-    //Setup UI
+    // Setup UI
     Engine::ui = Allocate<UI>(
         *Engine::renderer->getRenderInterface(),
         *Engine::input->getSystemInterface(),
@@ -105,8 +88,59 @@ int main(int argc, char **argv) {
     Engine::renderer->SetUIContext(Engine::ui->getContext());
     Engine::input->SetUIHandlers(ee_rml::MakeInputHandlers(Engine::ui->getContext(), window));
 
-    // Game loop
+    // Load game
     ee_engine::RendererCommand renderCmdBuffer;
+    Engine::loadScreen = Allocate<LoadScreen>(LoadScreen::Context{
+        .window = window,
+        .input = *Engine::input,
+        .renderer = *Engine::renderer,
+        .localizer = *Engine::localizer,
+        .ui = *Engine::ui,
+        .renderCmdBuffer = renderCmdBuffer,
+        .loadScreenScene = "assets/layout/fullscreen/loadscreen/loadscreen.rml"
+    });
+
+    LoadStages loadQueue = std::to_array<LoadStage>({
+        {
+            [] -> std::generator<float> {
+               const ee_engine::AssetHandle regionsAsset = Engine::assetManager->Find("assets/map/ee.map");
+               ee_assets::MapMesh& regions = Engine::assetManager->Get<ee_assets::MapMesh>(regionsAsset);
+               Engine::renderer->RegisterMapMesh(&regions.content);
+                   co_yield 0.1f;
+               co_yield std::ranges::elements_of(ee_utils::ScaledCoroutine(
+                   Engine::renderer->LoadProvinces(),
+                   0.1f, 0.98f
+               ));
+               Engine::assetManager->Free(regionsAsset);
+                   co_yield 0.99f;
+
+               Engine::renderer->SetCamera({
+                   .position = {11000.0f, 2800.0f},
+                   .zoom = 2000.0f
+               });
+           }, "ProcessMap", 0.9f
+        },
+
+        {
+            [] -> std::generator<float> {
+                Engine::client = Allocate<Client>();
+                const ee_engine::AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
+                Engine::client->LoadSave(save);
+                co_yield 0.1f;
+
+                co_yield std::ranges::elements_of(ee_utils::ScaledCoroutine(
+                    Engine::client->Init(),
+                    0.1f, 0.99f
+                ));
+                Engine::client->Start();
+            }, "SetupClient", 0.1f
+        },
+
+    });
+    Engine::loadScreen->Run(loadQueue, "assets/layout/overlay/overlay.rml");
+
+
+    // Game loop
     while (!glfwWindowShouldClose(window)) {
         Engine::ui->Update();
 

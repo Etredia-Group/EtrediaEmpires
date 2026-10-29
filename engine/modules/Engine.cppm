@@ -7,6 +7,7 @@ export import Render;
 export import Input;
 export import UI;
 export import AssetManager;
+export import LoadScreen;
 export import Localizer;
 export import Client;
 
@@ -21,11 +22,17 @@ export
         inline static ee_engine::AssetManager *assetManager;
         inline static ee_engine::IRenderer *renderer;
         inline static UI *ui;
+        inline static LoadScreen *loadScreen;
         inline static Localizer *localizer;
         inline static Client *client;
 
         static void Shutdown() {
             renderer->Shutdown();
+
+            if (loadScreen != nullptr) {
+                Deallocate(loadScreen);
+            }
+            loadScreen = nullptr;
 
             if (input != nullptr)
                 Deallocate(input);

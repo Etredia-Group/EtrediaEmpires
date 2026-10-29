@@ -23,6 +23,7 @@ namespace {
     constexpr std::uint64_t MAX_RASTER_TEXELS = 48ull * 1024 * 1024;
     /// Upper bound of the coast distance field size; it is smooth, so it may be coarser than the province raster.
     constexpr std::uint64_t MAX_COAST_FIELD_TEXELS = 12ull * 1024 * 1024;
+    constexpr std::size_t REGIONS_YIELD_STEP = 256;
 
     struct Bounds {
         glm::vec2 min {std::numeric_limits<float>::max()};
@@ -147,10 +148,12 @@ namespace {
      * Province contours are simplified, so thin slivers between neighbouring provinces stay unassigned.
      * Assigns such texels to the dominating neighbour when they are mostly surrounded by land.
      */
-    void CloseRasterGaps(ProvinceRaster &raster, const std::uint32_t iterations) {
+    std::generator<float> CloseRasterGaps(ProvinceRaster &raster, const std::uint32_t iterations) {
         const std::size_t width = static_cast<std::size_t>(raster.size.x);
         const std::size_t height = static_cast<std::size_t>(raster.size.y);
         std::uint32_t *ids = raster.ids.data();
+        const std::size_t totalPixels = raster.ids.size();
+        const std::size_t pixelsYieldStep = totalPixels / 5;
 
         std::vector<std::size_t> candidates;
         std::vector<std::pair<std::size_t, std::uint32_t>> changes;
@@ -163,7 +166,7 @@ namespace {
             if (x == 0 || y == 0 || x + 1 >= width || y + 1 >= height) return;
 
             // 4-neighbours first, then diagonals
-            const std::array<std::uint32_t, 8> neighbours {
+            const std::array neighbours {
                 ids[i - 1], ids[i + 1], ids[i - width], ids[i + width],
                 ids[i - width - 1], ids[i - width + 1], ids[i + width - 1], ids[i + width + 1]
             };
@@ -196,11 +199,27 @@ namespace {
         for (std::uint32_t iteration = 0; iteration < iterations; ++iteration) {
             changes.clear();
             if (firstPass) {
-                for (std::size_t i = 0; i < raster.ids.size(); ++i) evaluate(i);
+                for (std::size_t i = 0; i < totalPixels; ++i) {
+                    evaluate(i);
+
+                    if ((i & pixelsYieldStep) == 0) {
+                        co_yield
+                            (static_cast<float>(iteration) + static_cast<float>(i) / static_cast<float>(totalPixels)) /
+                            static_cast<float>(iterations);
+                    }
+                }
                 firstPass = false;
             }
             else {
-                for (const std::size_t i : candidates) evaluate(i);
+                for (const std::size_t i : candidates) {
+                    evaluate(i);
+
+                    if ((i & pixelsYieldStep) == 0) {
+                        co_yield
+                            (static_cast<float>(iteration) + static_cast<float>(i) / static_cast<float>(totalPixels)) /
+                            static_cast<float>(iterations);
+                    }
+                }
             }
             if (changes.empty()) break;
 
@@ -223,24 +242,34 @@ namespace {
                     candidates.push_back(n);
                 }
             }
+
+            co_yield static_cast<float>(iteration + 1) / static_cast<float>(iterations);
         }
+
+        co_yield 1.0f;
     }
 
     /**
      * Province meshes have no holes, so small water pockets fully enclosed by land are leftovers
      * of contour simplification. Fills them with the most common surrounding province.
      */
-    void FillEnclosedWater(ProvinceRaster &raster, const std::size_t maxArea) {
+    std::generator<float> FillEnclosedWater(ProvinceRaster &raster, const std::size_t maxArea) {
         enum : std::uint8_t { UNVISITED, CURRENT, OPEN_WATER };
 
         const std::size_t width = static_cast<std::size_t>(raster.size.x);
         const std::size_t height = static_cast<std::size_t>(raster.size.y);
+        const std::size_t totalPixels = raster.ids.size();
+        const std::size_t pixelsYieldStep = totalPixels / 5;
         std::uint32_t *ids = raster.ids.data();
-        std::vector<std::uint8_t> state(raster.ids.size(), UNVISITED);
+        std::vector<std::uint8_t> state(totalPixels, UNVISITED);
         std::vector<std::size_t> component;
         std::vector<std::pair<std::uint32_t, std::uint32_t>> shore;
 
-        for (std::size_t start = 0; start < raster.ids.size(); ++start) {
+        for (std::size_t start = 0; start < totalPixels; ++start) {
+            if ((start & pixelsYieldStep) == 0) {
+                co_yield static_cast<float>(start) / static_cast<float>(totalPixels);
+            }
+
             if (ids[start] != 0 || state[start] != UNVISITED) continue;
 
             // Bounded flood fill: stops as soon as the pocket proves to be open water
@@ -295,6 +324,8 @@ namespace {
             );
             for (const std::size_t i : component) ids[i] = dominant->first;
         }
+
+        co_yield 1.0f;
     }
 
     /**
@@ -538,7 +569,7 @@ void ee_vulkan::VulkanRenderer::Init() {
 
     mapUniform.emplace(*context, MAX_FRAMES_IN_FLIGHT);
 
-    LoadProvinces();
+    CreatePickReadback(true);
 
     _isReady = true;
     isDrawing = true;
@@ -937,15 +968,16 @@ void ee_vulkan::VulkanRenderer::LoadRmlMaterial() {
     );
 }
 
-void ee_vulkan::VulkanRenderer::LoadProvinces() {
-    const auto startTime = std::chrono::steady_clock::now();
-
+std::generator<float> ee_vulkan::VulkanRenderer::LoadProvinces() {
     // Map extent and number of provinces
     Bounds bounds;
     std::uint32_t provincesCount = 0;
-    for (const auto &provs : mapMesh->regions | std::views::values) {
+    for (
+        const std::vector<ee_engine::MapMesh::Province> &provs :
+        mapMesh->regions | std::views::values
+    ) {
         provincesCount += static_cast<std::uint32_t>(provs.size());
-        for (const auto &province : provs) {
+        for (const ee_engine::MapMesh::Province &province : provs) {
             for (const glm::vec2 &vertex : province.vertices) bounds.Add(vertex);
         }
     }
@@ -982,6 +1014,7 @@ void ee_vulkan::VulkanRenderer::LoadProvinces() {
     });
 
     std::size_t regionOffset = 0;
+    std::size_t regionsCount = 0;
     std::uint32_t indicesOffset = static_cast<std::uint32_t>(indicesData.size());
     std::int32_t verticesOffset = static_cast<std::int32_t>(verticesData.size());
     for (auto& [region, provs] : mapMesh->regions) {
@@ -1016,6 +1049,11 @@ void ee_vulkan::VulkanRenderer::LoadProvinces() {
 
         regionsMapping[region] = {.offset = regionOffset, .provincesCount = provs.size()};
         regionOffset += provs.size() * sizeof(ee_engine::ProvinceSSBO);
+        regionsCount++;
+
+        if ((regionsCount & REGIONS_YIELD_STEP) == 0) {
+            co_yield (static_cast<float>(regionsCount) / mapMesh->regions.size()) * 0.15f;
+        }
     }
 
     provincesData.push_back({
@@ -1039,8 +1077,14 @@ void ee_vulkan::VulkanRenderer::LoadProvinces() {
     renderCommands->SubmitStagingBuffer(*provinces.indirectCommands);
 
     // Pixel-exact province coverage and coastal distance field for the map shaders
-    CloseRasterGaps(raster, 3);
-    FillEnclosedWater(raster, 32);
+    co_yield std::ranges::elements_of(ee_utils::ScaledCoroutine(
+        CloseRasterGaps(raster, 3),
+        0.15f, 0.66f
+    ));
+    co_yield std::ranges::elements_of(ee_utils::ScaledCoroutine(
+        FillEnclosedWater(raster, 32),
+        0.66f, 0.99f
+    ));
 
     std::int32_t fieldFactor = 1;
     while (
@@ -1059,14 +1103,14 @@ void ee_vulkan::VulkanRenderer::LoadProvinces() {
 
     LoadMapTextures(raster.ids, coastField, provincesCount);
 
-    LOG(INFO, "Map loaded: %d provinces, raster %dx%d (%d map px per texel), coast field %dx%d, %d ms",
+    LOG(INFO, "Map loaded: %d provinces, raster %dx%d (%d map px per texel), coast field %dx%d.",
         static_cast<int>(provincesCount),
         raster.size.x, raster.size.y, raster.texelSize,
-        fieldSize.x, fieldSize.y,
-        static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - startTime
-        ).count())
+        fieldSize.x, fieldSize.y
     );
+
+    isMapLoaded = true;
+    co_yield 1.0f;
 }
 
 void ee_vulkan::VulkanRenderer::LoadMapTextures(
@@ -1172,82 +1216,82 @@ void ee_vulkan::VulkanRenderer::LoadMapTextures(
         .borderColor = vk::BorderColor::eFloatOpaqueBlack,
         .unnormalizedCoordinates = vk::False
     });
-
-    CreatePickReadback(provincesCount < std::numeric_limits<std::uint16_t>::max());
 }
 
 void ee_vulkan::VulkanRenderer::UpdateData(const std::uint32_t frame) {
     const double seconds = glfwGetTime();
     const std::uint64_t elapsedMs = static_cast<std::uint64_t>(seconds * 1000.0);
 
-    MapUniform &mapData = mapUniform->buffers[frame].content[0];
+    if (isMapLoaded) {
+        MapUniform &mapData = mapUniform->buffers[frame].content[0];
 
-    const float projectionScale = std::abs(viewProjection[0][0]) * static_cast<float>(surface.extent.width);
-    mapData.viewProjection = viewProjection;
-    mapData.inverseViewProjection = glm::inverse(viewProjection);
-    mapData.viewport = glm::vec4(
-        static_cast<float>(surface.extent.width),
-        static_cast<float>(surface.extent.height),
-        projectionScale > 0.0f ? 2.0f / projectionScale : 1.0f,
-        IsSrgbFormat(surface.format.format) ? 1.0f : 0.0f
-    );
-    mapData.raster = glm::vec4(
-        static_cast<float>(provinces.rasterOrigin.x),
-        static_cast<float>(provinces.rasterOrigin.y),
-        static_cast<float>(provinces.rasterSize.x),
-        static_cast<float>(provinces.rasterSize.y)
-    );
-    mapData.coast = glm::vec4(
-        static_cast<float>(provinces.rasterTexelSize),
-        static_cast<float>(provinces.coastFieldFactor),
-        static_cast<float>(provinces.coastFieldSize.x),
-        static_cast<float>(provinces.coastFieldSize.y)
-    );
-    mapData.info = glm::uvec4(
-        provinces.oceanInstance,
-        static_cast<std::uint32_t>(elapsedMs % 60000),
-        0,
-        0
-    );
+        const float projectionScale = std::abs(viewProjection[0][0]) * static_cast<float>(surface.extent.width);
+        mapData.viewProjection = viewProjection;
+        mapData.inverseViewProjection = glm::inverse(viewProjection);
+        mapData.viewport = glm::vec4(
+            static_cast<float>(surface.extent.width),
+            static_cast<float>(surface.extent.height),
+            projectionScale > 0.0f ? 2.0f / projectionScale : 1.0f,
+            IsSrgbFormat(surface.format.format) ? 1.0f : 0.0f
+        );
+        mapData.raster = glm::vec4(
+            static_cast<float>(provinces.rasterOrigin.x),
+            static_cast<float>(provinces.rasterOrigin.y),
+            static_cast<float>(provinces.rasterSize.x),
+            static_cast<float>(provinces.rasterSize.y)
+        );
+        mapData.coast = glm::vec4(
+            static_cast<float>(provinces.rasterTexelSize),
+            static_cast<float>(provinces.coastFieldFactor),
+            static_cast<float>(provinces.coastFieldSize.x),
+            static_cast<float>(provinces.coastFieldSize.y)
+        );
+        mapData.info = glm::uvec4(
+            provinces.oceanInstance,
+            static_cast<std::uint32_t>(elapsedMs % 60000),
+            0,
+            0
+        );
 
-    provincesPipeline->UpdateDescriptors({
-        {
-            .info = vk::DescriptorBufferInfo{
-                .buffer = mapUniform->buffers[frame].handle,
-                .offset = 0,
-                .range = mapUniform->buffers[frame].memorySize
+        provincesPipeline->UpdateDescriptors({
+            {
+                .info = vk::DescriptorBufferInfo{
+                    .buffer = mapUniform->buffers[frame].handle,
+                    .offset = 0,
+                    .range = mapUniform->buffers[frame].memorySize
+                },
+                .bindingPosition = 0,
+                .type = vk::DescriptorType::eUniformBuffer
             },
-            .bindingPosition = 0,
-            .type = vk::DescriptorType::eUniformBuffer
-        },
-        {
-            .info = vk::DescriptorBufferInfo{
-                .buffer = provinces.storage->handle,
-                .offset = 0,
-                .range = provinces.storage->memorySize
+            {
+                .info = vk::DescriptorBufferInfo{
+                    .buffer = provinces.storage->handle,
+                    .offset = 0,
+                    .range = provinces.storage->memorySize
+                },
+                .bindingPosition = 1,
+                .type = vk::DescriptorType::eStorageBuffer
             },
-            .bindingPosition = 1,
-            .type = vk::DescriptorType::eStorageBuffer
-        },
-        {
-            .info = vk::DescriptorImageInfo{
-                .sampler = provinces.nearestSampler,
-                .imageView = provinces.provinceIds->view,
-                .imageLayout = vk::ImageLayout::eReadOnlyOptimal
+            {
+                .info = vk::DescriptorImageInfo{
+                    .sampler = provinces.nearestSampler,
+                    .imageView = provinces.provinceIds->view,
+                    .imageLayout = vk::ImageLayout::eReadOnlyOptimal
+                },
+                .bindingPosition = 2,
+                .type = vk::DescriptorType::eCombinedImageSampler
             },
-            .bindingPosition = 2,
-            .type = vk::DescriptorType::eCombinedImageSampler
-        },
-        {
-            .info = vk::DescriptorImageInfo{
-                .sampler = provinces.linearSampler,
-                .imageView = provinces.coastDistance->view,
-                .imageLayout = vk::ImageLayout::eReadOnlyOptimal
-            },
-            .bindingPosition = 3,
-            .type = vk::DescriptorType::eCombinedImageSampler
-        }
-    }, frame);
+            {
+                .info = vk::DescriptorImageInfo{
+                    .sampler = provinces.linearSampler,
+                    .imageView = provinces.coastDistance->view,
+                    .imageLayout = vk::ImageLayout::eReadOnlyOptimal
+                },
+                .bindingPosition = 3,
+                .type = vk::DescriptorType::eCombinedImageSampler
+            }
+        }, frame);
+    }
 }
 
 void ee_vulkan::VulkanRenderer::CreatePickReadback(const bool idsPacked) {

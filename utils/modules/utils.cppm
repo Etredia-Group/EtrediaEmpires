@@ -4,3 +4,4 @@ export import :worker;
 export import :buffers;
 export import :lockfree;
 export import :logger;
+export import :coroutines;

@@ -131,6 +131,29 @@ export namespace ee_rml {
             text = str ? str : "";
         }
 
+        void JoinPath(
+            Rml::String &translated_path,
+            const Rml::String &document_path,
+            const Rml::String &path
+        ) override {
+            for (
+                const auto& [alias, target] : std::vector<std::pair<std::string, std::string>>{
+                    {"@ui", "assets/layout/"},
+                    {"@gfx", "assets/gfx/"}
+                }
+            ) {
+                if (!path.starts_with(alias)) continue;
+                std::string_view rest = std::string_view(path).substr(alias.size());
+                const bool boundary = rest.empty() || rest.front() == '/' || rest.front() == '\\'
+                                      || alias.back() == ':' || alias.back() == '/';
+                if (!boundary) continue;
+                while (!rest.empty() && (rest.front() == '/' || rest.front() == '\\')) rest.remove_prefix(1);
+                translated_path = rest.empty() ? target : target + "/" + std::string(rest);
+                return;
+            }
+            Rml::SystemInterface::JoinPath(translated_path, document_path, path);
+        }
+
     private:
         GLFWwindow *window;
     };

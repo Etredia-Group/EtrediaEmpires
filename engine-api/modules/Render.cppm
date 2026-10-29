@@ -69,6 +69,8 @@ export namespace ee_engine {
         virtual void Shutdown() = 0;
         void Draw();
 
+        virtual std::generator<float> LoadProvinces() = 0;
+
         virtual void ResizeWindow(int width, int height);
         void SetCamera(const CameraTransform &camera);
         void RequestProvincePick(float screenX, float screenY);
@@ -85,6 +87,7 @@ export namespace ee_engine {
     protected:
         bool _isReady = false;
         bool isDrawing = false;
+        bool isMapLoaded = false;
         int screenWidth, screenHeight;
         float screenAspect;
         CameraTransform camera;

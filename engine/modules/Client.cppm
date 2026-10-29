@@ -21,7 +21,7 @@ export
     public:
         Client();
         ~Client() override;
-        void Init() const;
+        std::generator<float> Init() const;
 
         //void Send(); -> Request(SEND)
 
