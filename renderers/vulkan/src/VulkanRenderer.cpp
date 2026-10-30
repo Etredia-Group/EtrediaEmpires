@@ -136,9 +136,14 @@ namespace {
 
             for (std::int32_t y = minY; y <= maxY; ++y) {
                 for (std::int32_t x = minX; x <= maxX; ++x) {
-                    const glm::ivec2 p(x * step, y * step);
-                    if (EdgeFunction(b, c, p) >= 0 && EdgeFunction(c, a, p) >= 0 && EdgeFunction(a, b, p) >= 0)
-                        ids[static_cast<std::size_t>(y) * width + x] = id;
+                    if (
+                        const glm::ivec2 p(x * step, y * step);
+                        EdgeFunction(b, c, p) >= 0 && EdgeFunction(c, a, p) >= 0 && EdgeFunction(a, b, p) >= 0
+                    ) {
+                        std::atomic_ref cell(ids[static_cast<std::size_t>(y) * width + x]);
+                        std::uint32_t cur = cell.load(std::memory_order_relaxed);
+                        while (cur < id && !cell.compare_exchange_weak(cur, id, std::memory_order_relaxed)) {}
+                    }
                 }
             }
         }
@@ -153,13 +158,18 @@ namespace {
         const std::size_t height = static_cast<std::size_t>(raster.size.y);
         std::uint32_t *ids = raster.ids.data();
         const std::size_t totalPixels = raster.ids.size();
-        const std::size_t pixelsYieldStep = totalPixels / 5;
 
+        using Change = std::pair<std::size_t, std::uint32_t>;
+        const std::size_t threads = std::max(1u, std::thread::hardware_concurrency());
+        std::vector<std::size_t> workers(threads);
+        std::iota(workers.begin(), workers.end(), 0);
+        std::vector<std::vector<Change>> local(threads);
+        std::vector<std::uint32_t> queuedStamp(totalPixels, 0);
         std::vector<std::size_t> candidates;
-        std::vector<std::pair<std::size_t, std::uint32_t>> changes;
+        constexpr std::size_t kSlices = 8;
         bool firstPass = true;
 
-        const auto evaluate = [&](const std::size_t i) {
+        const auto evaluate = [&](const std::size_t i, std::vector<Change> &out) {
             if (ids[i] != 0) return;
             const std::size_t x = i % width;
             const std::size_t y = i / width;
@@ -187,65 +197,58 @@ namespace {
             std::int32_t bestVotes = 0;
             for (const std::uint32_t candidate : neighbours) {
                 if (candidate == 0) continue;
-                const std::int32_t votes = static_cast<std::int32_t>(std::ranges::count(neighbours, candidate));
-                if (votes > bestVotes) {
+                if (
+                    const std::int32_t votes = static_cast<std::int32_t>(std::ranges::count(neighbours, candidate));
+                    votes > bestVotes
+                ) {
                     best = candidate;
                     bestVotes = votes;
                 }
             }
-            changes.emplace_back(i, best);
+            out.emplace_back(i, best);
         };
 
         for (std::uint32_t iteration = 0; iteration < iterations; ++iteration) {
-            changes.clear();
-            if (firstPass) {
-                for (std::size_t i = 0; i < totalPixels; ++i) {
-                    evaluate(i);
+            for (auto &v : local) v.clear();
+            const std::size_t work = firstPass ? totalPixels : candidates.size();
 
-                    if ((i & pixelsYieldStep) == 0) {
-                        co_yield
-                            (static_cast<float>(iteration) + static_cast<float>(i) / static_cast<float>(totalPixels)) /
-                            static_cast<float>(iterations);
-                    }
-                }
-                firstPass = false;
+            for (std::size_t s = 0; s < kSlices; ++s) {
+                const std::size_t begin = work * s / kSlices;
+                const std::size_t end = work * (s + 1) / kSlices;
+                std::for_each(std::execution::par, workers.begin(), workers.end(), [&](const std::size_t t) {
+                    const std::size_t lo = begin + (end - begin) * t / threads;
+                    const std::size_t hi = begin + (end - begin) * (t + 1) / threads;
+                    for (std::size_t k = lo; k < hi; ++k)
+                        evaluate(firstPass ? k : candidates[k], local[t]);
+                });
+                co_yield (static_cast<float>(iteration) + static_cast<float>(s + 1) / kSlices)
+                         / static_cast<float>(iterations);
             }
-            else {
-                for (const std::size_t i : candidates) {
-                    evaluate(i);
+            firstPass = false;
 
-                    if ((i & pixelsYieldStep) == 0) {
-                        co_yield
-                            (static_cast<float>(iteration) + static_cast<float>(i) / static_cast<float>(totalPixels)) /
-                            static_cast<float>(iterations);
-                    }
-                }
+            bool any = false;
+            for (const auto &v : local) {
+                for (const auto &[i, id] : v) { ids[i] = id; any = true; }
             }
-            if (changes.empty()) break;
+            if (!any) break;
 
-            // Apply after the scan, so every texel of an iteration sees the same state
+            const std::uint32_t stamp = iteration + 1;
+
             candidates.clear();
-            for (const auto &[i, id] : changes) {
-                ids[i] = id;
-                for (
-                    const std::size_t n : {
-                        i - 1,
-                        i + 1,
-                        i - width,
-                        i + width,
-                        i - width - 1,
-                        i - width + 1,
-                        i + width - 1,
-                        i + width + 1
+            for (const std::vector<Change> &v : local) {
+                for (const std::size_t &i : v | std::views::keys) {
+                    for (const std::size_t n : {
+                            i - 1, i + 1, i - width, i + width,
+                            i - width - 1, i - width + 1, i + width - 1, i + width + 1
+                    }) {
+                        if (ids[n] == 0 && queuedStamp[n] != stamp) {
+                            queuedStamp[n] = stamp;
+                            candidates.push_back(n);
+                        }
                     }
-                ) {
-                    candidates.push_back(n);
                 }
             }
-
-            co_yield static_cast<float>(iteration + 1) / static_cast<float>(iterations);
         }
-
         co_yield 1.0f;
     }
 
@@ -436,25 +439,26 @@ namespace {
         const std::vector<glm::vec2> &vertices,
         const std::vector<std::uint16_t> &indices
     ) {
-        struct Edge {
-            std::uint32_t count = 0;
-            std::uint16_t a = 0;
-            std::uint16_t b = 0;
-            std::uint16_t opposite = 0;
+        struct HalfEdge {
+            std::uint32_t key;
+            std::uint16_t a, b, opposite;
+        };
+        struct OutlineEdge {
+            std::uint16_t a, b;
+            glm::vec2 normal;
         };
 
-        std::unordered_map<std::uint32_t, Edge> edges;
+        thread_local std::vector<HalfEdge> edges;
+        thread_local std::vector<OutlineEdge> outline;
+        edges.clear();
+        outline.clear();
         edges.reserve(indices.size());
 
-        const auto addEdge = [&edges](const std::uint16_t a, const std::uint16_t b, const std::uint16_t opposite) {
+        const auto addEdge = [](const std::uint16_t a, const std::uint16_t b, const std::uint16_t opposite) {
             const std::uint32_t key = a < b
                 ? (static_cast<std::uint32_t>(a) << 16) | b
                 : (static_cast<std::uint32_t>(b) << 16) | a;
-            Edge &edge = edges[key];
-            ++edge.count;
-            edge.a = a;
-            edge.b = b;
-            edge.opposite = opposite;
+            edges.push_back({key, a, b, opposite});
         };
 
         for (std::size_t i = 0; i + 2 < indices.size(); i += 3) {
@@ -465,15 +469,18 @@ namespace {
             addEdge(c, a, b);
         }
 
-        struct OutlineEdge {
-            std::uint16_t a, b;
-            glm::vec2 normal;
-        };
-        std::vector<OutlineEdge> outline;
-        std::vector<glm::vec2> sums(vertices.size(), glm::vec2(0.0f));
+        std::ranges::sort(edges, {}, &HalfEdge::key);
 
-        for (const Edge &edge : edges | std::views::values) {
-            if (edge.count != 1) continue;
+        std::vector sums(vertices.size(), glm::vec2(0.0f));
+
+        for (std::size_t i = 0; i < edges.size();) {
+            std::size_t j = i + 1;
+            while (j < edges.size() && edges[j].key == edges[i].key) ++j;
+            const std::size_t count = j - i;
+            const HalfEdge &edge = edges[i];
+            i = j;
+
+            if (count != 1) continue;
 
             const glm::vec2 direction = vertices[edge.b] - vertices[edge.a];
             if (glm::dot(direction, direction) < 1e-8f) continue;
@@ -487,8 +494,8 @@ namespace {
             outline.push_back({edge.a, edge.b, normal});
         }
 
-        std::vector<glm::vec2> normals(vertices.size(), glm::vec2(0.0f));
-        std::vector<float> minCos(vertices.size(), 1.0f);
+        std::vector normals(vertices.size(), glm::vec2(0.0f));
+        std::vector minCos(vertices.size(), 1.0f);
         for (std::size_t i = 0; i < vertices.size(); ++i) {
             if (glm::dot(sums[i], sums[i]) > 1e-8f)
                 normals[i] = glm::normalize(sums[i]);
@@ -497,10 +504,8 @@ namespace {
             minCos[a] = std::min(minCos[a], glm::dot(normals[a], normal));
             minCos[b] = std::min(minCos[b], glm::dot(normals[b], normal));
         }
-        for (std::size_t i = 0; i < vertices.size(); ++i) {
-            // Miter length, limited on sharp spikes
+        for (std::size_t i = 0; i < vertices.size(); ++i)
             normals[i] /= std::max(minCos[i], 0.35f);
-        }
 
         return normals;
     }
@@ -1013,47 +1018,69 @@ std::generator<float> ee_vulkan::VulkanRenderer::LoadProvinces() {
         .firstInstance = provinces.oceanInstance
     });
 
+    struct Job {
+        std::uint32_t region;
+        const ee_engine::MapMesh::Province *mesh;
+        std::uint32_t instance;
+        std::uint32_t indicesOffset;
+        std::int32_t verticesOffset;
+    };
+
+    std::vector<Job> jobs;
+    const std::size_t vBase = verticesData.size();
+    const std::size_t iBase = indicesData.size();
+    const std::size_t pBase = provincesData.size();
+    const std::size_t cBase = indirectCommandsData.size();
+
+    std::uint32_t indicesOffset = static_cast<std::uint32_t>(iBase);
+    std::int32_t verticesOffset = static_cast<std::int32_t>(vBase);
+    std::uint32_t instance = static_cast<std::uint32_t>(pBase);
     std::size_t regionOffset = 0;
-    std::size_t regionsCount = 0;
-    std::uint32_t indicesOffset = static_cast<std::uint32_t>(indicesData.size());
-    std::int32_t verticesOffset = static_cast<std::int32_t>(verticesData.size());
-    for (auto& [region, provs] : mapMesh->regions) {
-        for (auto&[vertices, indices] : provs) {
-            const auto instance = static_cast<std::uint32_t>(provincesData.size());
 
-            indirectCommandsData.push_back({
-                .indexCount = static_cast<std::uint32_t>(indices.size()),
-                .instanceCount = 1,
-                .firstIndex = indicesOffset,
-                .vertexOffset = verticesOffset,
-                .firstInstance = instance
-            });
-
-            const std::vector<glm::vec2> normals = ComputeOutlineNormals(vertices, indices);
-            for (std::size_t i = 0; i < vertices.size(); ++i) {
-                verticesData.push_back({.position = vertices[i], .normal = normals[i]});
-            }
-            indicesData.append_range(indices);
-
-            RasterizeProvince(raster, vertices, indices, instance + 1);
-
-            ee_engine::ProvinceSSBO data{
-                .regionId = region,
-                .color = 0xFF0000
-            };
-            provincesData.push_back(data);
-
-            indicesOffset += indices.size();
-            verticesOffset += vertices.size();
+    for (auto &[region, provs] : mapMesh->regions) {
+        for (ee_engine::MapMesh::Province &prov : provs) {
+            jobs.push_back({region, &prov, instance, indicesOffset, verticesOffset});
+            indicesOffset += static_cast<std::uint32_t>(prov.indices.size());
+            verticesOffset += static_cast<std::int32_t>(prov.vertices.size());
+            ++instance;
         }
-
         regionsMapping[region] = {.offset = regionOffset, .provincesCount = provs.size()};
         regionOffset += provs.size() * sizeof(ee_engine::ProvinceSSBO);
-        regionsCount++;
+    }
 
-        if ((regionsCount & REGIONS_YIELD_STEP) == 0) {
-            co_yield (static_cast<float>(regionsCount) / mapMesh->regions.size()) * 0.15f;
-        }
+    verticesData.resize(verticesOffset);
+    indicesData.resize(indicesOffset);
+    provincesData.resize(pBase + jobs.size());
+    indirectCommandsData.resize(cBase + jobs.size());
+
+    const auto process = [&](const Job &job) {
+        const auto &[vertices, indices] = *job.mesh;
+        const std::size_t k = job.instance - pBase;
+
+        indirectCommandsData[cBase + k] = {
+            .indexCount = static_cast<std::uint32_t>(indices.size()),
+            .instanceCount = 1,
+            .firstIndex = job.indicesOffset,
+            .vertexOffset = job.verticesOffset,
+            .firstInstance = job.instance
+        };
+
+        const std::vector<glm::vec2> normals = ComputeOutlineNormals(vertices, indices);
+        for (std::size_t i = 0; i < vertices.size(); ++i)
+            verticesData[job.verticesOffset + i] = {.position = vertices[i], .normal = normals[i]};
+
+        std::ranges::copy(indices, indicesData.begin() + job.indicesOffset);
+        provincesData[k] = {.regionId = job.region, .color = 0xFF0000};
+
+        RasterizeProvince(raster, vertices, indices, job.instance + 1);
+    };
+
+    constexpr std::size_t kSlices = 16;
+    for (std::size_t s = 0; s < kSlices; ++s) {
+        const std::size_t lo = jobs.size() * s / kSlices;
+        const std::size_t hi = jobs.size() * (s + 1) / kSlices;
+        std::for_each(std::execution::par, jobs.begin() + lo, jobs.begin() + hi, process);
+        co_yield (static_cast<float>(s + 1) / kSlices) * 0.15f;
     }
 
     provincesData.push_back({
