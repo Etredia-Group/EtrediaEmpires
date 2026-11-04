@@ -31,12 +31,12 @@ template const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFo
 
 template <ee_assets::Asset T>
 const ee_engine::AssetOperations* ee_engine::AssetManager::OperationsFor() {
-    static constexpr ee_engine::AssetOperations ops { &FinishLoadAsset<T>, &DestroyAsset<T> };
+    static constexpr AssetOperations ops { &FinishLoadAsset<T>, &DestroyAsset<T> };
     return &ops;
 }
 
 template <ee_assets::Asset T>
-void ee_engine::AssetManager::FinishLoadAsset(ee_engine::AssetManager &self, AssetLoadingEntry &loaded) {
+void ee_engine::AssetManager::FinishLoadAsset(AssetManager &self, AssetLoadingEntry &loaded) {
     if constexpr (std::constructible_from<T, std::uint8_t*&, std::size_t>) {
         self.FinishLoadConstruct<T>(loaded);
     }

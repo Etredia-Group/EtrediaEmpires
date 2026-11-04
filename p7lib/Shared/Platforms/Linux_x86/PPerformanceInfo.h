@@ -43,7 +43,7 @@ public:
         return TRUE;
     }
 
-    tINT64 Get(IPerformanceInfo::eCounter i_eCounter)
+    tINT64 Get(eCounter i_eCounter)
     {
         UNUSED_ARG(i_eCounter);
         return 0;

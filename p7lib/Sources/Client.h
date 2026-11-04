@@ -47,20 +47,20 @@ protected:
     IJournal               *m_pLog;
     tBOOL                   m_bConnected;
     tUINT32                 m_dwConnection_Resets;
-    IP7_Client::eType       m_eType;
+    eType       m_eType;
     tXCHAR                **m_pArgs;
     tINT32                  m_iArgsCnt;
     volatile tBOOL          m_bFlushChannels;
 
 public:
-    CClient(IP7_Client::eType i_eType,
+    CClient(eType i_eType,
             tXCHAR          **i_pArgs,
             tINT32            i_iCount
            );
     virtual ~CClient();
 
 public:
-    virtual IP7_Client::eType Get_Type();
+    virtual eType Get_Type();
 
     virtual tINT32            Add_Ref();
     virtual tINT32            Release();

@@ -1,15 +1,15 @@
 module UI;
+import Engine;
 import utils;
 
-UI::UI(const Context &context) :
+ee_engine::UI::UI(const Context &context) :
     renderInterface(context.renderer),
     systemInterface(context.input),
     rmlContext(MakeContext(Rml::Vector2i(context.width, context.height))),
-    localizer(context.localizer),
     globalInfo(*rmlContext) {
 
-    globalInfo.data.lang = localizer.getLocale().code;
-    localizerSubscription = localizer.Subscribe([this](const Locale &locale) {
+    globalInfo.data.lang = Engine::localizer->getLocale().code;
+    localizerSubscription = Engine::localizer->Subscribe([this](const Locale &locale) {
         globalInfo.data.lang = locale.code;
         globalInfo.DirtyGlobal("lang");
     });
@@ -20,19 +20,19 @@ UI::UI(const Context &context) :
         *rmlContext,
         std::bind_front(
             static_cast<std::string_view (Localizer::*)(std::string_view, std::string_view)>(&Localizer::Localize),
-            &localizer
+            Engine::localizer
         )
     );
 
-    RegisterController<ee_engine::view::LoadingInfo>("fullscreen/loadscreen");
-    RegisterController<ee_engine::controller::MainMenu>("fullscreen/mainmenu");
-    RegisterController<ee_engine::view::RegionInfo>("popups/region-info");
+    RegisterController<view::LoadingInfo>("fullscreen/loadscreen");
+    RegisterController<controller::MainMenu>("fullscreen/mainmenu");
+    RegisterController<view::RegionInfo>("popups/region-info");
 }
 
-UI::~UI() {
-    localizer.Unsubscribe(localizerSubscription);
+ee_engine::UI::~UI() {
+    Engine::localizer->Unsubscribe(localizerSubscription);
 
-    for (ee_engine::UIBaseController *controller : controllers) {
+    for (UIBaseController *controller : controllers) {
         if (controller != nullptr)
             Deallocate(controller);
     }
@@ -40,11 +40,11 @@ UI::~UI() {
     Rml::Shutdown();
 }
 
-void UI::Update() const {
+void ee_engine::UI::Update() const {
     rmlContext->Update();
 }
 
-void UI::SwitchScene(const std::string &asset) {
+void ee_engine::UI::SwitchScene(const std::string &asset) {
     Rml::ElementDocument *scene = FindOrLoadDocument(asset);
 
     if (!scene) {
@@ -64,7 +64,7 @@ void UI::SwitchScene(const std::string &asset) {
     LOG(INFO, "Scene [%hs] loaded.", asset.c_str());
 }
 
-Rml::ElementDocument* UI::Popup(const std::string &asset, const bool isDraggable) {
+Rml::ElementDocument* ee_engine::UI::Popup(const std::string &asset, const bool isDraggable) {
     Rml::ElementDocument *popup = FindOrLoadDocument(asset);
 
     if (!popup) {
@@ -76,12 +76,12 @@ Rml::ElementDocument* UI::Popup(const std::string &asset, const bool isDraggable
     return popup;
 }
 
-std::size_t UI::ControllerId(const std::string_view key) {
+std::size_t ee_engine::UI::ControllerId(const std::string_view key) {
     static std::unordered_map<std::string, std::size_t, ee_utils::StringHash, ee_utils::StringEqual> ids;
     return ids.try_emplace(std::string(key), ids.size()).first->second;
 }
 
-Rml::Context* UI::MakeContext(const Rml::Vector2i dimentions) const {
+Rml::Context* ee_engine::UI::MakeContext(const Rml::Vector2i dimentions) const {
     Rml::SetSystemInterface(&systemInterface);
     Rml::SetRenderInterface(&renderInterface);
 
@@ -89,7 +89,7 @@ Rml::Context* UI::MakeContext(const Rml::Vector2i dimentions) const {
     return Rml::CreateContext("main", dimentions);
 }
 
-Rml::ElementDocument* UI::FindOrLoadDocument(const std::string &asset) {
+Rml::ElementDocument* ee_engine::UI::FindOrLoadDocument(const std::string &asset) {
     Rml::ElementDocument *document;
 
     if (const auto cached = documents.find(asset); cached != documents.end()) {

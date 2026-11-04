@@ -3,7 +3,7 @@ module;
 export module DataChannel;
 import std;
 
-export
+export namespace ee_engine
 {
     class IDataChannel {
     public:

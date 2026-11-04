@@ -3,11 +3,11 @@ import utils;
 import views;
 import Engine;
 
-Client::Client() : ThreadedWorker(L"Client", 0) {
+ee_engine::Client::Client() : ThreadedWorker(L"Client", 0) {
     commandsMapping[ClientCommand::SEND] = std::bind_front(&Client::SendCmd, this);
 }
 
-std::generator<float> Client::Init() const {
+std::generator<float> ee_engine::Client::Init() const {
     if (Engine::renderer == nullptr || !Engine::renderer->isReady()) {
         LOG(CRITICAL, "Renderer is not ready. Client cannot be created");
         throw std::logic_error("Renderer is not ready");
@@ -23,41 +23,41 @@ std::generator<float> Client::Init() const {
     }
 }
 
-const IDataChannel* Client::GetConnection() const {
+const ee_engine::IDataChannel* ee_engine::Client::GetConnection() const {
     return networkConnection;
 }
 
-void Client::ConnectServer() {
+void ee_engine::Client::ConnectServer() {
     if (networkConnection != nullptr)
         Deallocate(networkConnection);
 
     networkConnection = Allocate<NetworkChannel>();
 }
 
-void Client::LoadSave(const ee_engine::AssetHandle save) {
+void ee_engine::Client::LoadSave(const AssetHandle save) {
     this->save = save;
 }
 
-void Client::Update() {}
+void ee_engine::Client::Update() {}
 
-void Client::Release() {}
+void ee_engine::Client::Release() {}
 
 
 // ReSharper disable once CppMemberFunctionMayBeStatic
-void Client::SendCmd(ClientCommand& command) {
+void ee_engine::Client::SendCmd(ClientCommand& command) {
     command.type = ClientCommand::COMPLETED;
 }
 
 
-void Client::ViewModelSubject(const ee_data::Subject &subject) {
+void ee_engine::Client::ViewModelSubject(const ee_data::Subject &subject) {
     for (const std::uint32_t region : subject.regions) {
-        const ee_engine::ProvinceSSBO vm {
+        const ProvinceSSBO vm {
             .regionId = region,
             .color = subject.color
         };
 
-        ee_engine::RendererCommand cmd;
-        cmd.type = ee_engine::RendererCommand::UPDATE_REGION;
+        RendererCommand cmd;
+        cmd.type = RendererCommand::UPDATE_REGION;
         cmd.region = {.id = region, .data = vm};
 
         Engine::renderer->Request(cmd);
@@ -65,7 +65,7 @@ void Client::ViewModelSubject(const ee_data::Subject &subject) {
 }
 
 
-Client::~Client() {
+ee_engine::Client::~Client() {
     if (networkConnection != nullptr)
         Deallocate(networkConnection);
 }

@@ -489,7 +489,7 @@ public:
 
         memcpy(m_pBuffer + m_pHeader->wSize, i_pData, i_dwSize);
         m_pHeader->wSize = (tUINT16)(m_pHeader->wSize + i_dwSize);
-        CTPacket::Set_Flag(i_wFlag);
+        Set_Flag(i_wFlag);
         return TRUE;
     }//CTPClient_Data_Report::Add_Extra
 
@@ -505,8 +505,8 @@ public:
             return;
         }
 
-        CTPacket::Clr_Flag(TPACKET_FLAG_EXTRA_DATA);
-        CTPacket::Clr_Flag(TPACKET_FLAG_EXTENSION);
+        Clr_Flag(TPACKET_FLAG_EXTRA_DATA);
+        Clr_Flag(TPACKET_FLAG_EXTENSION);
     }//CTPClient_Data_Report::Clr_Extra
 
 
@@ -550,7 +550,7 @@ public:
         if (m_pHeader)
         {
             m_pHeader->wSize = CLIENT_INITIAL_SIZE;
-            CTPacket::Set_Type(ETPT_CLIENT_HELLO);
+            Set_Type(ETPT_CLIENT_HELLO);
 
             m_pInitial = (sH_Client_Hello*)(m_pBuffer + sizeof(sH_Common));
         }
@@ -763,7 +763,7 @@ public:
         if (m_pHeader)
         {
             m_pHeader->wSize = sizeof(sH_Common);
-            CTPacket::Set_Type(ETPT_CLIENT_DATA);
+            Set_Type(ETPT_CLIENT_DATA);
         }
     }//CTPClient_Data::Initialize
 
@@ -845,7 +845,7 @@ public:
     {
         if (m_pHeader)
         {
-            CTPacket::Set_Type(ETPT_CLIENT_DATA);
+            Set_Type(ETPT_CLIENT_DATA);
             CTPacket::Finalize(i_dwPacket_ID, i_wClient_ID);
         }
     }//CTPClient_Data::Finalize
@@ -870,7 +870,7 @@ public:
         if (m_bInitialized)
         {
             m_pHeader->wSize = CLIENT_DATA_REPORT_SIZE;
-            CTPacket::Set_Type(ETPT_CLIENT_DATA_REPORT);
+            Set_Type(ETPT_CLIENT_DATA_REPORT);
 
             m_pReport = (sH_Data_Window*)(m_pBuffer + sizeof(sH_Common));
         }
@@ -961,7 +961,7 @@ public:
         if (m_bInitialized)
         {
             m_pHeader->wSize = CLIENT_ALIVE_SIZE;
-            CTPacket::Set_Type(ETPT_CLIENT_PING);
+            Set_Type(ETPT_CLIENT_PING);
         }
     }//CTPClient_Ping::CTPClient_Ping
 };
@@ -984,7 +984,7 @@ public:
         if (m_bInitialized)
         {
             m_pHeader->wSize = CLIENT_BYE_SIZE;
-            CTPacket::Set_Type(ETPT_CLIENT_BYE);
+            Set_Type(ETPT_CLIENT_BYE);
         }
     }//CTPClient_Ping::CTPClient_Ping
 };//CTPClient_Ping
@@ -1038,7 +1038,7 @@ public:
         m_pHeader->wBits      = 0;
         m_pHeader->wClient_ID = 0;
         m_pHeader->wSize      = ACKNOWLEDGMENT_SIZE;
-        CTPacket::Set_Type(ETPT_ACKNOWLEDGMENT);
+        Set_Type(ETPT_ACKNOWLEDGMENT);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1174,7 +1174,7 @@ public:
         m_pHeader->wClient_ID = 0;
         m_pHeader->wSize      = SERVER_REPORT_SIZE;
 
-        CTPacket::Set_Type(ETPT_SERVER_DATA_REPORT);
+        Set_Type(ETPT_SERVER_DATA_REPORT);
     }//CTPServer_Report::Reset
 
 

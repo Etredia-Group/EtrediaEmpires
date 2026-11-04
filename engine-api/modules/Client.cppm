@@ -5,7 +5,7 @@ import DataChannel;
 import AssetManager;
 import std;
 
-export
+export namespace ee_engine
 {
     struct ClientCommand : ee_utils::WorkerCommand {
         enum Type : std::uint8_t {
@@ -28,7 +28,7 @@ export
         const IDataChannel* GetConnection() const;
         void ConnectServer();
 
-        void LoadSave(ee_engine::AssetHandle save);
+        void LoadSave(AssetHandle save);
 
     protected:
         void Update() override;
@@ -36,7 +36,7 @@ export
 
     private:
         NetworkChannel *networkConnection = nullptr;
-        ee_engine::AssetHandle save;
+        AssetHandle save;
 
         void SendCmd(ClientCommand& command);
 

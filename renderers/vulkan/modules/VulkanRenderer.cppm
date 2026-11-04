@@ -5,9 +5,9 @@ module;
 
 export module VulkanRender;
 import Render;
-import views;
 import vulkan_render;
 import rmlui_vulkan;
+import views;
 import rml;
 import std;
 

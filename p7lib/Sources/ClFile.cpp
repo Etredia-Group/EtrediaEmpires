@@ -54,7 +54,7 @@ enum eThreadsEvents
 ////////////////////////////////////////////////////////////////////////////////
 //CClFile()
 CClFile::CClFile(tXCHAR **i_pArgs, tINT32 i_iCount)
-    : CClient(IP7_Client::eFileBin, i_pArgs, i_iCount)
+    : CClient(eFileBin, i_pArgs, i_iCount)
     , m_lReject_Mem(0)
     , m_lReject_Con(0)
     , m_lReject_Int(0)

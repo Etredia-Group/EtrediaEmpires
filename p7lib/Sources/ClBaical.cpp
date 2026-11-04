@@ -49,7 +49,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //CClBaical
 CClBaical::CClBaical(tXCHAR **i_pArgs, tINT32   i_iCount)
-    : CClient(IP7_Client::eBaical, i_pArgs, i_iCount)
+    : CClient(eBaical, i_pArgs, i_iCount)
     , m_lReject_Mem(0)
     , m_lReject_Con(0)
     , m_lReject_Int(0)

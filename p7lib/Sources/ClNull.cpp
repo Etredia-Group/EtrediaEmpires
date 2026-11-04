@@ -28,7 +28,7 @@
 CClNull::CClNull(tXCHAR **i_pArgs,
                  tINT32   i_iCount
                 )
-    : CClient(IP7_Client::eNull, i_pArgs, i_iCount)
+    : CClient(eNull, i_pArgs, i_iCount)
 {
     Init_Base(i_pArgs, i_iCount);
 }//CClNull()

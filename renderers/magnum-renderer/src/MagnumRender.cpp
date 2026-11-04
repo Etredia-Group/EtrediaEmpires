@@ -51,7 +51,7 @@ void ee_magnum::MagnumRenderer::DrawUI() {}
 void ee_magnum::MagnumRenderer::ValidateSupport() {}
 
 void ee_magnum::MagnumRenderer::ApplyCamera() {
-    Matrix4 viewProjection{Magnum::NoInit};
+    Matrix4 viewProjection{NoInit};
     std::memcpy(viewProjection.data(), glm::value_ptr(this->viewProjection), sizeof(float) * 16);
 
     provinceMaterial->setViewProjection(viewProjection);
@@ -81,8 +81,8 @@ void ee_magnum::MagnumRenderer::LoadProvinces() {
             Containers::ArrayView provinceIndices(province.indices.data(), province.indices.size());
 
             regionMesh.setPrimitive(GL::MeshPrimitive::Triangles)
-                      .setCount(static_cast<Magnum::Int>(province.indices.size()))
-                      .addVertexBuffer(GL::Buffer{provinceVertices}, 0, GL::Attribute<0, Magnum::Vector3>{})
+                      .setCount(static_cast<Int>(province.indices.size()))
+                      .addVertexBuffer(GL::Buffer{provinceVertices}, 0, GL::Attribute<0, Vector3>{})
                       .setIndexBuffer(GL::Buffer{provinceIndices}, 0, GL::MeshIndexType::UnsignedShort);
 
             provinceMeshes.push_back(std::move(regionMesh));

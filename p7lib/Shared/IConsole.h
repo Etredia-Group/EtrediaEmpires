@@ -126,7 +126,7 @@ public:
 
     struct sInput 
     {
-        IConsole::eEvent eEvent;
+        eEvent eEvent;
         union 
         {
             sSize  stSize;
@@ -143,13 +143,13 @@ public:
     virtual tUINT32 GetCursorY() = 0;
     virtual tUINT32 GetWidth() = 0;
     virtual tUINT32 GetHeight() = 0;
-    virtual tBOOL   SetTextAttr(IConsole::eColor i_eFg, IConsole::eColor i_eBg) = 0;
-    virtual tBOOL   GetInput(IConsole::sInput &o_rInput) = 0;
+    virtual tBOOL   SetTextAttr(eColor i_eFg, eColor i_eBg) = 0;
+    virtual tBOOL   GetInput(sInput &o_rInput) = 0;
     virtual tBOOL   Clear() = 0;
-    virtual tBOOL   Clear(tUINT32 i_uX, tUINT32 i_uY, tUINT32 i_uW, tUINT32 i_uH, IConsole::eColor i_eBg) = 0;
+    virtual tBOOL   Clear(tUINT32 i_uX, tUINT32 i_uY, tUINT32 i_uW, tUINT32 i_uH, eColor i_eBg) = 0;
     virtual size_t  WriteTextB(const tXCHAR *i_pText, size_t i_szText) = 0;
-    virtual size_t  WriteTextB(IConsole::eColor i_eFg, 
-                               IConsole::eColor i_eBg, 
+    virtual size_t  WriteTextB(eColor i_eFg, 
+                               eColor i_eBg, 
                                size_t           i_szLenMin, 
                                size_t           i_szLenMax, 
                                size_t           i_szOffset,
@@ -158,8 +158,8 @@ public:
                                size_t           i_szTextMax
                               ) = 0;
 
-    virtual size_t  WriteTextO(IConsole::eColor i_eFg, 
-                               IConsole::eColor i_eBg, 
+    virtual size_t  WriteTextO(eColor i_eFg, 
+                               eColor i_eBg, 
                                size_t           i_szLenMin, 
                                size_t           i_szLenMax, 
                                size_t           i_szOffset,
@@ -176,8 +176,8 @@ public:
         return l_szReturn;
     }
 
-    virtual size_t  WriteText(IConsole::eColor i_eFg, 
-                              IConsole::eColor i_eBg, 
+    virtual size_t  WriteText(eColor i_eFg, 
+                              eColor i_eBg, 
                               size_t           i_szLenMin, 
                               size_t           i_szLenMax, 
                               const tXCHAR    *i_pFormat, 
@@ -194,8 +194,8 @@ public:
     }
 
 
-    virtual size_t  WriteTextF(IConsole::eColor i_eFg, 
-                               IConsole::eColor i_eBg, 
+    virtual size_t  WriteTextF(eColor i_eFg, 
+                               eColor i_eBg, 
                                size_t           i_szLenMin, 
                                size_t           i_szLenMax, 
                                size_t           i_szOffset,
@@ -364,7 +364,7 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    virtual tBOOL Init(const CConsoleWnd::sCfg &i_rConfig)    
+    virtual tBOOL Init(const sCfg &i_rConfig)    
     {
         m_pConsole       = i_rConfig.pConsole;
         m_eWindowBgColor = i_rConfig.eWindowBgColor;
@@ -451,7 +451,7 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    virtual CConsoleWnd::stColumn *GetColumn(tUINT32 i_uIndex)
+    virtual stColumn *GetColumn(tUINT32 i_uIndex)
     {
         return m_cColumns[i_uIndex];
     }
@@ -888,7 +888,7 @@ public:
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    CConsoleInput(CConsoleInput::sCfg &i_rConfig)
+    CConsoleInput(sCfg &i_rConfig)
     {
         UNUSED_ARG(i_rConfig);
     }

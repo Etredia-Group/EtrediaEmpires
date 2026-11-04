@@ -157,7 +157,7 @@ public:
     tBOOL               Is_Initialized();
 
     //IP7C_Channel--------------------------------------------------------------
-    IP7C_Channel::eType Get_Type() { return IP7C_Channel::eTelemetry; }
+    eType Get_Type() { return eTelemetry; }
     void                On_Init(sP7C_Channel_Info *i_pInfo);
     void                On_Receive(tUINT32 i_dwChannel, tUINT8 *i_pBuffer, tUINT32 i_dwSize, tBOOL i_bBigEndian);
     void                On_Status(tUINT32 i_dwChannel, const sP7C_Status *i_pStatus);

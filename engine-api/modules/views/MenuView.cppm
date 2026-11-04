@@ -14,6 +14,8 @@ export namespace ee_engine::view {
 
     struct MainMenu {
         using view_tag = void;
+
+        std::string ip = "";
     };
 
 }

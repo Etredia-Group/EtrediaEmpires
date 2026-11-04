@@ -13,8 +13,9 @@ export namespace ee_engine::controller {
 
     protected:
         void OnLoad() override {
-            BindEvent("connect-ip", "click", [](Rml::Event &event) {
-                LOG(INFO, "Connecting to IP: [%hs]", "...");
+            BindEvent("connect-ip", "click", [this](Rml::Event&) {
+                std::string_view ip = data.data.ip;
+
             });
         }
     };

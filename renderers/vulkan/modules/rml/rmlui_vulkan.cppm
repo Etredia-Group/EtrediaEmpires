@@ -4,7 +4,6 @@ module;
 
 export module rmlui_vulkan;
 import vulkan_render;
-import AssetManager;
 import utils;
 import rml;
 import std;
@@ -44,8 +43,6 @@ export namespace ee_rml {
         vulkan_render::Surface &surface;
         vulkan_render::RenderCommands &commands;
         vulkan_render::Pipeline &pipeline;
-
-        ee_engine::AssetManager &assetManager;
         std::uint32_t framesInFlight;
     };
 

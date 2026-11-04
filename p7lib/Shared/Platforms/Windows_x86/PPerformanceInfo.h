@@ -32,7 +32,7 @@ class CPerformanceInfo
     volatile tINT32 m_iRCnt;
     PDH_STATUS      m_hPdhStatus;
     HQUERY          m_hPdhQuery;
-    HCOUNTER        m_hPdhCounter[IPerformanceInfo::eCounterTotal];
+    HCOUNTER        m_hPdhCounter[eCounterTotal];
     SYSTEM_INFO     m_sSysInfo;
 
 public:
@@ -77,38 +77,38 @@ public:
             m_hPdhStatus = PdhAddEnglishCounterW(m_hPdhQuery, 
                                                  TM("\\Processor(_Total)\\% Processor Time"), 
                                                  0, 
-                                                 &m_hPdhCounter[IPerformanceInfo::eCounterSystemCpu]);
+                                                 &m_hPdhCounter[eCounterSystemCpu]);
             if (ERROR_SUCCESS != m_hPdhStatus)
             {
-                m_hPdhCounter[IPerformanceInfo::eCounterSystemCpu] = NULL;
+                m_hPdhCounter[eCounterSystemCpu] = NULL;
             }
 
             l_cPhdPath.Set(TM(""));
             swprintf_s(l_cPhdPath.Get(), l_cPhdPath.Max_Length(), TM("\\Process(%s)\\%% Processor Time"), l_pExeName);
-            if (ERROR_SUCCESS != PdhAddEnglishCounterW(m_hPdhQuery, l_cPhdPath.Get(), 0, &m_hPdhCounter[IPerformanceInfo::eCounterProcessCpu]))
+            if (ERROR_SUCCESS != PdhAddEnglishCounterW(m_hPdhQuery, l_cPhdPath.Get(), 0, &m_hPdhCounter[eCounterProcessCpu]))
             {
-                m_hPdhCounter[IPerformanceInfo::eCounterProcessCpu] = NULL;
+                m_hPdhCounter[eCounterProcessCpu] = NULL;
             }
 
             l_cPhdPath.Set(TM(""));
             swprintf_s(l_cPhdPath.Get(), l_cPhdPath.Max_Length(), TM("\\Process(%s)\\Handle Count"), l_pExeName);
-            if (ERROR_SUCCESS != PdhAddEnglishCounterW(m_hPdhQuery, l_cPhdPath.Get(), 0, &m_hPdhCounter[IPerformanceInfo::eCounterProcessHandles]))
+            if (ERROR_SUCCESS != PdhAddEnglishCounterW(m_hPdhQuery, l_cPhdPath.Get(), 0, &m_hPdhCounter[eCounterProcessHandles]))
             {
-                m_hPdhCounter[IPerformanceInfo::eCounterProcessHandles] = NULL;
+                m_hPdhCounter[eCounterProcessHandles] = NULL;
             }
 
             l_cPhdPath.Set(TM(""));
             swprintf_s(l_cPhdPath.Get(), l_cPhdPath.Max_Length(), TM("\\Process(%s)\\Thread Count"), l_pExeName);
-            if (ERROR_SUCCESS != PdhAddEnglishCounterW(m_hPdhQuery, l_cPhdPath.Get(), 0, &m_hPdhCounter[IPerformanceInfo::eCounterProcessThreads]))
+            if (ERROR_SUCCESS != PdhAddEnglishCounterW(m_hPdhQuery, l_cPhdPath.Get(), 0, &m_hPdhCounter[eCounterProcessThreads]))
             {
-                m_hPdhCounter[IPerformanceInfo::eCounterProcessThreads] = NULL;
+                m_hPdhCounter[eCounterProcessThreads] = NULL;
             }
 
             l_cPhdPath.Set(TM(""));
             swprintf_s(l_cPhdPath.Get(), l_cPhdPath.Max_Length(), TM("\\Process(%s)\\Working Set"), l_pExeName);
-            if (ERROR_SUCCESS != PdhAddEnglishCounterW(m_hPdhQuery, l_cPhdPath.Get(), 0, &m_hPdhCounter[IPerformanceInfo::eCounterProcessMemory]))
+            if (ERROR_SUCCESS != PdhAddEnglishCounterW(m_hPdhQuery, l_cPhdPath.Get(), 0, &m_hPdhCounter[eCounterProcessMemory]))
             {
-                m_hPdhCounter[IPerformanceInfo::eCounterProcessMemory] = NULL;
+                m_hPdhCounter[eCounterProcessMemory] = NULL;
             }
         }//if (ERROR_SUCCESS == PdhOpenQuery(NULL, NULL, &m_hPdhQuery))
 
@@ -118,35 +118,35 @@ public:
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     virtual ~CPerformanceInfo()
     {
-        if (m_hPdhCounter[IPerformanceInfo::eCounterProcessCpu])
+        if (m_hPdhCounter[eCounterProcessCpu])
         {
-            PdhRemoveCounter(m_hPdhCounter[IPerformanceInfo::eCounterProcessCpu]);
-            m_hPdhCounter[IPerformanceInfo::eCounterProcessCpu] = NULL;
+            PdhRemoveCounter(m_hPdhCounter[eCounterProcessCpu]);
+            m_hPdhCounter[eCounterProcessCpu] = NULL;
         }
 
-        if (m_hPdhCounter[IPerformanceInfo::eCounterSystemCpu])
+        if (m_hPdhCounter[eCounterSystemCpu])
         {
-            PdhRemoveCounter(m_hPdhCounter[IPerformanceInfo::eCounterSystemCpu]);
-            m_hPdhCounter[IPerformanceInfo::eCounterSystemCpu] = NULL;
+            PdhRemoveCounter(m_hPdhCounter[eCounterSystemCpu]);
+            m_hPdhCounter[eCounterSystemCpu] = NULL;
         }
 
 
-        if (m_hPdhCounter[IPerformanceInfo::eCounterProcessHandles])
+        if (m_hPdhCounter[eCounterProcessHandles])
         {
-            PdhRemoveCounter(m_hPdhCounter[IPerformanceInfo::eCounterProcessHandles]);
-            m_hPdhCounter[IPerformanceInfo::eCounterProcessHandles] = NULL;
+            PdhRemoveCounter(m_hPdhCounter[eCounterProcessHandles]);
+            m_hPdhCounter[eCounterProcessHandles] = NULL;
         }
 
-        if (m_hPdhCounter[IPerformanceInfo::eCounterProcessThreads])
+        if (m_hPdhCounter[eCounterProcessThreads])
         {
-            PdhRemoveCounter(m_hPdhCounter[IPerformanceInfo::eCounterProcessThreads]);
-            m_hPdhCounter[IPerformanceInfo::eCounterProcessThreads] = NULL;
+            PdhRemoveCounter(m_hPdhCounter[eCounterProcessThreads]);
+            m_hPdhCounter[eCounterProcessThreads] = NULL;
         }
 
-        if (m_hPdhCounter[IPerformanceInfo::eCounterProcessMemory])
+        if (m_hPdhCounter[eCounterProcessMemory])
         {
-            PdhRemoveCounter(m_hPdhCounter[IPerformanceInfo::eCounterProcessMemory]);
-            m_hPdhCounter[IPerformanceInfo::eCounterProcessMemory] = NULL;
+            PdhRemoveCounter(m_hPdhCounter[eCounterProcessMemory]);
+            m_hPdhCounter[eCounterProcessMemory] = NULL;
         }
 
         if (m_hPdhQuery) 
@@ -170,11 +170,11 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    tINT64 Get(IPerformanceInfo::eCounter i_eCounter)
+    tINT64 Get(eCounter i_eCounter)
     {
         PDH_FMT_COUNTERVALUE l_tPdhValue = {0};
 
-        if (    (i_eCounter >= IPerformanceInfo::eCounterTotal)
+        if (    (i_eCounter >= eCounterTotal)
              || (!m_hPdhCounter[i_eCounter])
            )
         {
@@ -183,7 +183,7 @@ public:
 
         if (ERROR_SUCCESS == PdhGetFormattedCounterValue(m_hPdhCounter[i_eCounter], PDH_FMT_LARGE, NULL, &l_tPdhValue))
         {
-            if (IPerformanceInfo::eCounterProcessCpu == i_eCounter)
+            if (eCounterProcessCpu == i_eCounter)
             {
                 l_tPdhValue.largeValue /= m_sSysInfo.dwNumberOfProcessors;
             }

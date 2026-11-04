@@ -9,7 +9,7 @@
 <body data-model="MainMenu" class="panel">
     <div id="base-panel" class="section stack vertical">
         <div class="stack horizontal">
-            <input class="value block" />
+            <input class="value block" placeholder="0.0.0.0:7777" data-value="ip" />
             <button id="connect-ip" class="base-btn">{{'CONNECT_IP'|t('base-menus',lang)}}</button>
         </div>
 

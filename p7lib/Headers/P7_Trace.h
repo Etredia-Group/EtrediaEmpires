@@ -153,14 +153,14 @@ public:
     //Set_Verbosity - function to set trace verbosity, traces with less priority 
     //                will be rejected. You may set verbosity online from Baical
     //                server. See documentation for details.
-    virtual void Set_Verbosity(IP7_Trace::hModule i_hModule, 
+    virtual void Set_Verbosity(hModule i_hModule, 
                                eP7Trace_Level     i_eVerbosity
                               )                                             = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     //Get_Verbosity - function to get trace verbosity. 
     //                See documentation for details.
-    virtual eP7Trace_Level Get_Verbosity(IP7_Trace::hModule i_hModule)      = 0;
+    virtual eP7Trace_Level Get_Verbosity(hModule i_hModule)      = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     //Register_Thread - function used to specify name for current thread. Allows
@@ -184,7 +184,7 @@ public:
     //                  it by trace messages, if module with such name is 
     //                  already registered - existing handle will be returned
     virtual tBOOL Register_Module(const tXCHAR       *i_pName,
-                                  IP7_Trace::hModule *o_hModule
+                                  hModule *o_hModule
                                  )                                          = 0;
 
 
@@ -201,7 +201,7 @@ public:
     //      trace functionality from other languages please call Trace_Managed()
     virtual tBOOL Trace(tUINT16            i_wTrace_ID,   
                         eP7Trace_Level     i_eLevel, 
-                        IP7_Trace::hModule i_hModule,
+                        hModule i_hModule,
                         tUINT16            i_wLine,
                         const char        *i_pFile,
                         const char        *i_pFunction,
@@ -220,7 +220,7 @@ public:
     //See documentation for details.
     virtual tBOOL Trace_Embedded(tUINT16            i_wTrace_ID,   
                                  eP7Trace_Level     i_eLevel, 
-                                 IP7_Trace::hModule i_hModule,
+                                 hModule i_hModule,
                                  tUINT16            i_wLine,
                                  const char        *i_pFile,
                                  const char        *i_pFunction,
@@ -235,7 +235,7 @@ public:
     //See documentation for details.
     virtual tBOOL Trace_Embedded(tUINT16            i_wTrace_ID,   
                                  eP7Trace_Level     i_eLevel, 
-                                 IP7_Trace::hModule i_hModule,
+                                 hModule i_hModule,
                                  tUINT16            i_wLine,
                                  const char        *i_pFile,
                                  const char        *i_pFunction,
@@ -249,7 +249,7 @@ public:
     //See documentation for details.
     virtual tBOOL Trace_Managed(tUINT16            i_wTrace_ID,   
                                 eP7Trace_Level     i_eLevel, 
-                                IP7_Trace::hModule i_hModule,
+                                hModule i_hModule,
                                 tUINT16            i_wLine,
                                 const tXCHAR      *i_pFile,
                                 const tXCHAR      *i_pFunction,

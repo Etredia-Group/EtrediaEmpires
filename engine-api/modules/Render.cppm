@@ -4,10 +4,10 @@ module;
 #include <glm/glm.hpp>
 
 export module Render;
-import utils;
-import views;
 import AssetManager;
+import views;
 import rml;
+import utils;
 import std;
 
 export namespace ee_engine {
@@ -60,7 +60,6 @@ export namespace ee_engine {
 
         bool isReady() const noexcept { return _isReady; }
 
-        void RegisterAssetManager(AssetManager &assetManager);
         void RegisterMaterials(const ShaderRefs &shaders);
         void RegisterMapMesh(MapMesh *mapMesh);
 
@@ -95,7 +94,6 @@ export namespace ee_engine {
         glm::mat4 viewProjectionInversed;
 
         GLFWwindow *window;
-        AssetManager *assetManager;
         MapMesh *mapMesh;
         ShaderRefs shaders;
 

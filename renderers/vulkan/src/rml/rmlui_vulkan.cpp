@@ -3,6 +3,7 @@ module;
 #include <glm/gtc/matrix_transform.hpp>
 
 module rmlui_vulkan;
+import Engine;
 
 // ReSharper disable once CppPassValueParameterByConstReference
 ee_rml::RmlVulkan::RmlVulkan(RenderContext renderContext) :
@@ -120,7 +121,7 @@ void ee_rml::RmlVulkan::ReleaseGeometry(const Rml::CompiledGeometryHandle geomet
 }
 
 Rml::TextureHandle ee_rml::RmlVulkan::LoadTexture(Rml::Vector2i &texture_dimensions, const Rml::String &source) {
-    const ee_assets::Texture &textureData = renderer.assetManager.FindOnce<ee_assets::Texture>(source);
+    const ee_assets::Texture &textureData = ee_engine::Engine::assetManager->FindOnce<ee_assets::Texture>(source);
 
     texture_dimensions.x = textureData.dimentionX;
     texture_dimensions.y = textureData.dimentionY;

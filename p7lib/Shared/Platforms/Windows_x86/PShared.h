@@ -53,7 +53,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //CShared::Create
-    static tBOOL Create(CShared::hShared *o_pHandle,
+    static tBOOL Create(hShared *o_pHandle,
                         const tXCHAR     *i_pName, 
                         const tUINT8     *i_pData, 
                         tUINT16           i_wSize
@@ -147,7 +147,7 @@ public:
             goto l_lblExit;
         }
 
-        *o_pHandle = (CShared::hShared)l_pShared;
+        *o_pHandle = (hShared)l_pShared;
 
         __try
         {
@@ -391,10 +391,10 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //Lock
-    static eLock Lock(const tXCHAR  *i_pName, CShared::hSem &o_rSem, tUINT32 i_dwTimeout_ms)
+    static eLock Lock(const tXCHAR  *i_pName, hSem &o_rSem, tUINT32 i_dwTimeout_ms)
     {
         HANDLE   l_hMutex   = NULL;
-        eLock    l_eReturn  = CShared::E_OK;
+        eLock    l_eReturn  = E_OK;
         DWORD    l_dwLen    = 0;
         wchar_t *l_pName    = NULL;
 
@@ -402,7 +402,7 @@ public:
 
         if (NULL == i_pName)
         {
-            l_eReturn = CShared::E_ERROR;
+            l_eReturn = E_ERROR;
             goto l_lblExit;
         }
 
@@ -411,7 +411,7 @@ public:
 
         if (NULL == l_pName)
         {
-            l_eReturn = CShared::E_ERROR;
+            l_eReturn = E_ERROR;
             goto l_lblExit;
         }
 
@@ -422,13 +422,13 @@ public:
         l_hMutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, l_pName);
         if (NULL == l_hMutex)
         {
-            l_eReturn = CShared::E_NOT_EXISTS;
+            l_eReturn = E_NOT_EXISTS;
             goto l_lblExit;
         }
 
         if (WAIT_OBJECT_0 != WaitForSingleObject(l_hMutex, i_dwTimeout_ms))
         {
-            l_eReturn = CShared::E_TIMEOUT;
+            l_eReturn = E_TIMEOUT;
             goto l_lblExit;
         }
 
@@ -441,7 +441,7 @@ public:
 
         if (SHARED_SEM_NULL != l_hMutex)
         {
-            if (CShared::E_OK == l_eReturn)
+            if (E_OK == l_eReturn)
             {
                 o_rSem = l_hMutex;
             }
@@ -458,14 +458,14 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //UnLock
-    static eLock UnLock(CShared::hSem &io_rSem)
+    static eLock UnLock(hSem &io_rSem)
     {
         HANDLE  l_hMutex  = NULL;
-        eLock   l_eReturn = CShared::E_ERROR;
+        eLock   l_eReturn = E_ERROR;
 
         if (SHARED_SEM_NULL == io_rSem)
         {
-            l_eReturn = CShared::E_NOT_EXISTS;
+            l_eReturn = E_NOT_EXISTS;
             goto l_lblExit;
         }
 

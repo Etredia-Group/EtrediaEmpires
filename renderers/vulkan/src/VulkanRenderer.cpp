@@ -8,6 +8,7 @@ module;
 #include <RmlUi/Core/Core.h>
 
 module VulkanRender;
+import Engine;
 import utils;
 
 namespace {
@@ -23,7 +24,6 @@ namespace {
     constexpr std::uint64_t MAX_RASTER_TEXELS = 48ull * 1024 * 1024;
     /// Upper bound of the coast distance field size; it is smooth, so it may be coarser than the province raster.
     constexpr std::uint64_t MAX_COAST_FIELD_TEXELS = 12ull * 1024 * 1024;
-    constexpr std::size_t REGIONS_YIELD_STEP = 256;
 
     struct Bounds {
         glm::vec2 min {std::numeric_limits<float>::max()};
@@ -566,8 +566,6 @@ void ee_vulkan::VulkanRenderer::Init() {
         .surface = surface,
         .commands = *renderCommands,
         .pipeline = *rmlPipeline,
-
-        .assetManager = *assetManager,
         .framesInFlight = MAX_FRAMES_IN_FLIGHT
     };
     rmlRenderInterface.emplace(rmlContext);
@@ -883,8 +881,8 @@ void ee_vulkan::VulkanRenderer::LoadProvincesMaterial() {
         model
     );
 
-    ee_assets::Shader &vertProvinces = assetManager->Get<ee_assets::Shader>(shaders.vertProvinces);
-    ee_assets::Shader &fragProvinces = assetManager->Get<ee_assets::Shader>(shaders.fragProvinces);
+    ee_assets::Shader &vertProvinces = ee_engine::Engine::assetManager->Get<ee_assets::Shader>(shaders.vertProvinces);
+    ee_assets::Shader &fragProvinces = ee_engine::Engine::assetManager->Get<ee_assets::Shader>(shaders.fragProvinces);
 
     vulkan_render::ShaderProgram provincesShader {
         .vertex = {reinterpret_cast<std::byte*>(vertProvinces.content), vertProvinces.size},
@@ -954,8 +952,8 @@ void ee_vulkan::VulkanRenderer::LoadRmlMaterial() {
     );
     rmlMaterial.maxExtraDescriptorSets = 100; //TODO: remove magic const
 
-    ee_assets::Shader &vertRml = assetManager->Get<ee_assets::Shader>(shaders.vertRml);
-    ee_assets::Shader &fragRml = assetManager->Get<ee_assets::Shader>(shaders.fragRml);
+    ee_assets::Shader &vertRml = ee_engine::Engine::assetManager->Get<ee_assets::Shader>(shaders.vertRml);
+    ee_assets::Shader &fragRml = ee_engine::Engine::assetManager->Get<ee_assets::Shader>(shaders.fragRml);
 
     vulkan_render::ShaderProgram rmlShader {
         .vertex = {reinterpret_cast<std::byte*>(vertRml.content), vertRml.size},

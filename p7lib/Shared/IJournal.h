@@ -71,8 +71,8 @@ public:
     };
 
     virtual tBOOL            Initialize(const tXCHAR *i_pName)              = 0;
-    virtual void             Set_Verbosity(IJournal::eLevel i_eVerbosity)   = 0;
-    virtual IJournal::eLevel Get_Verbosity()                                = 0;
+    virtual void             Set_Verbosity(eLevel i_eVerbosity)   = 0;
+    virtual eLevel Get_Verbosity()                                = 0;
 
     virtual tBOOL            Register_Thread(const tXCHAR *i_pName,
                                              tUINT32       i_dwThreadId
@@ -80,11 +80,11 @@ public:
     virtual tBOOL            Unregister_Thread(tUINT32 i_dwThreadId)        = 0;
 
     virtual tBOOL            Register_Module(const tXCHAR      *i_pName,
-                                             IJournal::hModule *o_hModule
+                                             hModule *o_hModule
                                             )                               = 0;
 
-    virtual tBOOL            Log(IJournal::eLevel  i_eType, 
-                                 IJournal::hModule i_hModule,
+    virtual tBOOL            Log(eLevel  i_eType, 
+                                 hModule i_hModule,
                                  const char       *i_pFile,
                                  const char       *i_pFunction, 
                                  tUINT32           i_dwLine,
@@ -92,7 +92,7 @@ public:
                                  ...
                                 )                                           = 0;
 
-    virtual tUINT64          Get_Count(IJournal::eLevel i_eType)            = 0;
+    virtual tUINT64          Get_Count(eLevel i_eType)            = 0;
     virtual tINT32           Add_Ref()                                      = 0;
     virtual tINT32           Release()                                      = 0;
 };

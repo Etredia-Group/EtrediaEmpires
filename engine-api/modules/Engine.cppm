@@ -13,14 +13,14 @@ export import Client;
 
 import utils;
 
-export
+export namespace ee_engine
 {
     class Engine {
     public:
         inline static GLFWwindow *window;
-        inline static ee_engine::IInput *input;
-        inline static ee_engine::AssetManager *assetManager;
-        inline static ee_engine::IRenderer *renderer;
+        inline static IInput *input;
+        inline static AssetManager *assetManager;
+        inline static IRenderer *renderer;
         inline static UI *ui;
         inline static LoadScreen *loadScreen;
         inline static Localizer *localizer;
@@ -29,29 +29,11 @@ export
         static void Shutdown() {
             renderer->Shutdown();
 
-            if (loadScreen != nullptr) {
-                Deallocate(loadScreen);
-            }
-            loadScreen = nullptr;
-
-            if (input != nullptr)
-                Deallocate(input);
-            input = nullptr;
-
-            if (ui != nullptr) {
-                Deallocate(ui);
-            }
-            ui = nullptr;
-
-            if (localizer != nullptr) {
-                Deallocate(localizer);
-            }
-            localizer = nullptr;
-
-            if (renderer != nullptr) {
-                Deallocate(renderer);
-            }
-            renderer = nullptr;
+            SystemShutdown(loadScreen);
+            SystemShutdown(input);
+            SystemShutdown(ui);
+            SystemShutdown(localizer);
+            SystemShutdown(renderer);
 
             WaitThreadShutdown(assetManager);
             WaitThreadShutdown(client);
@@ -60,8 +42,18 @@ export
             glfwTerminate();
         }
 
+    private:
+
+        template <typename T>
+        static void SystemShutdown(T *&system) {
+            if (system != nullptr) {
+                Deallocate(system);
+            }
+            system = nullptr;
+        }
+
         template <ee_utils::IThreadedWorker T>
-        static void WaitThreadShutdown(T * & thread) {
+        static void WaitThreadShutdown(T *&thread) {
             if (thread != nullptr) {
                 thread->Shutdown();
                 while (thread->isRunning.load()) {}

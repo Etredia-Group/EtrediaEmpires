@@ -1,9 +1,9 @@
 export module Localizer;
-import AssetManager;
+import AssetData;
 import utils;
 import std;
 
-export {
+export namespace ee_engine {
 
     struct Locale {
         std::string code;
@@ -18,7 +18,7 @@ export {
 
     class Localizer {
     public:
-        Localizer(const Locale &defaultLocale, ee_engine::AssetManager &assetManager);
+        Localizer(const Locale &defaultLocale);
         std::uint8_t Subscribe(LocaleListener listener);
         void Unsubscribe(std::uint8_t id);
 
@@ -30,7 +30,6 @@ export {
 
     private:
         Locale currentLocale;
-        ee_engine::AssetManager &assetManager;
 
         std::unordered_map<std::uint8_t, LocaleListener> listeners;
         std::uint8_t nextListenerId = 0;

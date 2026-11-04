@@ -17,10 +17,6 @@ ee_engine::IRenderer::IRenderer(GLFWwindow *window) {
 
 ee_engine::IRenderer::~IRenderer() {}
 
-void ee_engine::IRenderer::RegisterAssetManager(AssetManager &assetManager) {
-    this->assetManager = &assetManager;
-}
-
 void ee_engine::IRenderer::RegisterMaterials(const ShaderRefs& shaders) {
     this->shaders = shaders;
 }

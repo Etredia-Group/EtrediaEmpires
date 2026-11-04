@@ -44,7 +44,7 @@ public:
         return ECLIENT_STATUS_OK;
     }
 
-    virtual eClient_Status Log(const CClTextSink::sLog &i_rRawLog, 
+    virtual eClient_Status Log(const sLog &i_rRawLog, 
                                const tXCHAR            *i_pFmtLog, 
                                size_t                   i_szFmtLog
                               )

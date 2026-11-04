@@ -76,7 +76,7 @@ protected:
     size_t  m_szMax;
     size_t  m_szRecommended;
     sBlock *m_pBusy;
-    sBuffer m_pBuffers[CMemoryManager::eCount]; //static buffers, reusable
+    sBuffer m_pBuffers[eCount]; //static buffers, reusable
 
 public:
     ////////////////////////////////////////////////////////////////////////////
@@ -130,7 +130,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //Reuse - function is used for reusable temporary buffers
-    void *Reuse(CMemoryManager::eBuffer i_eBuffer, size_t i_szBuffer)
+    void *Reuse(eBuffer i_eBuffer, size_t i_szBuffer)
     {
         sBuffer *l_pBuffer = &m_pBuffers[i_eBuffer];
 
@@ -154,7 +154,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     //Size
-    size_t Size(CMemoryManager::eBuffer i_eBuffer)
+    size_t Size(eBuffer i_eBuffer)
     {
         return m_pBuffers[i_eBuffer].szBuffer;
     }//Size
@@ -414,8 +414,8 @@ class CP7Trace
             tDOUBLE db64;
         };
 
-        CP7Trace::sStack_Desc::uVal  uValue;
-        CP7Trace::sStack_Desc::eType eType;
+        uVal  uValue;
+        eType eType;
         tBOOL bLast;
     };
 
@@ -482,7 +482,7 @@ public:
 
     tBOOL Is_Initialized();
 
-    IP7C_Channel::eType Get_Type() { return IP7C_Channel::eTrace; }
+    eType Get_Type() { return eTrace; }
     void  On_Init(sP7C_Channel_Info *i_pInfo);
     void  On_Receive(tUINT32 i_dwChannel, tUINT8 *i_pBuffer, tUINT32 i_dwSize, tBOOL i_bBigEndian);
     void  On_Status(tUINT32 i_dwChannel, const sP7C_Status *i_pStatus);
@@ -491,15 +491,15 @@ public:
     tBOOL Register_Thread(const tXCHAR *i_pName, tUINT32 i_dwThreadId);
     tBOOL Unregister_Thread(tUINT32 i_dwThreadId);
 
-    tBOOL Register_Module(const tXCHAR *i_pName, IP7_Trace::hModule *o_hModule);
+    tBOOL Register_Module(const tXCHAR *i_pName, hModule *o_hModule);
 
-    void  Set_Verbosity(IP7_Trace::hModule i_hModule, eP7Trace_Level i_eVerbosity);
-    eP7Trace_Level Get_Verbosity(IP7_Trace::hModule i_hModule);
+    void  Set_Verbosity(hModule i_hModule, eP7Trace_Level i_eVerbosity);
+    eP7Trace_Level Get_Verbosity(hModule i_hModule);
 
 
     tBOOL Trace(tUINT16            i_wTrace_ID,   
                 eP7Trace_Level     i_eLevel, 
-                IP7_Trace::hModule i_hModule,
+                hModule i_hModule,
                 tUINT16            i_wLine,
                 const char        *i_pFile,
                 const char        *i_pFunction,
@@ -509,7 +509,7 @@ public:
 
     tBOOL Trace_Embedded(tUINT16            i_wTrace_ID,   
                          eP7Trace_Level     i_eLevel, 
-                         IP7_Trace::hModule i_hModule,
+                         hModule i_hModule,
                          tUINT16            i_wLine,
                          const char        *i_pFile,
                          const char        *i_pFunction,
@@ -518,7 +518,7 @@ public:
 
     tBOOL Trace_Embedded(tUINT16            i_wTrace_ID,   
                          eP7Trace_Level     i_eLevel, 
-                         IP7_Trace::hModule i_hModule,
+                         hModule i_hModule,
                          tUINT16            i_wLine,
                          const char        *i_pFile,
                          const char        *i_pFunction,
@@ -528,7 +528,7 @@ public:
 
     tBOOL Trace_Managed(tUINT16            i_wTrace_ID,   
                         eP7Trace_Level     i_eLevel, 
-                        IP7_Trace::hModule i_hModule,
+                        hModule i_hModule,
                         tUINT16            i_wLine,
                         const tXCHAR      *i_pFile,
                         const tXCHAR      *i_pFunction,
@@ -558,7 +558,7 @@ private:
 
     tBOOL Trace_Raw(tUINT16            i_wTrace_ID,   
                     eP7Trace_Level     i_eLevel, 
-                    IP7_Trace::hModule i_hModule,
+                    hModule i_hModule,
                     tUINT16            i_wLine,
                     const char        *i_pFile,
                     const char        *i_pFunction,
@@ -569,7 +569,7 @@ private:
 
     tBOOL Inc_Chunks(tUINT32 i_dwInc);
 
-    tBOOL Is_VarArgs(const CP7Trace::sStack_Desc *i_pDesc, ...);
+    tBOOL Is_VarArgs(const sStack_Desc *i_pDesc, ...);
 };
 
 #endif //TRACE_H

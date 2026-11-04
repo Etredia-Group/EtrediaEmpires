@@ -11,28 +11,28 @@ import utils;
 import std;
 
 GLFWInput::GLFWInput(const ee_engine::InputHandlers &handlers) : IInput(handlers) {
-    rmlSystemInterface.emplace(Engine::window);
+    rmlSystemInterface.emplace(ee_engine::Engine::window);
 
-    glfwSetWindowUserPointer(Engine::window, this);
+    glfwSetWindowUserPointer(ee_engine::Engine::window, this);
 
-    glfwSetScrollCallback(Engine::window, [](GLFWwindow *window, const double dx, const double dy) {
+    glfwSetScrollCallback(ee_engine::Engine::window, [](GLFWwindow *window, const double dx, const double dy) {
         GLFW_CALLBACK(zooming, static_cast<float>(dx), static_cast<float>(dy));
     });
 
-    glfwSetCursorPosCallback(Engine::window, [](GLFWwindow *window, const double x, const double y) {
+    glfwSetCursorPosCallback(ee_engine::Engine::window, [](GLFWwindow *window, const double x, const double y) {
         if (const GLFWInput *input = GLFW_GET_INPUT; input->uiHandlers.mouseMove) {
             input->uiHandlers.mouseMove(static_cast<float>(x), static_cast<float>(y));
         }
     });
 
-    glfwSetCursorEnterCallback(Engine::window, [](GLFWwindow *window, const int entered) {
+    glfwSetCursorEnterCallback(ee_engine::Engine::window, [](GLFWwindow *window, const int entered) {
         if (const GLFWInput *input = GLFW_GET_INPUT; !entered && input->uiHandlers.mouseLeave) {
             input->uiHandlers.mouseLeave();
         }
     });
 
     glfwSetMouseButtonCallback(
-        Engine::window,
+        ee_engine::Engine::window,
         [](GLFWwindow *window, const int button, const int action, int _) {
             GLFWInput *input = GLFW_GET_INPUT;
             if (button < 0 || button >= input->mouseUICaptured.size()) return;
@@ -51,7 +51,7 @@ GLFWInput::GLFWInput(const ee_engine::InputHandlers &handlers) : IInput(handlers
     );
 
     glfwSetKeyCallback(
-        Engine::window,
+        ee_engine::Engine::window,
         [](GLFWwindow *window, const int key, int, const int action, int) {
             if (const GLFWInput *input = GLFW_GET_INPUT; input->uiHandlers.key) {
                 bool _ = input->uiHandlers.key(key, action != GLFW_RELEASE);
@@ -60,24 +60,24 @@ GLFWInput::GLFWInput(const ee_engine::InputHandlers &handlers) : IInput(handlers
         }
     );
 
-    glfwSetCharCallback(Engine::window, [](GLFWwindow *window, const unsigned int cp) {
+    glfwSetCharCallback(ee_engine::Engine::window, [](GLFWwindow *window, const unsigned int cp) {
         if (const GLFWInput *input = GLFW_GET_INPUT; input->uiHandlers.text) {
             bool _ = input->uiHandlers.text(cp);
         }
     });
 
-    LOG(INFO, "Input mappings initialized");
+    LOG(INFO, "Input mappings initialized.");
 }
 
 void GLFWInput::Poll() {
     double mouseX, mouseY;
-    glfwGetCursorPos(Engine::window, &mouseX, &mouseY);
+    glfwGetCursorPos(ee_engine::Engine::window, &mouseX, &mouseY);
     this->mouseX = static_cast<float>(mouseX);
     this->mouseY = static_cast<float>(mouseY);
 
-    const std::uint32_t LMB = glfwGetMouseButton(Engine::window, GLFW_MOUSE_BUTTON_LEFT);
-    const std::uint32_t RMB = glfwGetMouseButton(Engine::window, GLFW_MOUSE_BUTTON_RIGHT);
-    const std::uint32_t MMB = glfwGetMouseButton(Engine::window, GLFW_MOUSE_BUTTON_MIDDLE);
+    const std::uint32_t LMB = glfwGetMouseButton(ee_engine::Engine::window, GLFW_MOUSE_BUTTON_LEFT);
+    const std::uint32_t RMB = glfwGetMouseButton(ee_engine::Engine::window, GLFW_MOUSE_BUTTON_RIGHT);
+    const std::uint32_t MMB = glfwGetMouseButton(ee_engine::Engine::window, GLFW_MOUSE_BUTTON_MIDDLE);
 
     OnLeftMouseButton(LMB);
     OnRightMouseButton(RMB);
@@ -86,7 +86,7 @@ void GLFWInput::Poll() {
     lastMouseX = this->mouseX;
     lastMouseY = this->mouseY;
 
-    if (glfwGetWindowAttrib(Engine::window, GLFW_HOVERED)) {
+    if (glfwGetWindowAttrib(ee_engine::Engine::window, GLFW_HOVERED)) {
         auto [mouseX, mouseY] = WindowToFramebuffer(this->mouseX, this->mouseY);
         handlers.mapHover(mouseX, mouseY);
     }
@@ -106,8 +106,8 @@ void GLFWInput::OnRightMouseButton(const std::uint32_t state) const {
         case GLFW_PRESS:
         {
             if (
-                glfwGetKey(Engine::window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
-                glfwGetKey(Engine::window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS
+                glfwGetKey(ee_engine::Engine::window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
+                glfwGetKey(ee_engine::Engine::window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS
             ) {
                 handlers.mapScroll(mouseX, mouseY, lastMouseX, lastMouseY);
             }
@@ -132,9 +132,9 @@ void GLFWInput::OnMiddleMouseButton(const std::uint32_t state) const {
 
 ee_engine::Pos GLFWInput::WindowToFramebuffer(float x, float y) {
     std::int32_t windowWidth, windowHeight;
-    glfwGetWindowSize(Engine::window, &windowWidth, &windowHeight);
+    glfwGetWindowSize(ee_engine::Engine::window, &windowWidth, &windowHeight);
     std::int32_t framebufferWidth, framebufferHeight;
-    glfwGetFramebufferSize(Engine::window, &framebufferWidth, &framebufferHeight);
+    glfwGetFramebufferSize(ee_engine::Engine::window, &framebufferWidth, &framebufferHeight);
 
     return {
         windowWidth > 0 ? x * static_cast<float>(framebufferWidth) / static_cast<float>(windowWidth) : x,

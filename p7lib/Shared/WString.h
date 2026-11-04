@@ -311,30 +311,30 @@ public:
 
         i_pGuidText++;
 
-        if (!CWString::Str2Hex(i_pGuidText, 8, (tUINT32&)o_rGUID.Data1)) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 8, (tUINT32&)o_rGUID.Data1)) return FALSE; 
         i_pGuidText += 9;
 
-        if (!CWString::Str2Hex(i_pGuidText, 4, (tUINT16&)o_rGUID.Data2)) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 4, (tUINT16&)o_rGUID.Data2)) return FALSE; 
         i_pGuidText += 5;
 
-        if (!CWString::Str2Hex(i_pGuidText, 4, (tUINT16&)o_rGUID.Data3)) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 4, (tUINT16&)o_rGUID.Data3)) return FALSE; 
         i_pGuidText += 5;
 
-        if (!CWString::Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[0])) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[0])) return FALSE; 
         i_pGuidText += 2;
-        if (!CWString::Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[1])) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[1])) return FALSE; 
         i_pGuidText += 3;
-        if (!CWString::Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[2])) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[2])) return FALSE; 
         i_pGuidText += 2;
-        if (!CWString::Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[3])) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[3])) return FALSE; 
         i_pGuidText += 2;
-        if (!CWString::Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[4])) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[4])) return FALSE; 
         i_pGuidText += 2;
-        if (!CWString::Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[5])) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[5])) return FALSE; 
         i_pGuidText += 2;
-        if (!CWString::Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[6])) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[6])) return FALSE; 
         i_pGuidText += 2;
-        if (!CWString::Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[7])) return FALSE; 
+        if (!Str2Hex(i_pGuidText, 2, (tUINT8&)o_rGUID.Data4[7])) return FALSE; 
         i_pGuidText += 2;
 
         if (TM('}') != *i_pGuidText)

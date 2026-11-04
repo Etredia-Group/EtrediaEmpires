@@ -534,7 +534,7 @@ tXCHAR *Get_Argument_Text_Value(tXCHAR       **i_pArgs,
 //                              CClient
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-CClient::CClient(IP7_Client::eType i_eType,
+CClient::CClient(eType i_eType,
                  tXCHAR          **i_pArgs,
                  tINT32            i_iCount
                 )

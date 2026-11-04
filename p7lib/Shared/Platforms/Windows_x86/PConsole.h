@@ -100,8 +100,8 @@ protected:
 class CConsole
     : public IConsole
 {
-    tUINT16   m_pFg[IConsole::eColorsMax];
-    tUINT16   m_pBg[IConsole::eColorsMax];
+    tUINT16   m_pFg[eColorsMax];
+    tUINT16   m_pBg[eColorsMax];
     size_t    m_szText;
     tXCHAR   *m_pText;
     HANDLE    m_hStdOut;
@@ -119,69 +119,69 @@ public:
         m_pEmpty  = NULL;
         AllocEmptyString(1024);
 
-        m_pFg[IConsole::eBlack]        = 0;
-        m_pFg[IConsole::eBlue]         = FOREGROUND_BLUE;
-        m_pFg[IConsole::eGreen]        = FOREGROUND_GREEN;
-        m_pFg[IConsole::eCyan]         = FOREGROUND_BLUE|FOREGROUND_GREEN;
-        m_pFg[IConsole::eRed]          = FOREGROUND_RED;
-        m_pFg[IConsole::eMagenta]      = FOREGROUND_BLUE|FOREGROUND_RED;
-        m_pFg[IConsole::eBrown]        = FOREGROUND_GREEN|FOREGROUND_RED;
-        m_pFg[IConsole::eLightGray]    = FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED;
-        m_pFg[IConsole::eDarkGray]     = FOREGROUND_INTENSITY;
-        m_pFg[IConsole::eLightBlue]    = FOREGROUND_BLUE|FOREGROUND_INTENSITY;
-        m_pFg[IConsole::eLightGreen]   = FOREGROUND_GREEN|FOREGROUND_INTENSITY;
-        m_pFg[IConsole::eLightCyan]    = FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_INTENSITY;
-        m_pFg[IConsole::eLightRed]     = FOREGROUND_RED|FOREGROUND_INTENSITY;
-        m_pFg[IConsole::eLightMagenta] = FOREGROUND_BLUE|FOREGROUND_RED|FOREGROUND_INTENSITY;
-        m_pFg[IConsole::eYellow]       = FOREGROUND_GREEN|FOREGROUND_RED|FOREGROUND_INTENSITY;
-        m_pFg[IConsole::eWhite]        = FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED|FOREGROUND_INTENSITY;
+        m_pFg[eBlack]        = 0;
+        m_pFg[eBlue]         = FOREGROUND_BLUE;
+        m_pFg[eGreen]        = FOREGROUND_GREEN;
+        m_pFg[eCyan]         = FOREGROUND_BLUE|FOREGROUND_GREEN;
+        m_pFg[eRed]          = FOREGROUND_RED;
+        m_pFg[eMagenta]      = FOREGROUND_BLUE|FOREGROUND_RED;
+        m_pFg[eBrown]        = FOREGROUND_GREEN|FOREGROUND_RED;
+        m_pFg[eLightGray]    = FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED;
+        m_pFg[eDarkGray]     = FOREGROUND_INTENSITY;
+        m_pFg[eLightBlue]    = FOREGROUND_BLUE|FOREGROUND_INTENSITY;
+        m_pFg[eLightGreen]   = FOREGROUND_GREEN|FOREGROUND_INTENSITY;
+        m_pFg[eLightCyan]    = FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_INTENSITY;
+        m_pFg[eLightRed]     = FOREGROUND_RED|FOREGROUND_INTENSITY;
+        m_pFg[eLightMagenta] = FOREGROUND_BLUE|FOREGROUND_RED|FOREGROUND_INTENSITY;
+        m_pFg[eYellow]       = FOREGROUND_GREEN|FOREGROUND_RED|FOREGROUND_INTENSITY;
+        m_pFg[eWhite]        = FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED|FOREGROUND_INTENSITY;
 
-        m_pBg[IConsole::eBlack]        = 0;
-        m_pBg[IConsole::eBlue]         = BACKGROUND_BLUE;
-        m_pBg[IConsole::eGreen]        = BACKGROUND_GREEN;
-        m_pBg[IConsole::eCyan]         = BACKGROUND_BLUE|BACKGROUND_GREEN;
-        m_pBg[IConsole::eRed]          = BACKGROUND_RED;
-        m_pBg[IConsole::eMagenta]      = BACKGROUND_BLUE|BACKGROUND_RED;
-        m_pBg[IConsole::eBrown]        = BACKGROUND_GREEN|BACKGROUND_RED;
-        m_pBg[IConsole::eLightGray]    = BACKGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_RED;
-        m_pBg[IConsole::eDarkGray]     = BACKGROUND_INTENSITY;
-        m_pBg[IConsole::eLightBlue]    = BACKGROUND_BLUE|BACKGROUND_INTENSITY;
-        m_pBg[IConsole::eLightGreen]   = BACKGROUND_GREEN|BACKGROUND_INTENSITY;
-        m_pBg[IConsole::eLightCyan]    = BACKGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_INTENSITY;
-        m_pBg[IConsole::eLightRed]     = BACKGROUND_RED|BACKGROUND_INTENSITY;
-        m_pBg[IConsole::eLightMagenta] = BACKGROUND_BLUE|BACKGROUND_RED|BACKGROUND_INTENSITY;
-        m_pBg[IConsole::eYellow]       = BACKGROUND_GREEN|BACKGROUND_RED|BACKGROUND_INTENSITY;
-        m_pBg[IConsole::eWhite]        = BACKGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_RED|BACKGROUND_INTENSITY;
+        m_pBg[eBlack]        = 0;
+        m_pBg[eBlue]         = BACKGROUND_BLUE;
+        m_pBg[eGreen]        = BACKGROUND_GREEN;
+        m_pBg[eCyan]         = BACKGROUND_BLUE|BACKGROUND_GREEN;
+        m_pBg[eRed]          = BACKGROUND_RED;
+        m_pBg[eMagenta]      = BACKGROUND_BLUE|BACKGROUND_RED;
+        m_pBg[eBrown]        = BACKGROUND_GREEN|BACKGROUND_RED;
+        m_pBg[eLightGray]    = BACKGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_RED;
+        m_pBg[eDarkGray]     = BACKGROUND_INTENSITY;
+        m_pBg[eLightBlue]    = BACKGROUND_BLUE|BACKGROUND_INTENSITY;
+        m_pBg[eLightGreen]   = BACKGROUND_GREEN|BACKGROUND_INTENSITY;
+        m_pBg[eLightCyan]    = BACKGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_INTENSITY;
+        m_pBg[eLightRed]     = BACKGROUND_RED|BACKGROUND_INTENSITY;
+        m_pBg[eLightMagenta] = BACKGROUND_BLUE|BACKGROUND_RED|BACKGROUND_INTENSITY;
+        m_pBg[eYellow]       = BACKGROUND_GREEN|BACKGROUND_RED|BACKGROUND_INTENSITY;
+        m_pBg[eWhite]        = BACKGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_RED|BACKGROUND_INTENSITY;
 
         m_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
         m_hStdIn  = GetStdHandle(STD_INPUT_HANDLE);
         SetConsoleMode(m_hStdIn, ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT);
 
-        m_pKeys.Push(new stKeyMap(38, IConsole::eKeyArrowUp),    38);
-        m_pKeys.Push(new stKeyMap(40, IConsole::eKeyArrowDown),  40);
-        m_pKeys.Push(new stKeyMap(37, IConsole::eKeyArrowLeft),  37);
-        m_pKeys.Push(new stKeyMap(39, IConsole::eKeyArrowRight), 39);
-        m_pKeys.Push(new stKeyMap(35, IConsole::eKeyEnd),        35);
-        m_pKeys.Push(new stKeyMap(36, IConsole::eKeyHome),       36);
-        m_pKeys.Push(new stKeyMap(33, IConsole::eKeyPageUp),     33);
-        m_pKeys.Push(new stKeyMap(34, IConsole::eKeyPageDown),   34);
+        m_pKeys.Push(new stKeyMap(38, eKeyArrowUp),    38);
+        m_pKeys.Push(new stKeyMap(40, eKeyArrowDown),  40);
+        m_pKeys.Push(new stKeyMap(37, eKeyArrowLeft),  37);
+        m_pKeys.Push(new stKeyMap(39, eKeyArrowRight), 39);
+        m_pKeys.Push(new stKeyMap(35, eKeyEnd),        35);
+        m_pKeys.Push(new stKeyMap(36, eKeyHome),       36);
+        m_pKeys.Push(new stKeyMap(33, eKeyPageUp),     33);
+        m_pKeys.Push(new stKeyMap(34, eKeyPageDown),   34);
 
-        m_pKeys.Push(new stKeyMap(112, IConsole::eKeyF1),        112);
-        m_pKeys.Push(new stKeyMap(113, IConsole::eKeyF2),        113);
-        m_pKeys.Push(new stKeyMap(114, IConsole::eKeyF3),        114);
-        m_pKeys.Push(new stKeyMap(115, IConsole::eKeyF4),        115);
-        m_pKeys.Push(new stKeyMap(116, IConsole::eKeyF5),        116);
-        m_pKeys.Push(new stKeyMap(117, IConsole::eKeyF6),        117);
-        m_pKeys.Push(new stKeyMap(118, IConsole::eKeyF7),        118);
-        m_pKeys.Push(new stKeyMap(119, IConsole::eKeyF8),        119);
-        m_pKeys.Push(new stKeyMap(120, IConsole::eKeyF9),        120);
-        m_pKeys.Push(new stKeyMap(121, IConsole::eKeyF10),       121);
-        m_pKeys.Push(new stKeyMap(122, IConsole::eKeyF11),       122);
-        m_pKeys.Push(new stKeyMap(123, IConsole::eKeyF12),       123);
-        m_pKeys.Push(new stKeyMap(45,  IConsole::eKeyInsert),    45);
-        m_pKeys.Push(new stKeyMap(46,  IConsole::eKeyDel),       46);
-        m_pKeys.Push(new stKeyMap(9,   IConsole::eKeyTab),       9);
-        m_pKeys.Push(new stKeyMap(8,   IConsole::eKeyBackSpace), 8);
+        m_pKeys.Push(new stKeyMap(112, eKeyF1),        112);
+        m_pKeys.Push(new stKeyMap(113, eKeyF2),        113);
+        m_pKeys.Push(new stKeyMap(114, eKeyF3),        114);
+        m_pKeys.Push(new stKeyMap(115, eKeyF4),        115);
+        m_pKeys.Push(new stKeyMap(116, eKeyF5),        116);
+        m_pKeys.Push(new stKeyMap(117, eKeyF6),        117);
+        m_pKeys.Push(new stKeyMap(118, eKeyF7),        118);
+        m_pKeys.Push(new stKeyMap(119, eKeyF8),        119);
+        m_pKeys.Push(new stKeyMap(120, eKeyF9),        120);
+        m_pKeys.Push(new stKeyMap(121, eKeyF10),       121);
+        m_pKeys.Push(new stKeyMap(122, eKeyF11),       122);
+        m_pKeys.Push(new stKeyMap(123, eKeyF12),       123);
+        m_pKeys.Push(new stKeyMap(45,  eKeyInsert),    45);
+        m_pKeys.Push(new stKeyMap(46,  eKeyDel),       46);
+        m_pKeys.Push(new stKeyMap(9,   eKeyTab),       9);
+        m_pKeys.Push(new stKeyMap(8,   eKeyBackSpace), 8);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -222,7 +222,7 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    tBOOL GetInput(IConsole::sInput &o_rInput)
+    tBOOL GetInput(sInput &o_rInput)
     {
         INPUT_RECORD l_stRecord = {};
         DWORD        l_dwRead   = 0;
@@ -243,12 +243,12 @@ public:
 
         if (FOCUS_EVENT == l_stRecord.EventType)
         {
-            o_rInput.eEvent = IConsole::eEvent::eFocus;
+            o_rInput.eEvent = eFocus;
             o_rInput.stFocus.bFocus = l_stRecord.Event.FocusEvent.bSetFocus;
         }
         else if (KEY_EVENT == l_stRecord.EventType)
         {
-            o_rInput.eEvent = IConsole::eEvent::eKey;
+            o_rInput.eEvent = eKey;
             o_rInput.stKey.bDown     = l_stRecord.Event.KeyEvent.bKeyDown;
             o_rInput.stKey.uControls = l_stRecord.Event.KeyEvent.dwControlKeyState;
             o_rInput.stKey.wCount    = l_stRecord.Event.KeyEvent.wRepeatCount;
@@ -265,14 +265,14 @@ public:
         }
         else if (MOUSE_EVENT == l_stRecord.EventType)
         {
-            o_rInput.eEvent = IConsole::eEvent::eMouse;
+            o_rInput.eEvent = eMouse;
             o_rInput.stMouse.uButton = l_stRecord.Event.MouseEvent.dwButtonState;
             o_rInput.stMouse.uX      = l_stRecord.Event.MouseEvent.dwMousePosition.X;
             o_rInput.stMouse.uY      = l_stRecord.Event.MouseEvent.dwMousePosition.Y;
         }
         else if (WINDOW_BUFFER_SIZE_EVENT == l_stRecord.EventType)
         {
-            o_rInput.eEvent = IConsole::eEvent::eSize;
+            o_rInput.eEvent = eSize;
             o_rInput.stSize.uW  = l_stRecord.Event.WindowBufferSizeEvent.dwSize.X;
             o_rInput.stSize.uH  = l_stRecord.Event.WindowBufferSizeEvent.dwSize.Y;
         }
@@ -319,12 +319,12 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    tBOOL SetTextAttr(IConsole::eColor i_eFg, IConsole::eColor i_eBg)
+    tBOOL SetTextAttr(eColor i_eFg, eColor i_eBg)
     {
         if (    (i_eFg < 0)
-             || (i_eFg >= IConsole::eColorsMax)
+             || (i_eFg >= eColorsMax)
              || (i_eBg < 0)
-             || (i_eBg >= IConsole::eColorsMax)
+             || (i_eBg >= eColorsMax)
            )
         {
             return FALSE;
@@ -380,7 +380,7 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    tBOOL Clear(tUINT32 i_uX, tUINT32 i_uY, tUINT32 i_uW, tUINT32 i_uH, IConsole::eColor i_eBg)
+    tBOOL Clear(tUINT32 i_uX, tUINT32 i_uY, tUINT32 i_uW, tUINT32 i_uH, eColor i_eBg)
     {
         tUINT32 l_uiW = GetWidth();
         tUINT32 l_uiH = GetHeight();
@@ -412,7 +412,7 @@ public:
             }
         }
 
-        if (!SetTextAttr(IConsole::eBlack, i_eBg))
+        if (!SetTextAttr(eBlack, i_eBg))
         {
             return FALSE;
         }
@@ -440,8 +440,8 @@ public:
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    size_t WriteTextB(IConsole::eColor i_eFg, 
-                      IConsole::eColor i_eBg, 
+    size_t WriteTextB(eColor i_eFg, 
+                      eColor i_eBg, 
                       size_t           i_szLenMin, 
                       size_t           i_szLenMax, 
                       size_t           i_szOffset,
@@ -536,8 +536,8 @@ public:
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    size_t WriteTextF(IConsole::eColor i_eFg, 
-                      IConsole::eColor i_eBg, 
+    size_t WriteTextF(eColor i_eFg, 
+                      eColor i_eBg, 
                       size_t           i_szLenMin, 
                       size_t           i_szLenMax, 
                       size_t           i_szOffset,

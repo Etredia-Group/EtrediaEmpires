@@ -33,88 +33,83 @@ int main(int argc, char **argv) {
     else LOG(INFO, "GLFW Window created");
 
     glfwMakeContextCurrent(window);
-    Engine::window = window;
+    ee_engine::Engine::window = window;
 
     // Setup Asset Manager
-    Engine::assetManager = Allocate<ee_engine::AssetManager>(0);
-    Engine::assetManager->Start();
+    ee_engine::Engine::assetManager = Allocate<ee_engine::AssetManager>(0);
+    ee_engine::Engine::assetManager->Start();
 
     // Start load assets
-    Engine::assetManager->LoadDir<ee_assets::Shader>("assets/shaders");
-    Engine::assetManager->LoadDir<ee_assets::Material>("assets/materials");
-    Engine::assetManager->LoadDir<ee_assets::Texture>("assets/gfx");
-    Engine::assetManager->LoadDir<ee_assets::ResourceList>("assets/economy/resources");
+    ee_engine::Engine::assetManager->LoadDir<ee_assets::Shader>("assets/shaders");
+    ee_engine::Engine::assetManager->LoadDir<ee_assets::Material>("assets/materials");
+    ee_engine::Engine::assetManager->LoadDir<ee_assets::Texture>("assets/gfx");
+    ee_engine::Engine::assetManager->LoadDir<ee_assets::ResourceList>("assets/economy/resources");
 
-    Engine::assetManager->LoadAsync<ee_assets::MapMesh>("assets/map/ee.map");
-    Engine::assetManager->LoadAsync<ee_assets::Save>("assets/scenarios/empires.save");
+    ee_engine::Engine::assetManager->LoadAsync<ee_assets::MapMesh>("assets/map/ee.map");
+    ee_engine::Engine::assetManager->LoadAsync<ee_assets::Save>("assets/scenarios/empires.save");
 
     // Setup renderer
-    Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_vulkan::VulkanRenderer>(window));
-    Engine::renderer->RegisterAssetManager(*Engine::assetManager);
+    ee_engine::Engine::renderer = reinterpret_cast<ee_engine::IRenderer*>(Allocate<ee_vulkan::VulkanRenderer>(window));
 
     //TODO: ShaderRefs builder from set of AssetMaterial
     const ee_assets::Material &provincesMaterial =
-        Engine::assetManager->FindOnce<ee_assets::Material>("assets/materials/provinces.mat");
-    const ee_engine::AssetHandle vertProv = Engine::assetManager->Find(provincesMaterial.vertexShaderAssetID);
-    const ee_engine::AssetHandle fragProv = Engine::assetManager->Find(provincesMaterial.fragmentShaderAssetID);
+        ee_engine::Engine::assetManager->FindOnce<ee_assets::Material>("assets/materials/provinces.mat");
+    const ee_engine::AssetHandle vertProv = ee_engine::Engine::assetManager->Find(provincesMaterial.vertexShaderAssetID);
+    const ee_engine::AssetHandle fragProv = ee_engine::Engine::assetManager->Find(provincesMaterial.fragmentShaderAssetID);
     const ee_assets::Material &rmlMaterial =
-        Engine::assetManager->FindOnce<ee_assets::Material>("assets/materials/rmlui.mat");
-    const ee_engine::AssetHandle vertUI = Engine::assetManager->Find(rmlMaterial.vertexShaderAssetID);
-    const ee_engine::AssetHandle fragUI = Engine::assetManager->Find(rmlMaterial.fragmentShaderAssetID);
-    Engine::renderer->RegisterMaterials({
+        ee_engine::Engine::assetManager->FindOnce<ee_assets::Material>("assets/materials/rmlui.mat");
+    const ee_engine::AssetHandle vertUI = ee_engine::Engine::assetManager->Find(rmlMaterial.vertexShaderAssetID);
+    const ee_engine::AssetHandle fragUI = ee_engine::Engine::assetManager->Find(rmlMaterial.fragmentShaderAssetID);
+    ee_engine::Engine::renderer->RegisterMaterials({
         .vertProvinces = vertProv,
         .fragProvinces = fragProv,
         .vertRml = vertUI,
         .fragRml = fragUI
     });
-    Engine::renderer->Init();
+    ee_engine::Engine::renderer->Init();
 
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow*, const int width, const int height) {
-        Engine::renderer->ResizeWindow(width, height);
+        ee_engine::Engine::renderer->ResizeWindow(width, height);
     });
 
     // Setup localization manager
-    Engine::localizer = Allocate<Localizer>("ru", *Engine::assetManager);
+    ee_engine::Engine::localizer = Allocate<ee_engine::Localizer>("ru");
 
     // Setup input manager
-    Engine::input = Allocate<GLFWInput>(Actions::mappings);
+    ee_engine::Engine::input = Allocate<GLFWInput>(Actions::mappings);
 
     // Setup UI
-    Engine::ui = Allocate<UI>(UI::Context{
-        *Engine::renderer->getRenderInterface(),
-        *Engine::input->getSystemInterface(),
-        *Engine::localizer,
-        SCREEN_WIDTH, SCREEN_HEIGHT
+    ee_engine::Engine::ui = Allocate<ee_engine::UI>(ee_engine::UI::Context{
+        .renderer = *ee_engine::Engine::renderer->getRenderInterface(),
+        .input = *ee_engine::Engine::input->getSystemInterface(),
+        .width = SCREEN_WIDTH, .height = SCREEN_HEIGHT
     });
-    Engine::renderer->SetUIContext(Engine::ui->getContext());
-    Engine::input->SetUIHandlers(ee_rml::MakeInputHandlers(Engine::ui->getContext(), window));
+    ee_engine::Engine::renderer->SetUIContext(ee_engine::Engine::ui->getContext());
+    ee_engine::Engine::input->SetUIHandlers(ee_rml::MakeInputHandlers(ee_engine::Engine::ui->getContext(), window));
 
     // Load game
     ee_engine::RendererCommand renderCmdBuffer;
-    Engine::loadScreen = Allocate<LoadScreen>(LoadScreen::Context{
+    ee_engine::Engine::loadScreen = Allocate<ee_engine::LoadScreen>(ee_engine::LoadScreen::Context{
         .window = window,
-        .input = *Engine::input,
-        .renderer = *Engine::renderer,
-        .ui = *Engine::ui,
         .renderCmdBuffer = renderCmdBuffer,
         .loadScreenScene = "fullscreen/loadscreen"
     });
 
-    LoadStages loadQueue = std::to_array<LoadStage>({
+    ee_engine::LoadStages loadQueue = std::to_array<ee_engine::LoadStage>({
         {
             [] -> std::generator<float> {
-               const ee_engine::AssetHandle regionsAsset = Engine::assetManager->Find("assets/map/ee.map");
-               ee_assets::MapMesh& regions = Engine::assetManager->Get<ee_assets::MapMesh>(regionsAsset);
-               Engine::renderer->RegisterMapMesh(&regions.content);
+               const ee_engine::AssetHandle regionsAsset = ee_engine::Engine::assetManager->Find("assets/map/ee.map");
+               ee_assets::MapMesh& regions = ee_engine::Engine::assetManager->Get<ee_assets::MapMesh>(regionsAsset);
+               ee_engine::Engine::renderer->RegisterMapMesh(&regions.content);
                    co_yield 0.1f;
                co_yield std::ranges::elements_of(ee_utils::ScaledCoroutine(
-                   Engine::renderer->LoadProvinces(),
+                   ee_engine::Engine::renderer->LoadProvinces(),
                    0.1f, 0.98f
                ));
-               Engine::assetManager->Free(regionsAsset);
+               ee_engine::Engine::assetManager->Free(regionsAsset);
                    co_yield 0.99f;
 
-               Engine::renderer->SetCamera({
+               ee_engine::Engine::renderer->SetCamera({
                    .position = {11000.0f, 4800.0f},
                    .zoom = 2000.0f
                });
@@ -123,21 +118,21 @@ int main(int argc, char **argv) {
 
         {
             [] -> std::generator<float> {
-                Engine::client = Allocate<Client>();
-                const ee_engine::AssetHandle save = Engine::assetManager->Find("assets/scenarios/empires.save");
-                Engine::client->LoadSave(save);
+                ee_engine::Engine::client = Allocate<ee_engine::Client>();
+                const ee_engine::AssetHandle save = ee_engine::Engine::assetManager->Find("assets/scenarios/empires.save");
+                ee_engine::Engine::client->LoadSave(save);
                 co_yield 0.1f;
 
                 co_yield std::ranges::elements_of(ee_utils::ScaledCoroutine(
-                    Engine::client->Init(),
+                    ee_engine::Engine::client->Init(),
                     0.1f, 0.99f
                 ));
-                Engine::client->Start();
+                ee_engine::Engine::client->Start();
             }, "SetupClient", 0.1f
         },
 
     });
-    Engine::loadScreen->Run(
+    ee_engine::Engine::loadScreen->Run(
         loadQueue,
         "fullscreen/mainmenu"
     );
@@ -145,19 +140,19 @@ int main(int argc, char **argv) {
 
     // Game loop
     while (!glfwWindowShouldClose(window)) {
-        Engine::ui->Update();
+        ee_engine::Engine::ui->Update();
 
-        Engine::renderer->ProcessQueue(renderCmdBuffer);
-        Engine::renderer->Draw();
+        ee_engine::Engine::renderer->ProcessQueue(renderCmdBuffer);
+        ee_engine::Engine::renderer->Draw();
 
         glfwSwapBuffers(window);
-        Engine::input->Poll();
+        ee_engine::Engine::input->Poll();
         glfwPollEvents();
     }
 
     // Free memory
     LOG(INFO, "Exit...");
-    Engine::Shutdown();
+    ee_engine::Engine::Shutdown();
     Logger::UnregisterThread();
     Logger::Release();
 

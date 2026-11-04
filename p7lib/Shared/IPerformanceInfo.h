@@ -37,7 +37,7 @@ public:
 
 public:
     virtual tBOOL   Refresh()                                               = 0;
-    virtual tINT64  Get(IPerformanceInfo::eCounter i_eCounter)              = 0;
+    virtual tINT64  Get(eCounter i_eCounter)              = 0;
     virtual tINT32  Add_Ref()                                               = 0;
     virtual tINT32  Release()                                               = 0;
 };

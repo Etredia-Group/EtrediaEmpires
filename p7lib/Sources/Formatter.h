@@ -183,8 +183,8 @@ protected:
         tXCHAR             cPadding;
         tXCHAR            *pPrefix;
         size_t             szPrefix;
-        CFormatter::eSize  eSize;
-        CFormatter::eType  eType;
+        eSize  eSize;
+        eType  eType;
         tINT32             iWidth; //0 - no width, -1 - use argument to specify width
         tINT32             iPrecision; //-2 no precision, -1 - use argument to specify precision
         tXCHAR            *pDouble; //format string for double
@@ -240,7 +240,7 @@ public:
     CFormatter(const tXCHAR        *i_pFormat,         
                sP7Trace_Arg        *i_pArgs,
                size_t               i_szArgs,
-               CFormatter::sBuffer *i_pBuffer = NULL
+               sBuffer *i_pBuffer = NULL
               )
         : m_pArgHead(NULL)
         , m_pBuffer(i_pBuffer)
@@ -1299,9 +1299,9 @@ private:
 
     ////////////////////////////////////////////////////////////////////////////
     //GetSize
-    CFormatter::eSize GetSize(const tXCHAR *&i_pFormat)
+    eSize GetSize(const tXCHAR *&i_pFormat)
     {
-        struct sSize{ const tXCHAR *pPrefix; size_t szPrefix; CFormatter::eSize eSize;};
+        struct sSize{ const tXCHAR *pPrefix; size_t szPrefix; eSize eSize;};
         const static sSize g_pSize[] = {{TM("I64"), 3, eSize64},
                                         {TM("I32"), 3, eSize32},
                                         {TM("ll"),  2, eSizell},

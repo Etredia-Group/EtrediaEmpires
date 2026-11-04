@@ -52,13 +52,13 @@ private:
     CRITICAL_SECTION   m_tCS;
 
     SYSTEMTIME         m_tTime;
-    wchar_t            m_pTypes_Description[IJournal::eLEVEL_COUNT][FJOURNAL_DESCRIPTION_MAX_LENGTH];
+    wchar_t            m_pTypes_Description[eLEVEL_COUNT][FJOURNAL_DESCRIPTION_MAX_LENGTH];
     CWString           m_cFile_Name;
-    UINT64             m_pCount[IJournal::eLEVEL_COUNT];
+    UINT64             m_pCount[eLEVEL_COUNT];
 
-    IJournal::eLevel   m_eVerbosity;
+    eLevel   m_eVerbosity;
 
-    IJournal::eTime    m_eTime;  //ignored for a while
+    eTime    m_eTime;  //ignored for a while
     tBOOL              m_bFunction;
     tBOOL              m_bType;
 
@@ -77,8 +77,8 @@ public:
        , m_hThread(NULL)
        , m_hEvent_Exit(NULL)
        , m_hEvent_Write(NULL)
-       , m_eVerbosity(IJournal::eLEVEL_TRACE)
-       , m_eTime(IJournal::eTIME_YYYYMMDDHHMMSSMS)
+       , m_eVerbosity(eLEVEL_TRACE)
+       , m_eTime(eTIME_YYYYMMDDHHMMSSMS)
        , m_bFunction(TRUE)
        , m_bType(TRUE)
        , m_bInitialized(FALSE)
@@ -90,12 +90,12 @@ public:
 
         InitializeCriticalSection(&m_tCS);
 
-        wcscpy_s(m_pTypes_Description[IJournal::eLEVEL_TRACE],    FJOURNAL_DESCRIPTION_MAX_LENGTH, L"INFO : ");
-        wcscpy_s(m_pTypes_Description[IJournal::eLEVEL_DEBUG],    FJOURNAL_DESCRIPTION_MAX_LENGTH, L"DEBUG: ");
-        wcscpy_s(m_pTypes_Description[IJournal::eLEVEL_INFO],     FJOURNAL_DESCRIPTION_MAX_LENGTH, L"INFO : ");
-        wcscpy_s(m_pTypes_Description[IJournal::eLEVEL_WARNING],  FJOURNAL_DESCRIPTION_MAX_LENGTH, L"WARN.: ");
-        wcscpy_s(m_pTypes_Description[IJournal::eLEVEL_ERROR],    FJOURNAL_DESCRIPTION_MAX_LENGTH, L"ERROR: ");
-        wcscpy_s(m_pTypes_Description[IJournal::eLEVEL_CRITICAL], FJOURNAL_DESCRIPTION_MAX_LENGTH, L"CRIT.: ");
+        wcscpy_s(m_pTypes_Description[eLEVEL_TRACE],    FJOURNAL_DESCRIPTION_MAX_LENGTH, L"INFO : ");
+        wcscpy_s(m_pTypes_Description[eLEVEL_DEBUG],    FJOURNAL_DESCRIPTION_MAX_LENGTH, L"DEBUG: ");
+        wcscpy_s(m_pTypes_Description[eLEVEL_INFO],     FJOURNAL_DESCRIPTION_MAX_LENGTH, L"INFO : ");
+        wcscpy_s(m_pTypes_Description[eLEVEL_WARNING],  FJOURNAL_DESCRIPTION_MAX_LENGTH, L"WARN.: ");
+        wcscpy_s(m_pTypes_Description[eLEVEL_ERROR],    FJOURNAL_DESCRIPTION_MAX_LENGTH, L"ERROR: ");
+        wcscpy_s(m_pTypes_Description[eLEVEL_CRITICAL], FJOURNAL_DESCRIPTION_MAX_LENGTH, L"CRIT.: ");
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -221,7 +221,7 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    void Set_Verbosity(IJournal::eLevel i_eVerbosity)
+    void Set_Verbosity(eLevel i_eVerbosity)
     {
         EnterCriticalSection(&m_tCS);
         m_eVerbosity = i_eVerbosity;
@@ -229,7 +229,7 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    void Set_Format(IJournal::eTime i_eTime, tBOOL i_bFunction, tBOOL i_bType)
+    void Set_Format(eTime i_eTime, tBOOL i_bFunction, tBOOL i_bType)
     {
         EnterCriticalSection(&m_tCS);
         m_eTime     = i_eTime; 
@@ -239,9 +239,9 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    IJournal::eLevel Get_Verbosity()
+    eLevel Get_Verbosity()
     {
-        IJournal::eLevel l_eResult;
+        eLevel l_eResult;
         EnterCriticalSection(&m_tCS);
         l_eResult = m_eVerbosity;
         LeaveCriticalSection(&m_tCS);
@@ -250,8 +250,8 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    tBOOL Log(IJournal::eLevel  i_eType, 
-              IJournal::hModule i_hModule,
+    tBOOL Log(eLevel  i_eType, 
+              hModule i_hModule,
               const char       *i_pFile,
               const char       *i_pFunction, 
               tUINT32           i_dwLine,
@@ -265,7 +265,7 @@ public:
 
         if (    (FALSE == m_bInitialized)
              || (NULL == i_pFormat) 
-             || (i_eType >= IJournal::eLEVEL_COUNT) 
+             || (i_eType >= eLEVEL_COUNT) 
            )
         {
             return FALSE;
@@ -399,10 +399,10 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    tUINT64 Get_Count(IJournal::eLevel i_eType)
+    tUINT64 Get_Count(eLevel i_eType)
     {
         UINT64 l_qwReturn = 0ULL;
-        if (i_eType >= IJournal::eLEVEL_COUNT) 
+        if (i_eType >= eLEVEL_COUNT) 
         {
             return 0ULL;
         }
@@ -452,7 +452,7 @@ public:
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    tBOOL Register_Module(const tXCHAR *i_pName, IJournal::hModule *o_hModule)
+    tBOOL Register_Module(const tXCHAR *i_pName, hModule *o_hModule)
     {
         if (o_hModule)
         {

@@ -7,6 +7,7 @@ set(LIB engine-api)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(xxHash CONFIG REQUIRED)
+find_package(reflectcpp CONFIG REQUIRED)
 
 # Link library
 
@@ -17,3 +18,4 @@ target_link_libraries(${LIB} PUBLIC economy)
 target_link_libraries(${LIB} PRIVATE glfw)
 target_link_libraries(${LIB} PRIVATE glm::glm)
 target_link_libraries(${LIB} PRIVATE xxHash::xxhash)
+target_link_libraries(${LIB} PRIVATE reflectcpp::reflectcpp)

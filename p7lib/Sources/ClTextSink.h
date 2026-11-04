@@ -88,7 +88,7 @@ public:
     virtual ~CClTextSink() {}
 
     virtual eClient_Status Initialize(tXCHAR **i_pArgs, tINT32 i_iCount) = 0;
-    virtual eClient_Status Log(const CClTextSink::sLog &i_rRawLog, 
+    virtual eClient_Status Log(const sLog &i_rRawLog, 
                                const tXCHAR            *i_pFmtLog, 
                                size_t                   i_szFmtLog
                               ) = 0;

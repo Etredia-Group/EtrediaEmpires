@@ -1201,29 +1201,29 @@ CP7Trace::CP7Trace(IP7_Client         *i_pClient,
 #else
     if (m_bInitialized)
     {
-        CP7Trace::sStack_Desc l_pDesc[6];
+        sStack_Desc l_pDesc[6];
         l_pDesc[0].uValue.dw32 = 0xDEADBEEFu; 
-        l_pDesc[0].eType       = CP7Trace::sStack_Desc::eTypeU32;
+        l_pDesc[0].eType       = sStack_Desc::eTypeU32;
         l_pDesc[0].bLast       = FALSE;
 
         l_pDesc[1].uValue.dw64 = 0x99ABCDEF12345678ull; 
-        l_pDesc[1].eType       = CP7Trace::sStack_Desc::eTypeU64;
+        l_pDesc[1].eType       = sStack_Desc::eTypeU64;
         l_pDesc[1].bLast       = FALSE;
 
         l_pDesc[2].uValue.dw32 = 0xABBADEFEu; 
-        l_pDesc[2].eType       = CP7Trace::sStack_Desc::eTypeU32;
+        l_pDesc[2].eType       = sStack_Desc::eTypeU32;
         l_pDesc[2].bLast       = FALSE;
 
         l_pDesc[3].uValue.dw32 = 0x98765432u; 
-        l_pDesc[3].eType       = CP7Trace::sStack_Desc::eTypeU32;
+        l_pDesc[3].eType       = sStack_Desc::eTypeU32;
         l_pDesc[3].bLast       = FALSE;
 
         l_pDesc[4].uValue.db64 = (tDOUBLE)362764.9; 
-        l_pDesc[4].eType       = CP7Trace::sStack_Desc::eTypeD64;
+        l_pDesc[4].eType       = sStack_Desc::eTypeD64;
         l_pDesc[4].bLast       = FALSE;
 
         l_pDesc[5].uValue.dw64 = 0x791A90204E0b4C6Dull; 
-        l_pDesc[5].eType       = CP7Trace::sStack_Desc::eTypeU64;
+        l_pDesc[5].eType       = sStack_Desc::eTypeU64;
         l_pDesc[5].bLast       = TRUE;
 
         if (!Is_VarArgs(l_pDesc, 
@@ -1807,7 +1807,7 @@ l_lblExit:
 
 ////////////////////////////////////////////////////////////////////////////////
 // Register_Module                                      
-tBOOL CP7Trace::Register_Module(const tXCHAR *i_pName, IP7_Trace::hModule *o_hModule)
+tBOOL CP7Trace::Register_Module(const tXCHAR *i_pName, hModule *o_hModule)
 {
     if (    (NULL == i_pName)
          || (NULL == o_hModule)
@@ -1941,7 +1941,7 @@ l_lblExit:
 
 ////////////////////////////////////////////////////////////////////////////////
 // Set_Verbosity                                      
-void CP7Trace::Set_Verbosity(IP7_Trace::hModule i_hModule, eP7Trace_Level i_eVerbosity)
+void CP7Trace::Set_Verbosity(hModule i_hModule, eP7Trace_Level i_eVerbosity)
 {
     LOCK_ENTER(m_sCS);
     sP7C_Data_Chunk *l_pChunk = NULL;
@@ -2003,7 +2003,7 @@ l_lblExit:
 
 ////////////////////////////////////////////////////////////////////////////////
 // Get_Verbosity                                      
-eP7Trace_Level CP7Trace::Get_Verbosity(IP7_Trace::hModule i_hModule)
+eP7Trace_Level CP7Trace::Get_Verbosity(hModule i_hModule)
 {
     eP7Trace_Level l_eReturn = EP7TRACE_LEVEL_COUNT;
     LOCK_ENTER(m_sCS);
@@ -2027,7 +2027,7 @@ eP7Trace_Level CP7Trace::Get_Verbosity(IP7_Trace::hModule i_hModule)
 // Trace                                      
 tBOOL CP7Trace::Trace(tUINT16            i_wTrace_ID,
                       eP7Trace_Level     i_eLevel, 
-                      IP7_Trace::hModule i_hModule,
+                      hModule i_hModule,
                       tUINT16            i_wLine,
                       const char        *i_pFile,
                       const char        *i_pFunction,
@@ -2176,7 +2176,7 @@ void CP7Trace::Flush()
 // Trace_Embedded                                      
 tBOOL CP7Trace::Trace_Embedded(tUINT16            i_wTrace_ID,   
                                eP7Trace_Level     i_eLevel, 
-                               IP7_Trace::hModule i_hModule,
+                               hModule i_hModule,
                                tUINT16            i_wLine,
                                const char        *i_pFile,
                                const char        *i_pFunction,
@@ -2220,7 +2220,7 @@ tBOOL CP7Trace::Trace_Embedded(tUINT16            i_wTrace_ID,
 // Trace_Embedded                                      
 tBOOL CP7Trace::Trace_Embedded(tUINT16            i_wTrace_ID,   
                                eP7Trace_Level     i_eLevel, 
-                               IP7_Trace::hModule i_hModule,
+                               hModule i_hModule,
                                tUINT16            i_wLine,
                                const char        *i_pFile,
                                const char        *i_pFunction,
@@ -2247,7 +2247,7 @@ tBOOL CP7Trace::Trace_Embedded(tUINT16            i_wTrace_ID,
 //Trace_Managed  
 tBOOL CP7Trace::Trace_Managed(tUINT16            i_wTrace_ID,   
                               eP7Trace_Level     i_eLevel, 
-                              IP7_Trace::hModule i_hModule,
+                              hModule i_hModule,
                               tUINT16            i_wLine,
                               const tXCHAR      *i_pFile,
                               const tXCHAR      *i_pFunction,
@@ -2492,7 +2492,7 @@ l_lblExit:
 // Trace_Raw  
 __forceinline tBOOL CP7Trace::Trace_Raw(tUINT16            i_wTrace_ID,   
                                         eP7Trace_Level     i_eLevel, 
-                                        IP7_Trace::hModule i_hModule,
+                                        hModule i_hModule,
                                         tUINT16            i_wLine,
                                         const char        *i_pFile,
                                         const char        *i_pFunction,
@@ -2889,7 +2889,7 @@ __forceinline tBOOL CP7Trace::Inc_Chunks(tUINT32 i_dwInc)
 //Some processors have funny stack alignment rules, for example arm under 32 bits
 //for 64 bits variables request 64 bit address stack alignment, some uses gen.
 //registers, some changes order, etc.
-tBOOL CP7Trace::Is_VarArgs(const CP7Trace::sStack_Desc *i_pDesc, ...)
+tBOOL CP7Trace::Is_VarArgs(const sStack_Desc *i_pDesc, ...)
 {
     const tUINT8 *l_pData   = (const tUINT8 *)&i_pDesc + sizeof(void*);
     tBOOL         l_bReturn = TRUE;
@@ -2898,7 +2898,7 @@ tBOOL CP7Trace::Is_VarArgs(const CP7Trace::sStack_Desc *i_pDesc, ...)
     va_start(l_pVal, i_pDesc);
     while (1)
     {
-        if (CP7Trace::sStack_Desc::eTypeU32 == i_pDesc->eType)
+        if (sStack_Desc::eTypeU32 == i_pDesc->eType)
         {
             if (*(tUINT32*)l_pData != va_arg(l_pVal, tUINT32))
             {
@@ -2908,7 +2908,7 @@ tBOOL CP7Trace::Is_VarArgs(const CP7Trace::sStack_Desc *i_pDesc, ...)
 
             l_pData += SIZE_OF_ARG(tUINT32);
         }
-        else if (CP7Trace::sStack_Desc::eTypeU64 == i_pDesc->eType)
+        else if (sStack_Desc::eTypeU64 == i_pDesc->eType)
         {
             if (*(tUINT64*)l_pData != va_arg(l_pVal, tUINT64))
             {
@@ -2918,7 +2918,7 @@ tBOOL CP7Trace::Is_VarArgs(const CP7Trace::sStack_Desc *i_pDesc, ...)
 
             l_pData += SIZE_OF_ARG(tUINT64);
         }
-        else if (CP7Trace::sStack_Desc::eTypeD64 == i_pDesc->eType)
+        else if (sStack_Desc::eTypeD64 == i_pDesc->eType)
         {
             if (*(tDOUBLE*)l_pData != va_arg(l_pVal, tDOUBLE))
             {

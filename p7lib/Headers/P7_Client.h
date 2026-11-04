@@ -424,7 +424,7 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     //Get_Type - get channel type, depending on type cast to IP7_Telemetry or
     //           IP7_Trace is available
-    virtual IP7C_Channel::eType Get_Type()                                  = 0;
+    virtual eType Get_Type()                                  = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     //Add_Ref - increase object's reference count
@@ -472,7 +472,7 @@ public:
         eText,
         eCount
     };
-    virtual IP7_Client::eType Get_Type()                                    = 0;
+    virtual eType Get_Type()                                    = 0;
 
     virtual tINT32            Add_Ref()                                     = 0;
     virtual tINT32            Release()                                     = 0;
