@@ -5,11 +5,7 @@
 
 module;
 
-#if defined(_MSC_VER)
-#define NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
-#else
-#define NO_UNIQUE_ADDRESS [[no_unique_address]]
-#endif
+#include <ee_utils/compiler.hpp>
 
 export module vulkan_render:data;
 import :hardware;
@@ -19,22 +15,16 @@ import vulkan_hpp;
 import utils;
 
 namespace vulkan_render {
-    struct NoMember {
-        constexpr NoMember() = default;
-        constexpr NoMember(std::nullptr_t) {}
-    };
 
-    template <typename T, bool condition>
-    using optional = std::conditional_t<condition, T, NoMember>;
 
     template <bool hasStaging>
-    using StagingBuffer = optional<vk::raii::Buffer, hasStaging>;
+    using StagingBuffer = ee_utils::optional<vk::raii::Buffer, hasStaging>;
 
     template <bool hasStaging>
-    using StagingDeviceMemory = optional<vk::raii::DeviceMemory, hasStaging>;
+    using StagingDeviceMemory = ee_utils::optional<vk::raii::DeviceMemory, hasStaging>;
 
     template <typename T, bool isMapped>
-    using MappedMemory = optional<std::span<T>, isMapped>;
+    using MappedMemory = ee_utils::optional<std::span<T>, isMapped>;
 }
 
 export namespace vulkan_render {

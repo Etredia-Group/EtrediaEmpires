@@ -6,18 +6,17 @@
     <link type="text/css" href="loadscreen.rcss" />
 </head>
 
-<body data-model="LoadingInfo">
+<body data-model="LoadingInfo" class="panel">
     <div id="load-panel">
-        <img id="load-bg" src="@gfx/loadscreens/doox.png" />
+        <img class="stretch" src="@gfx/base-bg.png" />
+        <img class="stretch" src="@gfx/loadscreens/1.png" />
         <div id="load-bar" class="section">
             <div id="progress" data-style-width="progress + '%'" />
-            <span id="stage">{{stage}}</span>
+            <span id="stage">{{stage|t('load-stages',lang)}}</span>
             <span id="progress-value">{{(progress | format(0))}}%</span>
         </div>
         <span id="load-tooltip">{{quote}}</span>
     </div>
-
-    <div id="popups-container"></div>
 </body>
 
 </rml>

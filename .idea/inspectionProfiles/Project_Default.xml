@@ -7,12 +7,13 @@
     <inspection_tool class="ConstantConditionsOC" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="ConstantFunctionResult" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="ConstantParameter" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="CssUnknownUnit" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="DanglingPointer" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="EndlessLoop" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="HtmlUnknownTag" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="7">
+          <list size="17">
             <item index="0" class="java.lang.String" itemvalue="nobr" />
             <item index="1" class="java.lang.String" itemvalue="noembed" />
             <item index="2" class="java.lang.String" itemvalue="comment" />
@@ -20,6 +21,16 @@
             <item index="4" class="java.lang.String" itemvalue="embed" />
             <item index="5" class="java.lang.String" itemvalue="script" />
             <item index="6" class="java.lang.String" itemvalue="rml" />
+            <item index="7" class="java.lang.String" itemvalue="selectbox" />
+            <item index="8" class="java.lang.String" itemvalue="selectvalue" />
+            <item index="9" class="java.lang.String" itemvalue="selectarrow" />
+            <item index="10" class="java.lang.String" itemvalue="sliderarrowinc" />
+            <item index="11" class="java.lang.String" itemvalue="sliderarrowdec" />
+            <item index="12" class="java.lang.String" itemvalue="sliderbar" />
+            <item index="13" class="java.lang.String" itemvalue="slidertrack" />
+            <item index="14" class="java.lang.String" itemvalue="selection" />
+            <item index="15" class="java.lang.String" itemvalue="tabset" />
+            <item index="16" class="java.lang.String" itemvalue="tabs" />
           </list>
         </value>
       </option>

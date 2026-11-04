@@ -16,7 +16,7 @@ export
 
         void Poll() override;
 
-        constexpr Rml::SystemInterface* getSystemInterface() noexcept override {return &*rmlSystemInterface;}
+        Rml::SystemInterface* getSystemInterface() noexcept override {return &*rmlSystemInterface;}
 
     private:
         std::optional<ee_rml::RmlGLFW> rmlSystemInterface;

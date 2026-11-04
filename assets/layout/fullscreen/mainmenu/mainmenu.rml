@@ -1,0 +1,30 @@
+<rml>
+
+<head>
+    <link type="text/css" href="@ui/base.rcss" />
+    <link type="text/css" href="@ui/game.rcss" />
+    <link type="text/css" href="mainmenu.rcss" />
+</head>
+
+<body data-model="MainMenu" class="panel">
+    <div id="base-panel" class="section stack vertical">
+        <div class="stack horizontal">
+            <input class="value block" />
+            <button id="connect-ip" class="base-btn">{{'CONNECT_IP'|t('base-menus',lang)}}</button>
+        </div>
+
+        <div class="stack horizontal">
+            <input type="checkbox">{{'IS_SINGLE_PLAY'|t('base-menus',lang)}}</input>
+            <select />
+            <button>{{'START_SETTINGS'|t('base-menus',lang)}}</button>
+            <button>{{'HOST'|t('base-menus',lang)}}</button>
+        </div>
+
+        <div class="stack vertical">
+            <button>{{'GAME_SETTINGS'|t('base-menus',lang)}}</button>
+            <button>{{'EXIT'|t('base-menus',lang)}}</button>
+        </div>
+    </div>
+</body>
+
+</rml>

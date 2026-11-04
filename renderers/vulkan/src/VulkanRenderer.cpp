@@ -1430,7 +1430,7 @@ void ee_vulkan::VulkanRenderer::ResolvePick(const std::uint32_t frame) {
 }
 
 
-constexpr ee_engine::ProvinceSSBO& ee_vulkan::VulkanRenderer::getRegionData(const std::uint32_t id) const noexcept {
+const ee_engine::ProvinceSSBO& ee_vulkan::VulkanRenderer::getRegionData(const std::uint32_t id) noexcept {
     const RegionRanges provinces = regionsMapping.at(id);
     return this->provinces.storage->content[provinces.offset / sizeof(ee_engine::ProvinceSSBO)];
 }

@@ -1,29 +1,47 @@
 module UI;
 import utils;
 
-UI::UI(
-    Rml::RenderInterface &renderer,
-    Rml::SystemInterface &input,
-    const std::uint32_t width,
-    const std::uint32_t height
-) :
-    renderInterface(renderer),
-    systemInterface(input),
-    context(MakeContext(Rml::Vector2i(width, height))),
-    loadingInfo(*context),
-    regionInfo(*context) {
+UI::UI(const Context &context) :
+    renderInterface(context.renderer),
+    systemInterface(context.input),
+    rmlContext(MakeContext(Rml::Vector2i(context.width, context.height))),
+    localizer(context.localizer),
+    globalInfo(*rmlContext) {
 
-    Rml::LoadFontFace("assets/fonts/ARIAL.TTF");
+    globalInfo.data.lang = localizer.getLocale().code;
+    localizerSubscription = localizer.Subscribe([this](const Locale &locale) {
+        globalInfo.data.lang = locale.code;
+        globalInfo.DirtyGlobal("lang");
+    });
 
-    LoadPopups();
+    Rml::LoadFontFace("assets/fonts/CascadiaCode/CascadiaCodePL-Regular.otf");
+
+    Rml::RegisterBase(
+        *rmlContext,
+        std::bind_front(
+            static_cast<std::string_view (Localizer::*)(std::string_view, std::string_view)>(&Localizer::Localize),
+            &localizer
+        )
+    );
+
+    RegisterController<ee_engine::view::LoadingInfo>("fullscreen/loadscreen");
+    RegisterController<ee_engine::controller::MainMenu>("fullscreen/mainmenu");
+    RegisterController<ee_engine::view::RegionInfo>("popups/region-info");
 }
 
 UI::~UI() {
+    localizer.Unsubscribe(localizerSubscription);
+
+    for (ee_engine::UIBaseController *controller : controllers) {
+        if (controller != nullptr)
+            Deallocate(controller);
+    }
+
     Rml::Shutdown();
 }
 
 void UI::Update() const {
-    context->Update();
+    rmlContext->Update();
 }
 
 void UI::SwitchScene(const std::string &asset) {
@@ -40,10 +58,6 @@ void UI::SwitchScene(const std::string &asset) {
 
     currentDocument.document = scene;
     currentDocument.asset = asset;
-    popupsContatiner = currentDocument.document->GetElementById("popups-container");
-    if (!popupsContatiner) {
-        LOG(ERROR, "Scene [%hs] does not contain popups-container element.", asset.c_str());
-    }
 
     currentDocument.document->Show();
 
@@ -62,6 +76,11 @@ Rml::ElementDocument* UI::Popup(const std::string &asset, const bool isDraggable
     return popup;
 }
 
+std::size_t UI::ControllerId(const std::string_view key) {
+    static std::unordered_map<std::string, std::size_t, ee_utils::StringHash, ee_utils::StringEqual> ids;
+    return ids.try_emplace(std::string(key), ids.size()).first->second;
+}
+
 Rml::Context* UI::MakeContext(const Rml::Vector2i dimentions) const {
     Rml::SetSystemInterface(&systemInterface);
     Rml::SetRenderInterface(&renderInterface);
@@ -77,20 +96,11 @@ Rml::ElementDocument* UI::FindOrLoadDocument(const std::string &asset) {
         document = cached->second;
     }
     else {
-        document = context->LoadDocument(asset);
+        std::filesystem::path path = asset;
+        path = "assets/layout"/path/path.filename().replace_extension("rml");
+        document = rmlContext->LoadDocument(path.string());
         documents[asset] = document;
     }
 
     return document;
-}
-
-void UI::LoadPopups() {
-    const std::vector<std::string> popupAssets {
-        "region-info"
-    };
-
-    for (std::string popupAsset : popupAssets) {
-        std::string path = "assets/layout/popups/" + popupAsset + "/" + popupAsset + ".rcss";
-        documents[path] = context->LoadDocument(path);
-    }
 }

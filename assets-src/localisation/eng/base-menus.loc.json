@@ -1,0 +1,10 @@
+{
+  "loc": {
+    "CONNECT_IP": "Connect IP",
+    "IS_SINGLE_PLAY": "Single",
+    "START_SETTINGS": "+",
+    "HOST": "Host",
+    "GAME_SETTINGS": "Settings",
+    "EXIT": "Exit"
+  }
+}

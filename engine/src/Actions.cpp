@@ -44,7 +44,7 @@ void Actions::Click(const float x, const float y) {
     if (!hit.has_value()) return;
 
     const std::uint32_t &regionId = hit->regionId;
-    Rml::Binded<ee_engine::RegionInfo> &regionInfo = Engine::ui->regionInfo;
+    UI::Binded<ee_engine::view::RegionInfo> &regionInfo = Engine::ui->GetController<ee_engine::view::RegionInfo>();
     if (regionId == regionInfo.data.id) return;
 
     if (regionInfo.data.id != 0) {

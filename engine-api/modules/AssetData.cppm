@@ -13,6 +13,7 @@ export module AssetData;
 export import GameData;
 export import Economy;
 export import views;
+import utils;
 import std;
 
 export namespace ee_assets {
@@ -65,13 +66,46 @@ export namespace ee_assets {
 
         using LocKey = std::variant<std::string, std::uint32_t>;
         struct LocKeyHash {
+            using is_transparent = void;
+
             std::size_t operator()(const LocKey &key) const noexcept {
                 if (const std::uint32_t *color = std::get_if<std::uint32_t>(&key))
                     return std::hash<std::uint32_t>{}(*color);
                 return std::hash<std::string_view>{}(std::get<std::string>(key));
             }
+
+            size_t operator()(const std::string_view sv) const {
+                return std::hash<std::string_view>{}(sv);
+            }
+
+            size_t operator()(const std::uint32_t val) const noexcept {
+                return std::hash<std::uint32_t>{}(val);
+            }
         };
-        using LocTable = std::unordered_map<LocKey, std::string, LocKeyHash>;
+        struct LocKeyEqual {
+            using is_transparent = void;
+
+            bool operator()(const LocKey& lhs, const LocKey& rhs) const noexcept {
+                return lhs == rhs;
+            }
+            bool operator()(const LocKey& lhs, const std::uint32_t rhs) const noexcept {
+                if (const std::uint32_t* val = std::get_if<std::uint32_t>(&lhs)) return *val == rhs;
+                return false;
+            }
+            bool operator()(const std::uint32_t lhs, const LocKey& rhs) const noexcept {
+                if (const std::uint32_t* val = std::get_if<std::uint32_t>(&rhs)) return lhs == *val;
+                return false;
+            }
+            bool operator()(const LocKey& lhs, const std::string_view rhs) const noexcept {
+                if (const std::string *val = std::get_if<std::string>(&lhs)) return std::string_view(*val) == rhs;
+                return false;
+            }
+            bool operator()(const std::string_view lhs, const LocKey& rhs) const noexcept {
+                if (const std::string *val = std::get_if<std::string>(&rhs)) return lhs == std::string_view(*val);
+                return false;
+            }
+        };
+        using LocTable = std::unordered_map<LocKey, std::string, LocKeyHash, LocKeyEqual>;
 
         LocTable loc;
     };

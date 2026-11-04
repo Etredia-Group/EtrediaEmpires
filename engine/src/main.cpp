@@ -80,11 +80,12 @@ int main(int argc, char **argv) {
     Engine::input = Allocate<GLFWInput>(Actions::mappings);
 
     // Setup UI
-    Engine::ui = Allocate<UI>(
+    Engine::ui = Allocate<UI>(UI::Context{
         *Engine::renderer->getRenderInterface(),
         *Engine::input->getSystemInterface(),
+        *Engine::localizer,
         SCREEN_WIDTH, SCREEN_HEIGHT
-    );
+    });
     Engine::renderer->SetUIContext(Engine::ui->getContext());
     Engine::input->SetUIHandlers(ee_rml::MakeInputHandlers(Engine::ui->getContext(), window));
 
@@ -94,10 +95,9 @@ int main(int argc, char **argv) {
         .window = window,
         .input = *Engine::input,
         .renderer = *Engine::renderer,
-        .localizer = *Engine::localizer,
         .ui = *Engine::ui,
         .renderCmdBuffer = renderCmdBuffer,
-        .loadScreenScene = "assets/layout/fullscreen/loadscreen/loadscreen.rml"
+        .loadScreenScene = "fullscreen/loadscreen"
     });
 
     LoadStages loadQueue = std::to_array<LoadStage>({
@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
                    co_yield 0.99f;
 
                Engine::renderer->SetCamera({
-                   .position = {11000.0f, 2800.0f},
+                   .position = {11000.0f, 4800.0f},
                    .zoom = 2000.0f
                });
            }, "ProcessMap", 0.9f
@@ -137,7 +137,10 @@ int main(int argc, char **argv) {
         },
 
     });
-    Engine::loadScreen->Run(loadQueue, "assets/layout/overlay/overlay.rml");
+    Engine::loadScreen->Run(
+        loadQueue,
+        "fullscreen/mainmenu"
+    );
 
 
     // Game loop

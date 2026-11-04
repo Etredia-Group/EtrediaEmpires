@@ -3,7 +3,9 @@ module;
 #include <GLFW/glfw3.h>
 
 export module rmlui_glfw;
+import Engine;
 import Input;
+import utils;
 import rml;
 import std;
 
@@ -15,11 +17,11 @@ namespace ee_rml {
         if (isKeyDown(GLFW_KEY_LEFT_CONTROL) || isKeyDown(GLFW_KEY_RIGHT_CONTROL))
             m |= Rml::Input::KeyModifier::KM_CTRL;
         if (isKeyDown(GLFW_KEY_LEFT_SHIFT) || isKeyDown(GLFW_KEY_RIGHT_SHIFT))
-            m |= Rml::Input::KM_SHIFT;
+            m |= Rml::Input::KeyModifier::KM_SHIFT;
         if (isKeyDown(GLFW_KEY_LEFT_ALT) || isKeyDown(GLFW_KEY_RIGHT_ALT))
-            m |= Rml::Input::KM_ALT;
+            m |= Rml::Input::KeyModifier::KM_ALT;
         if (isKeyDown(GLFW_KEY_LEFT_SUPER) || isKeyDown(GLFW_KEY_RIGHT_SUPER))
-            m |= Rml::Input::KM_META;
+            m |= Rml::Input::KeyModifier::KM_META;
         return m;
     }
 
@@ -30,45 +32,45 @@ namespace ee_rml {
         };
 
         if (key >= GLFW_KEY_A  && key <= GLFW_KEY_Z)  return offsetFrom(KeyIdentifier::KI_A, key - GLFW_KEY_A);
-        if (key >= GLFW_KEY_0  && key <= GLFW_KEY_9)  return offsetFrom(KI_0, key - GLFW_KEY_0);
-        if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F12) return offsetFrom(KI_F1, key - GLFW_KEY_F1);
-        if (key >= GLFW_KEY_KP_0 && key <= GLFW_KEY_KP_9) return offsetFrom(KI_NUMPAD0, key - GLFW_KEY_KP_0);
+        if (key >= GLFW_KEY_0  && key <= GLFW_KEY_9)  return offsetFrom(KeyIdentifier::KI_0, key - GLFW_KEY_0);
+        if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F12) return offsetFrom(KeyIdentifier::KI_F1, key - GLFW_KEY_F1);
+        if (key >= GLFW_KEY_KP_0 && key <= GLFW_KEY_KP_9) return offsetFrom(KeyIdentifier::KI_NUMPAD0, key - GLFW_KEY_KP_0);
 
         switch (key) {
-        case GLFW_KEY_SPACE:      return KI_SPACE;
-        case GLFW_KEY_ENTER:      return KI_RETURN;
-        case GLFW_KEY_KP_ENTER:   return KI_NUMPADENTER;
-        case GLFW_KEY_ESCAPE:     return KI_ESCAPE;
-        case GLFW_KEY_TAB:        return KI_TAB;
-        case GLFW_KEY_BACKSPACE:  return KI_BACK;
-        case GLFW_KEY_DELETE:     return KI_DELETE;
-        case GLFW_KEY_INSERT:     return KI_INSERT;
-        case GLFW_KEY_HOME:       return KI_HOME;
-        case GLFW_KEY_END:        return KI_END;
-        case GLFW_KEY_PAGE_UP:    return KI_PRIOR;
-        case GLFW_KEY_PAGE_DOWN:  return KI_NEXT;
-        case GLFW_KEY_LEFT:       return KI_LEFT;
-        case GLFW_KEY_RIGHT:      return KI_RIGHT;
-        case GLFW_KEY_UP:         return KI_UP;
-        case GLFW_KEY_DOWN:       return KI_DOWN;
-        case GLFW_KEY_LEFT_SHIFT:    return KI_LSHIFT;
-        case GLFW_KEY_RIGHT_SHIFT:   return KI_RSHIFT;
-        case GLFW_KEY_LEFT_CONTROL:  return KI_LCONTROL;
-        case GLFW_KEY_RIGHT_CONTROL: return KI_RCONTROL;
-        case GLFW_KEY_LEFT_ALT:      return KI_LMENU;
-        case GLFW_KEY_RIGHT_ALT:     return KI_RMENU;
-        case GLFW_KEY_SEMICOLON:     return KI_OEM_1;
-        case GLFW_KEY_EQUAL:         return KI_OEM_PLUS;
-        case GLFW_KEY_COMMA:         return KI_OEM_COMMA;
-        case GLFW_KEY_MINUS:         return KI_OEM_MINUS;
-        case GLFW_KEY_PERIOD:        return KI_OEM_PERIOD;
-        case GLFW_KEY_SLASH:         return KI_OEM_2;
-        case GLFW_KEY_GRAVE_ACCENT:  return KI_OEM_3;
-        case GLFW_KEY_LEFT_BRACKET:  return KI_OEM_4;
-        case GLFW_KEY_BACKSLASH:     return KI_OEM_5;
-        case GLFW_KEY_RIGHT_BRACKET: return KI_OEM_6;
-        case GLFW_KEY_APOSTROPHE:    return KI_OEM_7;
-        default:                     return KI_UNKNOWN;
+        case GLFW_KEY_SPACE:      return KeyIdentifier::KI_SPACE;
+        case GLFW_KEY_ENTER:      return KeyIdentifier::KI_RETURN;
+        case GLFW_KEY_KP_ENTER:   return KeyIdentifier::KI_NUMPADENTER;
+        case GLFW_KEY_ESCAPE:     return KeyIdentifier::KI_ESCAPE;
+        case GLFW_KEY_TAB:        return KeyIdentifier::KI_TAB;
+        case GLFW_KEY_BACKSPACE:  return KeyIdentifier::KI_BACK;
+        case GLFW_KEY_DELETE:     return KeyIdentifier::KI_DELETE;
+        case GLFW_KEY_INSERT:     return KeyIdentifier::KI_INSERT;
+        case GLFW_KEY_HOME:       return KeyIdentifier::KI_HOME;
+        case GLFW_KEY_END:        return KeyIdentifier::KI_END;
+        case GLFW_KEY_PAGE_UP:    return KeyIdentifier::KI_PRIOR;
+        case GLFW_KEY_PAGE_DOWN:  return KeyIdentifier::KI_NEXT;
+        case GLFW_KEY_LEFT:       return KeyIdentifier::KI_LEFT;
+        case GLFW_KEY_RIGHT:      return KeyIdentifier::KI_RIGHT;
+        case GLFW_KEY_UP:         return KeyIdentifier::KI_UP;
+        case GLFW_KEY_DOWN:       return KeyIdentifier::KI_DOWN;
+        case GLFW_KEY_LEFT_SHIFT:    return KeyIdentifier::KI_LSHIFT;
+        case GLFW_KEY_RIGHT_SHIFT:   return KeyIdentifier::KI_RSHIFT;
+        case GLFW_KEY_LEFT_CONTROL:  return KeyIdentifier::KI_LCONTROL;
+        case GLFW_KEY_RIGHT_CONTROL: return KeyIdentifier::KI_RCONTROL;
+        case GLFW_KEY_LEFT_ALT:      return KeyIdentifier::KI_LMENU;
+        case GLFW_KEY_RIGHT_ALT:     return KeyIdentifier::KI_RMENU;
+        case GLFW_KEY_SEMICOLON:     return KeyIdentifier::KI_OEM_1;
+        case GLFW_KEY_EQUAL:         return KeyIdentifier::KI_OEM_PLUS;
+        case GLFW_KEY_COMMA:         return KeyIdentifier::KI_OEM_COMMA;
+        case GLFW_KEY_MINUS:         return KeyIdentifier::KI_OEM_MINUS;
+        case GLFW_KEY_PERIOD:        return KeyIdentifier::KI_OEM_PERIOD;
+        case GLFW_KEY_SLASH:         return KeyIdentifier::KI_OEM_2;
+        case GLFW_KEY_GRAVE_ACCENT:  return KeyIdentifier::KI_OEM_3;
+        case GLFW_KEY_LEFT_BRACKET:  return KeyIdentifier::KI_OEM_4;
+        case GLFW_KEY_BACKSLASH:     return KeyIdentifier::KI_OEM_5;
+        case GLFW_KEY_RIGHT_BRACKET: return KeyIdentifier::KI_OEM_6;
+        case GLFW_KEY_APOSTROPHE:    return KeyIdentifier::KI_OEM_7;
+        default:                     return KeyIdentifier::KI_UNKNOWN;
         }
     }
 }
@@ -118,7 +120,7 @@ export namespace ee_rml {
 
     class RmlGLFW final : public Rml::SystemInterface {
     public:
-        explicit RmlGLFW(GLFWwindow *window) : window(window){}
+        explicit RmlGLFW(GLFWwindow *window) : window(window) {}
 
         double GetElapsedTime() override { return glfwGetTime(); }
 
@@ -129,6 +131,31 @@ export namespace ee_rml {
         void GetClipboardText(Rml::String &text) override {
             const char *str = glfwGetClipboardString(window);
             text = str ? str : "";
+        }
+
+        bool LogMessage(const Rml::Log::Type type, const Rml::String &message) override {
+            switch (type) {
+                case Rml::Log::LT_ERROR:
+                    LOG(ERROR, "RmlUi. %hs", message.c_str());
+                    break;
+                case Rml::Log::LT_ASSERT:
+                    LOG(CRITICAL, "RmlUi. %hs", message.c_str());
+                    break;
+                case Rml::Log::LT_WARNING:
+                    LOG(WARNING, "RmlUi. %hs", message.c_str());
+                    break;
+                case Rml::Log::LT_INFO:
+                    LOG(INFO, "RmlUi. %hs", message.c_str());
+                    break;
+                case Rml::Log::LT_DEBUG:
+                    LOG(DEBUG, "RmlUi. %hs", message.c_str());
+                    break;
+
+                default:
+                    break;
+            }
+
+            return true;
         }
 
         void JoinPath(
@@ -151,7 +178,7 @@ export namespace ee_rml {
                 translated_path = rest.empty() ? target : target + "/" + std::string(rest);
                 return;
             }
-            Rml::SystemInterface::JoinPath(translated_path, document_path, path);
+            SystemInterface::JoinPath(translated_path, document_path, path);
         }
 
     private:

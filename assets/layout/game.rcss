@@ -21,7 +21,7 @@
 .block {
     display: flex;
     flex-direction: row;
-    border: 2px outset;
+    border-width: 2px;
 
     text-align: center;
     align-items: center;
@@ -30,7 +30,8 @@
 
 .section {
     background: #121c40;
-    border: 3px solid #3d5bb5;
+    border-width: 3px;
+    border-color: #3d5bb5;
     display: flex;
     color: white;
 
@@ -48,6 +49,11 @@
     background-color: black;
     color: white;
     font-size: 16px;
+
     border-color: #1d2749;
     border-radius: 8px;
+}
+
+button {
+
 }

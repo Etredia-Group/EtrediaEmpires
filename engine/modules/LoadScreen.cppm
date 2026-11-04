@@ -1,12 +1,10 @@
 module;
 
 #include <GLFW/glfw3.h>
-#include <RmlUi/Core/Unit.h>
 
 export module LoadScreen;
 import Input;
 import Render;
-import Localizer;
 import UI;
 import std;
 
@@ -28,8 +26,8 @@ export {
         }
 
         std::generator<float> Run() const { return process(); }
-        constexpr float getWeight() const noexcept {return weight;}
-        constexpr const std::string& getLabel() const noexcept {return label;}
+        const float& getWeight() const noexcept {return weight;}
+        const std::string& getLabel() const noexcept {return label;}
 
     private:
         std::function<std::generator<float>()> process;
@@ -52,7 +50,6 @@ export {
             GLFWwindow *window;
             ee_engine::IInput &input;
             ee_engine::IRenderer &renderer;
-            Localizer &localizer;
             UI &ui;
 
             ee_engine::RendererCommand &renderCmdBuffer;
@@ -60,7 +57,9 @@ export {
             std::chrono::milliseconds frameInterval{16};
         };
 
-        explicit LoadScreen(const Context &context) : context(context) {}
+        explicit LoadScreen(const Context &context) :
+            context(context),
+            loadingInfo(&context.ui.GetController<ee_engine::view::LoadingInfo>()) {}
 
         void Run(const std::span<const LoadStage> queue, const std::string &targetScene="") const {
             using clock = std::chrono::steady_clock;
@@ -111,6 +110,7 @@ export {
 
     private:
         const Context context;
+        UI::Binded<ee_engine::view::LoadingInfo> *loadingInfo;
 
         void ProcessWindow() const {
             context.ui.Update();
@@ -124,16 +124,13 @@ export {
         }
 
         void UpdateProgress(const float progress) const {
-            Rml::Binded<ee_engine::LoadingInfo> &loadingInfo = context.ui.loadingInfo;
-            loadingInfo.data.progress = progress * 100.0f;
-            loadingInfo.model.DirtyVariable("progress");
+            loadingInfo->data.progress = progress * 100.0f;
+            loadingInfo->model.DirtyVariable("progress");
         }
 
         void UpdateStage(const std::string &stage) const {
-            Rml::Binded<ee_engine::LoadingInfo> &loadingInfo = context.ui.loadingInfo;
-            //TODO: https://mikke89.github.io/RmlUiDoc/pages/localisation.html
-            loadingInfo.data.stage = context.localizer.Localize("load-stages", stage);
-            loadingInfo.model.DirtyVariable("stage");
+            loadingInfo->data.stage = stage;
+            loadingInfo->model.DirtyVariable("stage");
         }
     };
 }

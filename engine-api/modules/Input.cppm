@@ -28,7 +28,7 @@ export namespace ee_engine {
 
         virtual void Poll() = 0;
         void SetUIHandlers(UIInputHandlers handlers) { uiHandlers = std::move(handlers); }
-        virtual constexpr Rml::SystemInterface* getSystemInterface() noexcept = 0;
+        virtual Rml::SystemInterface* getSystemInterface() noexcept = 0;
 
     protected:
         InputHandlers handlers;
@@ -38,6 +38,6 @@ export namespace ee_engine {
         float mouseX = 0.0f, mouseY = 0.0f;
         float lastMouseX = 0.0f, lastMouseY = 0.0f;
 
-        explicit IInput(const InputHandlers& handlers) { this->handlers = handlers; };
+        explicit IInput(InputHandlers handlers) : handlers(std::move(handlers)) {}
     };
 }

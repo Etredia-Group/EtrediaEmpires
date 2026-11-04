@@ -58,7 +58,7 @@ export namespace ee_engine {
     public:
         virtual ~IRenderer();
 
-        constexpr bool isReady() const noexcept { return _isReady; }
+        bool isReady() const noexcept { return _isReady; }
 
         void RegisterAssetManager(AssetManager &assetManager);
         void RegisterMaterials(const ShaderRefs &shaders);
@@ -76,11 +76,11 @@ export namespace ee_engine {
         void RequestProvincePick(float screenX, float screenY);
         void ClearProvincePick();
 
-        virtual constexpr Rml::RenderInterface* getRenderInterface() noexcept = 0;
-        virtual constexpr ProvinceSSBO &getRegionData(std::uint32_t id) const noexcept = 0;
+        virtual Rml::RenderInterface* getRenderInterface() noexcept = 0;
+        virtual const ProvinceSSBO &getRegionData(std::uint32_t id) noexcept = 0;
 
-        constexpr CameraTransform getCamera() const noexcept { return camera; };
-        constexpr std::optional<ProvinceHit> getHoveredProvince() const noexcept { return hoveredProvince; }
+        const CameraTransform& getCamera() const noexcept { return camera; };
+        std::optional<ProvinceHit> getHoveredProvince() const noexcept;
         glm::vec2 ScreenToWorld(float screenX, float screenY) const;
         glm::vec2 ScreenToWorld(const glm::vec2 &screenPos) const;
 

@@ -115,8 +115,8 @@ export namespace ee_vulkan {
 
         std::generator<float> LoadProvinces() override;
 
-        constexpr Rml::RenderInterface* getRenderInterface() noexcept override {return &*rmlRenderInterface;}
-        constexpr ee_engine::ProvinceSSBO& getRegionData(std::uint32_t id) const noexcept override;
+        Rml::RenderInterface* getRenderInterface() noexcept override {return &*rmlRenderInterface;}
+        const ee_engine::ProvinceSSBO& getRegionData(std::uint32_t id) noexcept override;
 
     protected:
         bool DrawBegin() override;

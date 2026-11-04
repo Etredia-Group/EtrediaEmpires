@@ -39,8 +39,6 @@
         <div class="department"><img src="@gfx/overlay/button_innovations.png" /></div>
         <div class="department"><img src="@gfx/overlay/button_production.png" /></div>
     </div>
-
-    <div id="popups-container"></div>
 </body>
 
 </rml>

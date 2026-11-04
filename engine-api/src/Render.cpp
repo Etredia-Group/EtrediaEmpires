@@ -86,6 +86,8 @@ void ee_engine::IRenderer::ClearProvincePick() {
     RequestProvincePickAt(std::nullopt);
 }
 
+std::optional<ee_engine::ProvinceHit> ee_engine::IRenderer::getHoveredProvince() const noexcept { return hoveredProvince; }
+
 glm::vec2 ee_engine::IRenderer::ScreenToWorld(const float screenX, const float screenY) const {
     return ScreenToWorld(glm::vec2(screenX, screenY));
 }

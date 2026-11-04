@@ -35,8 +35,11 @@
     font-size: 14px;
     background-color: #014269;
     color: white;
+
     border-radius: 2px;
-    border: 1px outset #1d2749;
+    border-width: 1px;
+    border-color: #1d2749;
+
     text-align: center;
 }
 

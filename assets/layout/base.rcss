@@ -7,7 +7,8 @@ tabset tabs
 	display: block;
 	background-color: rgba(255, 255, 255, 0);
 	color: black;
-    font-family: Arial;
+    /*noinspection CssNoGenericFontName*/
+    font-family: "Cascadia Code PL";
 }
 
 rml, html,
@@ -23,6 +24,16 @@ body
 
     pointer-events: none;
 }
+
+button {
+    display: inline-block;
+    padding: 6dp 12dp;
+    color: black;
+    background-color: #e0e0e0;
+    border: 1dp #888;
+}
+button:hover   { background-color: #f0f0f0; }
+button:active  { background-color: #c8c8c8; }
 
 h1
 {
@@ -107,4 +118,166 @@ colgroup
 thead, tbody, tfoot
 {
 	display: table-row-group;
+}
+
+/* ---------- Общие правила для полей ввода ---------- */
+input[type="text"],
+input[type="password"],
+textarea {
+    box-sizing: border-box;
+    height: 28dp;
+    padding: 4dp 8dp;
+    color: black;
+    background-color: white;
+    border: 1dp #888;
+    cursor: text;
+    caret-color: black;
+}
+
+textarea {
+    height: 80dp;
+}
+
+input[type="text"]:hover,
+input[type="password"]:hover,
+textarea:hover {
+    border-color: #555;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+textarea:focus {
+    border-color: #3a7bd5;
+    background-color: #fdfdff;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+    color: #888;
+    background-color: #ececec;
+    border-color: #bbb;
+    cursor: default;
+}
+
+/* Выделенный текст */
+input[type="text"] selection,
+input[type="password"] selection,
+textarea selection {
+    color: white;
+    background-color: #3a7bd5;
+}
+
+/* ---------- Checkbox / Radio ---------- */
+input[type="checkbox"],
+input[type="radio"] {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 16dp;
+    height: 16dp;
+    vertical-align: middle;
+    background-color: white;
+    border: 1dp #888;
+    cursor: pointer;
+}
+
+input[type="radio"] {
+    border-radius: 8dp;
+}
+
+input[type="checkbox"]:hover,
+input[type="radio"]:hover {
+    border-color: #555;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #3a7bd5;
+    border-color: #2b5fa8;
+}
+
+input[type="radio"]:checked {
+    background-color: #3a7bd5;
+    border-color: #2b5fa8;
+}
+
+/* ---------- Range (ползунок) ---------- */
+input[type="range"] {
+    width: 160dp;
+    height: 16dp;
+}
+
+input[type="range"] slidertrack {
+    height: 4dp;
+    margin-top: 6dp;
+    background-color: #bbb;
+    border-radius: 2dp;
+}
+
+input[type="range"] sliderbar {
+    width: 14dp;
+    height: 14dp;
+    margin-top: -5dp;
+    background-color: #3a7bd5;
+    border-radius: 7dp;
+    cursor: pointer;
+}
+
+input[type="range"] sliderbar:hover {
+    background-color: #5b97e8;
+}
+
+input[type="range"] sliderarrowdec,
+input[type="range"] sliderarrowinc {
+    display: none;
+}
+
+/* ---------- Select ---------- */
+select {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 160dp;
+    height: 28dp;
+    padding: 4dp 8dp;
+    color: black;
+    background-color: #e0e0e0;
+    border: 1dp #888;
+    cursor: pointer;
+}
+
+select:hover {
+    background-color: #f0f0f0;
+}
+
+select selectvalue {
+    display: block;
+    margin-right: 20dp;
+}
+
+select selectarrow {
+    width: 16dp;
+    height: 100%;
+    float: right;
+    background-color: #c8c8c8;
+}
+
+/* Выпадающий список */
+select selectbox {
+    margin-top: 1dp;
+    color: black;
+    background-color: white;
+    border: 1dp #888;
+}
+
+select selectbox option {
+    padding: 4dp 8dp;
+    cursor: pointer;
+}
+
+select selectbox option:hover {
+    background-color: #dce8fa;
+}
+
+select selectbox option:checked {
+    color: white;
+    background-color: #3a7bd5;
 }
