@@ -15,6 +15,7 @@ add_library_target(${LIB})
 
 target_link_libraries(${LIB} PUBLIC utils)
 target_link_libraries(${LIB} PUBLIC economy)
+target_link_libraries(${LIB} PUBLIC server)
 target_link_libraries(${LIB} PRIVATE glfw)
 target_link_libraries(${LIB} PRIVATE glm::glm)
 target_link_libraries(${LIB} PRIVATE xxHash::xxhash)

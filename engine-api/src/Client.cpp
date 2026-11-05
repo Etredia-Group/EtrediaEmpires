@@ -23,15 +23,16 @@ std::generator<float> ee_engine::Client::Init() const {
     }
 }
 
-const ee_engine::IDataChannel* ee_engine::Client::GetConnection() const {
+ee_engine::IDataChannel* ee_engine::Client::GetConnection() const {
     return networkConnection;
 }
 
-void ee_engine::Client::ConnectServer() {
+void ee_engine::Client::ConnectServer(const char *ip) {
     if (networkConnection != nullptr)
         Deallocate(networkConnection);
 
     networkConnection = Allocate<NetworkChannel>();
+    networkConnection->lobby.Connect(ip);
 }
 
 void ee_engine::Client::LoadSave(const AssetHandle save) {

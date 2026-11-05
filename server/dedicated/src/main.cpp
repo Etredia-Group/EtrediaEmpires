@@ -9,6 +9,8 @@ int main(const int argc, char **argv) {
 
     lobby.Create(7777);
 
+    while (true) {}
+
 
     Logger::UnregisterThread();
     Logger::Release();

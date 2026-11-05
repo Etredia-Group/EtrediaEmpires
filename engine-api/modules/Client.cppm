@@ -25,8 +25,8 @@ export namespace ee_engine
 
         //void Send(); -> Request(SEND)
 
-        const IDataChannel* GetConnection() const;
-        void ConnectServer();
+        IDataChannel* GetConnection() const;
+        void ConnectServer(const char *ip);
 
         void LoadSave(AssetHandle save);
 

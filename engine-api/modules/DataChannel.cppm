@@ -1,6 +1,7 @@
 module;
 
 export module DataChannel;
+import Network;
 import std;
 
 export namespace ee_engine
@@ -16,6 +17,8 @@ export namespace ee_engine
 
     class NetworkChannel final : public IDataChannel {
     public:
+        ee_network::Lobby lobby;
+
         void Request() override;
     };
 

@@ -19,6 +19,7 @@ GLFWInput::GLFWInput(const ee_engine::InputHandlers &handlers) : IInput(handlers
         GLFW_CALLBACK(zooming, static_cast<float>(dx), static_cast<float>(dy));
     });
 
+    //TODO: use GLFW_CALLBACK macro
     glfwSetCursorPosCallback(ee_engine::Engine::window, [](GLFWwindow *window, const double x, const double y) {
         if (const GLFWInput *input = GLFW_GET_INPUT; input->uiHandlers.mouseMove) {
             input->uiHandlers.mouseMove(static_cast<float>(x), static_cast<float>(y));

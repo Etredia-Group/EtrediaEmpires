@@ -176,6 +176,8 @@ namespace logger {
         }
     };
 
+    //TODO: use fixed buffer size for convertion and std::string_view for format line
+    // because having length as template parameter blows up specializations.
     /**
      * Function-like utility type for ASCII-only formatted logging.
      * @note Non-ASCII characters may be converted incorrectly due to simple
