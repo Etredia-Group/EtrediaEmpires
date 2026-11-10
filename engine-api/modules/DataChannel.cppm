@@ -17,13 +17,13 @@ export namespace ee_engine
 
     class NetworkChannel final : public IDataChannel {
     public:
-        ee_network::Lobby lobby;
+        ee_network::LobbyClient lobby;
 
         void Request() override;
     };
 
-    class ThreadChannel final : public IDataChannel {
-    public:
-        void Request() override;
-    };
+    // class ThreadChannel final : public IDataChannel {
+    // public:
+    //     void Request() override;
+    // };
 }

@@ -3,10 +3,12 @@ module;
 #include <steam/isteamnetworkingsockets.h>
 
 export module Network;
+import :Packet;
 import SteamExtention;
 import std;
 
 export namespace ee_network {
+    using EndpointAddress = std::string;
 
     class Lobby {
     public:
@@ -16,13 +18,16 @@ export namespace ee_network {
         void Tick();
 
     protected:
-        const std::int32_t MAX_MESSAGES_ON_POLL = 64;
+        static constexpr std::int32_t MAX_MESSAGES_ON_POLL = 64;
         bool isConnected = false;
 
         ISteamNetworkingSockets *steam;
+        SteamNetConfig config;
 
         void Poll();
         virtual const std::int32_t ReceiveMessages(ISteamNetworkingMessage* *receivedMessages) = 0;
+
+        [[nodiscard]] bool ASSERT_CONNECTED(std::source_location location=std::source_location::current()) const;
     };
 
     class LobbyServer final : public Lobby {
@@ -30,14 +35,15 @@ export namespace ee_network {
         ~LobbyServer() override;
         void Create(std::uint16_t port);
 
+        void Broadcast(const PacketBase &packet, SendFlags flags);
+
     protected:
         const std::int32_t ReceiveMessages(ISteamNetworkingMessage **receivedMessages) override;
 
     private:
-        HSteamListenSocket server = 0;
-        HSteamNetPollGroup pollGroup = 0;
-        std::set<HSteamNetConnection> clients;
-        SteamNetConfig config;
+        HSteamListenSocket server = k_HSteamListenSocket_Invalid;
+        HSteamNetPollGroup pollGroup = k_HSteamNetPollGroup_Invalid;
+        std::unordered_map<HSteamNetConnection, EndpointAddress> clients;
 
         void MakeConfig();
 
@@ -50,11 +56,18 @@ export namespace ee_network {
         void Connect(const char *addressStr);
         void Disconnect();
 
+        void Send(const PacketBase &packet, SendFlags flags) const;
+
     protected:
         const std::int32_t ReceiveMessages(ISteamNetworkingMessage **receivedMessages) override;
 
     private:
-        HSteamNetConnection connection = 0;
+        HSteamNetConnection connection = k_HSteamNetConnection_Invalid;
+        EndpointAddress endpointAddress = "";
+
+        void MakeConfig();
+
+        static void OnStatusChanged(const SteamNetConnectionStatusChangedCallback_t *event);
     };
 
 }

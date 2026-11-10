@@ -5,11 +5,13 @@ int main(const int argc, char **argv) {
     Logger::Init(L"/P7.Sink=Console");
     Logger::RegisterThread(L"Main Server");
 
-    ee_network::Lobby lobby;
+    ee_network::LobbyServer lobby;
 
     lobby.Create(7777);
 
-    while (true) {}
+    while (true) {
+        lobby.Tick();
+    }
 
 
     Logger::UnregisterThread();

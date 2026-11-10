@@ -1,6 +1,6 @@
 module;
 
-#include <steam/isteamnetworkingsockets.h>
+#include <steam/isteamnetworkingutils.h>
 
 export module SteamExtention;
 import std;
@@ -18,6 +18,13 @@ export namespace ee_network {
         DISCONNECTION_STATUS_FAILED_TO_ACCEPT,
 
         DISCONNECTION_STATUS_NONE = k_ESteamNetConnectionEnd_AppException_Max
+    };
+
+    enum class SendFlags {
+        RELIABLE = k_nSteamNetworkingSend_Reliable,
+        UNRELIABLE = k_nSteamNetworkingSend_Unreliable,
+        NONAGLE = k_nSteamNetworkingSend_NoNagle,
+        NODELAY = k_nSteamNetworkingSend_NoDelay
     };
 
     std::string AddressToString(const SteamNetworkingIPAddr &address) {

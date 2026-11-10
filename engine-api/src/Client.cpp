@@ -39,7 +39,11 @@ void ee_engine::Client::LoadSave(const AssetHandle save) {
     this->save = save;
 }
 
-void ee_engine::Client::Update() {}
+void ee_engine::Client::Update() {
+    if (networkConnection != nullptr) {
+        networkConnection->lobby.Tick();
+    }
+}
 
 void ee_engine::Client::Release() {}
 
