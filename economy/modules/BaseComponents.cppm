@@ -8,6 +8,5 @@ import aliases;
 export namespace ee_economy {
 
     struct OwnerCorpoComponent { entt::entity entity; };
-    struct OnRegionComponent { ee::RegionId id; };
 
 }

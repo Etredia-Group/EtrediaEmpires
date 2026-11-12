@@ -3,6 +3,8 @@ module;
 #include <entt/entt.hpp>
 
 export module Economy:Firm;
+import :Resources;
+import EcsContext;
 import aliases;
 import std;
 
@@ -14,18 +16,24 @@ export namespace ee_economy {
         ee::RecipeTag constructionRecipe;
         std::uint8_t constructionSpeed;
     };
-    using FirmDefId = std::uint8_t;
     using FirmList = std::vector<FirmDefinition>;
 
-    class FirmDefinitionTable {
+    class FirmDefinitionTable final : public ee_ecs::TagTable<FirmDefinition, ee::FirmDefId> {
     public:
-        explicit FirmDefinitionTable(FirmList &definitions);
-        std::optional<FirmDefId> Find(ee::FirmTag tag) const noexcept;
-        const FirmDefinition &operator[](FirmDefId id) const noexcept;
+        FirmDefinitionTable(entt::registry &registry, const ee::ResourceLayout &sharedStorage);
+        void OnAdd(const FirmDefinition &definition) override;
+
+        std::span<const ee::ResourceId> getResourceLayout(ee::FirmDefId id) const noexcept;
+        std::optional<ee::ResourceTypesRange> getResourceIndex(
+            ee::FirmDefId id,
+            ee::ResourceId resource
+        ) const noexcept;
 
     private:
-        FirmList &definitions;
-        entt::dense_map<ee::FirmTag, FirmDefId> defByTag;
+        ResourceTable &resourcesContext;
+        ProductionRecipeTable &recipesContext;
+        std::vector<ee::ResourceLayout> resourceLayouts;
+        ee::ResourceLayout sharedResourceLayout;
     };
 
 }
@@ -34,11 +42,13 @@ export namespace ee_economy {
 
 export namespace ee_economy {
 
-    struct FirmDefComponent { FirmDefId definition; };
+    struct FirmDefComponent { ee::FirmDefId id; };
     struct FirmBatchComponent {
-        std::uint16_t count;
+        std::uint32_t count;
         float damage;
         float efficiency;
+
+        ee::StorageSlot storageSlot;
     };
 
 }
@@ -48,5 +58,7 @@ export namespace ee_economy {
 export namespace ee_economy {
 
     void MergeFirmBatches(FirmBatchComponent &target, const FirmBatchComponent &source) noexcept;
+    ee::ResourceAmount FirmsScaleIncome(const FirmBatchComponent &batch, ee::ResourceAmount value) noexcept;
+    ee::ResourceAmount FirmsScaleOutcome(const FirmBatchComponent &batch, ee::ResourceAmount value) noexcept;
 
 }

@@ -22,6 +22,7 @@ add_subdirectory(sdk)
 add_subdirectory(p7lib)
 add_subdirectory(utils)
 
+add_subdirectory(ecs-context)
 add_subdirectory(economy)
 
 add_subdirectory(server/lib)

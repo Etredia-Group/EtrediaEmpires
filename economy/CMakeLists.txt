@@ -11,4 +11,5 @@ find_package(EnTT CONFIG REQUIRED)
 add_library_target(${LIB})
 
 target_link_libraries(${LIB} PUBLIC utils)
+target_link_libraries(${LIB} PUBLIC ecs-context)
 target_link_libraries(${LIB} PRIVATE EnTT::EnTT)
