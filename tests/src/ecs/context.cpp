@@ -39,24 +39,6 @@ struct TableB : ee_ecs::TagTable<B> {
 };
 template<> struct ee_ecs::table_by_tag<ee::RecipeIdentity> {using type = TableB;};
 
-TEST(EcsContext, TagTableAdd) {
-    TableA a;
-    a.Add({
-        {.tag = static_cast<A::Tag>(20)},
-        {.tag = static_cast<A::Tag>(10)},
-    });
-
-    ASSERT_EQ(a.getSize(), 2);
-    ASSERT_EQ(a.GetAll().size(), 2);
-    ASSERT_EQ(a.FindId(20), 0);
-    ASSERT_EQ(a.FindId(10), 1);
-    ASSERT_EQ(a.Get(0).tag, static_cast<A::Tag>(20));
-    ASSERT_EQ(a.Get(1).tag, static_cast<A::Tag>(10));
-    ASSERT_EQ(a.FindItem(20).tag, static_cast<A::Tag>(20));
-    ASSERT_EQ(a.FindItem(10).tag, static_cast<A::Tag>(10));
-    ASSERT_EQ(a.count, 2);
-}
-
 TEST(EcsContext, TagTableAddMultiple) {
     TableA a;
     a.Add({
@@ -150,4 +132,23 @@ TEST(EcsContext, LinkTagTables) {
 
     ASSERT_TRUE(tableB.isLinked);
     ASSERT_EQ(tableB.count, 100 + 200);
+}
+
+TEST(EcsContext, RegionIndexAddRemove) {
+    entt::registry registry;
+    const ee_ecs::RegionIndex &index = registry.ctx().emplace<ee_ecs::RegionIndex>();
+
+    const entt::entity entity = registry.create();
+    ee_ecs::PlaceInRegion(registry, entity, 123);
+
+    std::span<const entt::entity> entities = index.Get(123);
+    ASSERT_EQ(entities.size(), 1);
+    ASSERT_EQ(entities[0], entity);
+    ASSERT_EQ(registry.get<ee_ecs::OnRegionComponent>(entity).id, 123);
+
+    ee_ecs::RemoveFromRegion(registry, entity);
+
+    entities = index.Get(123);
+    ASSERT_EQ(entities.size(), 0);
+    ASSERT_FALSE(registry.all_of<ee_ecs::OnRegionComponent>(entity));
 }
