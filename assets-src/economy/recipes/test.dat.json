@@ -1,20 +1,20 @@
 {
   "recipes": [
     {
-      "tag": "res1.1",
+      "tag": "$res1.1",
       "in": [
-        {"tag": "res0.1", "count": 2},
-        {"tag": "res0.2", "count": 1}
+        { "resource": "$res0.1", "count": 2 },
+        { "resource": "$res0.2", "count": 1 }
       ],
       "out": [
-        {"tag": "res1.1", "count": 1}
+        { "resource": "$res1.1", "count": 1 }
       ]
     },
 
     {
-      "tag": "firm1",
+      "tag": "$firm1",
       "in": [
-        { "tag": "res0.1", "count": 5 }
+        { "resource": "$res0.1", "count": 5 }
       ],
       "out": []
     }

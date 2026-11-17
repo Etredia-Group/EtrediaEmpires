@@ -2,18 +2,27 @@ export module aliases;
 import std;
 
 export namespace ee {
-    using Tag = std::uint32_t;
-    using ResourceTag = Tag;
-    using FirmTag = Tag;
-    using RecipeTag = Tag;
+    using Id = std::uint32_t;
+    using RegionId = Id;
 
-    using RegionId = std::uint32_t;
-    using ResourceId = std::uint8_t;
-    using RecipeId = std::uint16_t;
-    using FirmDefId = std::uint8_t;
-
-    using ResourceLayout = std::vector<ResourceId>; // Resources storage definition
-    using ResourceTypesRange = std::uint16_t;
-    using ResourceAmount = std::uint32_t;
+    using ResourceLayout = std::vector<Id>; // Resources storage definition
+    using ResourceTypesRange = std::uint16_t; // Range must be <= Id range
+    using ResourceAmount = std::uint16_t;
+    using ResourceSize = std::uint8_t;
+    using ResourceMass = std::uint8_t;
     using StorageSlot = std::uint32_t; // Range of slots depends on amount of batches per firm type
+    using StorageUsage = std::uint32_t;
+}
+
+export namespace ee {
+    using Tag = Id; // Tag must be same as Id for Identity linkage
+    enum class ResourceIdentity : Id {};
+    enum class FirmIdentity : Id {};
+    enum class RecipeIdentity : Id {};
+
+    //TODO: codegen
+    template<typename T> concept ITag =
+        std::same_as<std::remove_cvref_t<T>, ResourceIdentity> ||
+        std::same_as<std::remove_cvref_t<T>, FirmIdentity> ||
+        std::same_as<std::remove_cvref_t<T>, RecipeIdentity>;
 }

@@ -1,9 +1,5 @@
-module;
-
-#include <entt/entt.hpp>
-
 module Economy;
-
+import std;
 
 ee_economy::FirmDefinitionTable::FirmDefinitionTable(
     entt::registry &registry,
@@ -12,36 +8,59 @@ ee_economy::FirmDefinitionTable::FirmDefinitionTable(
     recipesContext(registry.ctx().get<ProductionRecipeTable>()),
     sharedResourceLayout(sharedStorage) {}
 
-void ee_economy::FirmDefinitionTable::OnAdd(const FirmDefinition &definition) {
+void ee_economy::FirmDefinitionTable::OnLink(const FirmDefinition &definition) {
     ee::ResourceLayout layout = sharedResourceLayout;
-    const ProductionRecipe &recipe = recipesContext.Get(definition.productionRecipe);
+    const ProductionRecipe &recipe = recipesContext.Get(std::to_underlying(definition.productionRecipe));
 
-    auto add = [&](const ee::ResourceTag tag) {
-        if (
-            const ee::ResourceId id = resourcesContext.GetId(tag);
-            std::ranges::find(layout, id) == layout.end()
-        ) {
+    auto add = [&](const ee::Id id) {
+        if (std::ranges::find(layout, id) == layout.end()) {
             layout.push_back(id);
         }
     };
 
-    for (const ProductionRecipe::Entry &entry : recipe.in) add(entry.tag);
-    for (const ProductionRecipe::Entry &entry : recipe.out) add(entry.tag);
+    for (const ProductionRecipe::Entry &entry : recipe.in) add(std::to_underlying(entry.resource));
+    for (const ProductionRecipe::Entry &entry : recipe.out) add(std::to_underlying(entry.resource));
 
     resourceLayouts.push_back(std::move(layout));
 }
 
-std::span<const ee::ResourceId> ee_economy::FirmDefinitionTable::getResourceLayout(
-    const ee::FirmDefId id
-) const noexcept {
-    return resourceLayouts[id];
+void ee_economy::FirmDefinitionTable::OnLink() {
+    productions.assign(definitions.size(), {});
+
+    for (std::size_t i = 0; i < definitions.size(); i++) {
+        const ProductionRecipe &recipe = recipesContext.Get(std::to_underlying(definitions[i].productionRecipe));
+
+        for (const auto &[resource, count] : recipe.in) {
+            const ee::ResourceTypesRange resourceIndex = getResourceIndex(i, std::to_underlying(resource)).value();
+            productions[i].in.push_back({
+                .resource = static_cast<ee::ResourceIdentity>(resourceIndex),
+                .count = count
+            });
+        }
+
+        for (const auto &[resource, count] : recipe.out) {
+            const ee::ResourceTypesRange resourceIndex = getResourceIndex(i, std::to_underlying(resource)).value();
+            productions[i].out.push_back({
+                .resource = static_cast<ee::ResourceIdentity>(resourceIndex),
+                .count = count
+            });
+        }
+    }
+}
+
+std::span<const ee::Id> ee_economy::FirmDefinitionTable::getResourceLayout(const ee::Id firmId) const noexcept {
+    return resourceLayouts[firmId];
+}
+
+const ee_economy::ProductionRecipe& ee_economy::FirmDefinitionTable::getProduction(ee::Id firmId) const noexcept {
+    return productions[firmId];
 }
 
 std::optional<ee::ResourceTypesRange> ee_economy::FirmDefinitionTable::getResourceIndex(
-    const ee::FirmDefId id,
-    const ee::ResourceId resource
+    const ee::Id firmId,
+    const ee::Id resource
 ) const noexcept {
-    const ee::ResourceLayout &layout = resourceLayouts[id];
+    const ee::ResourceLayout &layout = resourceLayouts[firmId];
     const auto entry = std::ranges::find(layout, resource);
     if (entry == layout.end()) return std::nullopt;
 
@@ -59,16 +78,10 @@ void ee_economy::MergeFirmBatches(FirmBatchComponent &target, const FirmBatchCom
     target.count = targetCount;
 }
 
-ee::ResourceAmount ee_economy::FirmsScaleIncome(
-    const FirmBatchComponent &batch,
-    const ee::ResourceAmount value
-) noexcept {
-    return value; //TODO
+float ee_economy::CalcFirmsIncomeFactor(const FirmBatchComponent &batch) noexcept {
+    return static_cast<float>(batch.count) * (1.0 - batch.damage);
 }
 
-ee::ResourceAmount ee_economy::FirmsScaleOutcome(
-    const FirmBatchComponent &batch,
-    const ee::ResourceAmount value
-) noexcept {
-    return value; //TODO
+float ee_economy::CalcFirmsOutcomeFactor(const FirmBatchComponent &batch) noexcept {
+    return static_cast<float>(batch.count) * batch.efficiency * (1.0 - batch.damage);
 }

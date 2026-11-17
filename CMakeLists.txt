@@ -20,10 +20,12 @@ project (EtrediaEmpires LANGUAGES CXX)
 add_subdirectory(sdk)
 
 add_subdirectory(p7lib)
+add_subdirectory(entt-module)
 add_subdirectory(utils)
 
 add_subdirectory(ecs-context)
 add_subdirectory(economy)
+add_subdirectory(ecs-world)
 
 add_subdirectory(server/lib)
 add_subdirectory(server/dedicated)

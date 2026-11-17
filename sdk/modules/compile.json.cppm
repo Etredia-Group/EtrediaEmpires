@@ -28,7 +28,7 @@ export namespace ee_sdk {
         }
 
         void Compile(glz::json_t &asset) const {
-            CompileRecursive(asset, CompileHashes);
+            CompileRecursive(asset, &CompileHashes);
             CompileRecursive(asset, std::bind_front(&JsonCompiler::CompileMappings, this));
             CompileRecursive(asset, &CompileColors);
         }
@@ -69,32 +69,34 @@ export namespace ee_sdk {
             }
         }
 
-        //TODO: extern config
-        static bool NeedsCompile(const std::basic_string<char> &key) {
-            return
-                key == "tag" ||
-                key.ends_with("AssetID") ||
-                key.ends_with("Type") ||
-                key.ends_with("Recipe");
+        static bool NeedsCompileHash(const std::string &value) {
+            return value.size() > 1 && value.starts_with("$");
+        }
+
+        static bool NeedsCompileMapping(const std::string &value) {
+            return !value.starts_with("#") && !value.starts_with("$");
         }
 
         static void CompileHashes(const std::basic_string<char> &key, glz::json_t &value) {
             if (!value.is_string()) return;
-            if (!NeedsCompile(key)) return;
+            if (!NeedsCompileHash(value.get_string())) return;
 
             const std::filesystem::path linkPath = value.get_string();
             const auto linkPath8 = linkPath.generic_u8string();
-            std::uint32_t hash = HashData(linkPath8.data(), linkPath8.size());
-            LOG(INFO, "COMPILED HASH: Replace string [%s] with [%u] hash.", linkPath.c_str(), hash);
+            std::uint32_t hash = HashData(linkPath8.data() + 1, linkPath8.size() - 1);
+            LOG(INFO, "COMPILED HASH [key:%hs]: Replace string [%s] with [%u] hash.",
+                key.c_str(), linkPath.c_str(), hash);
             value = hash;
         }
 
-        void CompileMappings(const std::basic_string<char> &, glz::json_t &value) const {
+        void CompileMappings(const std::basic_string<char> &key, glz::json_t &value) const {
             if (!value.is_string()) return;
             const std::string& value_string = value.get_string();
+            if (!NeedsCompileMapping(value_string)) return;
 
             if (const std::optional<std::uint32_t> toValue = FindMapping(value_string)) {
-                LOG(INFO, "COMPILED MAPPING: Replace string [%hs] with [0x%X] (%u) value",
+                LOG(INFO, "COMPILED MAPPING [key:%hs]: Replace string [%hs] with [0x%X] (%u) value",
+                    key.c_str(),
                     value_string.c_str(),
                     *toValue,
                     *toValue
@@ -103,10 +105,12 @@ export namespace ee_sdk {
             }
         }
 
-        static void CompileColors(const std::basic_string<char> &, glz::json_t &value) {
+        static void CompileColors(const std::basic_string<char> &key, glz::json_t &value) {
             if (!value.is_string()) return;
+            const std::string &value_string = value.get_string();
+            if (!value_string.starts_with('#')) return;
 
-            const char *colorStr = value.get_string().c_str() + 1;
+            const char *colorStr = value_string.c_str() + 1;
             const char *colorStrPointer = colorStr;
             std::uint8_t b = 0, g = 0, r = 0;
             std::uint32_t hex = 0;
@@ -117,8 +121,8 @@ export namespace ee_sdk {
 
             hex = colorToHex(r, g, b, true);
 
-            LOG(INFO, "COMPILED COLOR: Replace string [%hs] with 0x[%X] (RGB %u, %u, %u) color",
-                colorStr, hex, r, g, b);
+            LOG(INFO, "COMPILED COLOR [key:%hs]: Replace string [%hs] with 0x[%X] (RGB %u, %u, %u) color",
+                key.c_str(), colorStr, hex, r, g, b);
             value = hex;
         }
     };

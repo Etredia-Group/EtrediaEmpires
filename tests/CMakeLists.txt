@@ -15,7 +15,10 @@ add_executable_target(${EXE})
 target_link_libraries(${EXE} PRIVATE GTest::gtest_main)
 target_link_libraries(${EXE} PUBLIC utils)
 target_link_libraries(${EXE} PUBLIC engine-api)
+target_link_libraries(${EXE} PUBLIC entt-module)
+target_link_libraries(${EXE} PUBLIC ecs-context)
 target_link_libraries(${EXE} PUBLIC economy)
+target_link_libraries(${EXE} PUBLIC ecs-world)
 
 # Test
 

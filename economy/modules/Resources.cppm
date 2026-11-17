@@ -6,24 +6,29 @@ import std;
 export namespace ee_economy {
 
     struct Resource {
-        ee::ResourceTag tag;
-        std::uint8_t baseCost;
-        std::uint8_t size;
-        std::uint8_t mass;
+        using Tag = ee::ResourceIdentity; Tag tag;
+
+        std::uint16_t baseCost;
+        ee::ResourceSize size;
+        ee::ResourceMass mass;
     };
     using ResourceList = std::vector<Resource>;
-    class ResourceTable final : public ee_ecs::TagTable<Resource, ee::ResourceId> {};
+    class ResourceTable final : public ee_ecs::TagTable<Resource> {};
 
     struct ProductionRecipe {
-        ee::RecipeTag tag;
+        using Tag = ee::RecipeIdentity; Tag tag;
 
         struct Entry {
-            ee::ResourceTag tag;
+            ee::ResourceIdentity resource;
             ee::ResourceAmount count;
         };
         std::vector<Entry> in;
         std::vector<Entry> out;
     };
     using ProductionRecipeList = std::vector<ProductionRecipe>;
-    class ProductionRecipeTable final : public ee_ecs::TagTable<ProductionRecipe, ee::RecipeId> {};
+    class ProductionRecipeTable final : public ee_ecs::TagTable<ProductionRecipe> {};
+
 }
+
+template<> struct ee_ecs::table_by_tag<ee::ResourceIdentity>{ using type = ee_economy::ResourceTable; };
+template<> struct ee_ecs::table_by_tag<ee::RecipeIdentity>{ using type = ee_economy::ProductionRecipeTable; };

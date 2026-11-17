@@ -1,7 +1,3 @@
-module;
-
-#include <entt/entt.hpp>
-
 module Economy;
 import :BaseComponents;
 import EcsContext;
@@ -15,7 +11,7 @@ std::size_t ee_economy::FirmIndexHash::operator()(FirmIndex x) const noexcept {
 
 constexpr ee_economy::FirmIndex ee_economy::GetFirmIndex(
     const ee::RegionId region,
-    const ee::FirmDefId definition
+    const ee::Id definition
 ) noexcept {
     return (static_cast<FirmIndex>(region) << 32) | definition;
 }
@@ -30,7 +26,7 @@ entt::entity ee_economy::AddFirms(
     entt::registry &registry,
     const entt::entity corporation,
     const ee::RegionId region,
-    const ee::FirmDefId firmsDef,
+    const ee::Id firmsDef,
     FirmBatchComponent &firmsData
 ) {
     Firms &firms = registry.get<Corporation>(corporation).firms;

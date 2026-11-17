@@ -2,7 +2,7 @@
   "save": {
     "subjects": [
       {
-        "tag": "UCB",
+        "tag": "$UCB",
         "color": "#E5EA5D",
         "regions": [
           "dineria",
@@ -35,7 +35,7 @@
         ]
       },
       {
-        "tag": "FSC",
+        "tag": "$FSC",
         "color": "#D88CC9",
         "regions": [
           "alende",
@@ -51,7 +51,7 @@
         ]
       },
       {
-        "tag": "TRP",
+        "tag": "$TRP",
         "color": "#C8ABCC",
         "regions": [
           "barlakir",
@@ -63,7 +63,7 @@
         ]
       },
       {
-        "tag": "ISH",
+        "tag": "$ISH",
         "color": "#EADCC5",
         "regions": [
           "langat",
@@ -109,7 +109,7 @@
         ]
       },
       {
-        "tag": "IID",
+        "tag": "$IID",
         "color": "#AD3832",
         "regions": [
           "tornfkills",
@@ -138,7 +138,7 @@
         ]
       },
       {
-        "tag": "KAR",
+        "tag": "$KAR",
         "color": "#A4B5D8",
         "regions": [
           "bargental",

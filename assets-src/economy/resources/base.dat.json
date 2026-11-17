@@ -1,13 +1,13 @@
 {
   "resources": [
     {
-      "tag": "coal",
+      "tag": "$coal",
       "baseCost": 10,
       "size": 0,
       "mass": 0
     },
     {
-      "tag": "oil",
+      "tag": "$oil",
       "baseCost": 50,
       "size": 0,
       "mass": 0

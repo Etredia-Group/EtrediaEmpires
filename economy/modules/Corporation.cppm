@@ -1,8 +1,5 @@
-module;
-
-#include <entt/entt.hpp>
-
 export module Economy:Corporation;
+import entt;
 import aliases;
 import :Firm;
 
@@ -12,7 +9,7 @@ export namespace ee_economy {
     struct FirmIndexHash {
         std::size_t operator()(FirmIndex x) const noexcept;
     };
-    constexpr FirmIndex GetFirmIndex(ee::RegionId region, ee::FirmDefId definition) noexcept;
+    constexpr FirmIndex GetFirmIndex(ee::RegionId region, ee::Id definition) noexcept;
     using Firms = entt::dense_map<FirmIndex, entt::entity, FirmIndexHash>;
 
 }
@@ -36,7 +33,7 @@ export namespace ee_economy {
         entt::registry &registry,
         entt::entity corporation,
         ee::RegionId region,
-        ee::FirmDefId firmsDef,
+        ee::Id firmsDef,
         FirmBatchComponent &firmsData
     );
     void DestroyFirms(entt::registry &registry, entt::entity firmsBatch);

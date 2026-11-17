@@ -1,8 +1,6 @@
-module;
-
-#include <entt/entt.hpp>
-
 export module EcsContext:RegionIndex;
+import std;
+import entt;
 import aliases;
 
 export namespace ee_ecs {

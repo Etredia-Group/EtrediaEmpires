@@ -1,7 +1,3 @@
-module;
-
-#include <entt/entt.hpp>
-
 module EcsContext;
 
 void ee_ecs::RegionIndex::Add(const ee::RegionId region, const entt::entity entity) {

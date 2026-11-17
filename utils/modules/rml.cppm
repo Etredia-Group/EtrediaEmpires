@@ -1,8 +1,7 @@
 module;
 
 #include <ee_utils/compiler.hpp>
-#include <rfl/to_view.hpp>
-#include <rfl/type_name_t.hpp>
+#include <ee_utils/reflection.hpp>
 #include <RmlUi/Core.h>
 #include <RmlUi/Core/TextInputContext.h>
 

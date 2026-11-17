@@ -1,8 +1,5 @@
-module;
-
-#include <entt/entt.hpp>
-
 export module Economy:BaseComponents;
+import entt;
 import aliases;
 
 export namespace ee_economy {

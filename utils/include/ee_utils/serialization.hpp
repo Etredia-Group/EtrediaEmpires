@@ -7,18 +7,49 @@
 #ifndef SERIALIZATION_HPP
 #define SERIALIZATION_HPP
 
+#include <type_traits>
 #include <glm/glm.hpp>
 #include <rfl/capnproto.hpp>
 
 namespace rfl {
-    template <glm::length_t length, typename T>
-    struct GlmVecImpl {
-        float x; float y;
 
-        static GlmVecImpl from_class(const glm::vec<length, T>& vector) noexcept {
-            return {vector.x,vector.y};
+    template <typename T> concept ScopedEnum = std::is_scoped_enum_v<T>;
+
+    template <ScopedEnum TEnum>
+    struct Reflector<TEnum> {
+        using ReflType = std::underlying_type_t<TEnum>;
+        static ReflType from(const TEnum &tag) noexcept { return static_cast<ReflType>(tag); }
+        static TEnum to(const ReflType &value) noexcept { return static_cast<TEnum>(value); }
+    };
+
+}
+
+namespace rfl {
+    template <glm::length_t length, typename Scalar> struct GlmVecImpl;
+
+    template <typename Scalar>
+    struct GlmVecImpl<2, Scalar> {
+        Scalar x; Scalar y;
+        static GlmVecImpl from_class(const glm::vec<2, Scalar> &vector) noexcept { return {vector.x, vector.y}; }
+        glm::vec<2, Scalar> to_class() const { return {x, y}; }
+    };
+
+    template <typename Scalar>
+    struct GlmVecImpl<3, Scalar> {
+        Scalar x; Scalar y; Scalar z;
+        static GlmVecImpl from_class(const glm::vec<3, Scalar> &vector) noexcept {
+            return {vector.x, vector.y, vector.z};
         }
-        glm::vec<length, T> to_class() const { return {x, y}; }
+        glm::vec<3, Scalar> to_class() const { return {x, y, z}; }
+    };
+
+    template <typename Scalar>
+    struct GlmVecImpl<4, Scalar> {
+        Scalar x; Scalar y; Scalar z; Scalar w;
+        static GlmVecImpl from_class(const glm::vec<4, Scalar> &vector) noexcept {
+            return {vector.x, vector.y, vector.z, vector.w};
+        }
+        glm::vec<4, Scalar> to_class() const { return {x, y, z, w}; }
     };
 }
 
