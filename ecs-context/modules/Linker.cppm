@@ -29,7 +29,7 @@ export namespace ee_ecs {
 
         /**
          * Replace hash tags with runtime ids.
-         * @note All tag tables used in game must be registered in context before linkage.
+         * @note All tag tables used in game must be registered in context and filled before linkage.
          * @warning Repeating linkage is UB.
          * @tparam TDef Type of the table data.
          * @param table instance of the table.

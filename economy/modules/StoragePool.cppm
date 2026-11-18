@@ -15,6 +15,7 @@ export namespace ee_economy {
         StoragePool(StoragePool &&) noexcept = default;
         StoragePool &operator=(StoragePool &&) noexcept = default;
 
+        // resource - production index, not recipe index, not table id
         void SetResource(
             ee::StorageSlot slot,
             ee::ResourceIdentity resource,

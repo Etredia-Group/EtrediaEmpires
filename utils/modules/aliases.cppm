@@ -20,6 +20,11 @@ export namespace ee {
     enum class FirmIdentity : Id {};
     enum class RecipeIdentity : Id {};
 
+    union RIdentity{
+        Tag tag;
+        ResourceIdentity id;
+    };
+
     //TODO: codegen
     template<typename T> concept ITag =
         std::same_as<std::remove_cvref_t<T>, ResourceIdentity> ||

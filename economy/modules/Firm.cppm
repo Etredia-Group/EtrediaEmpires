@@ -11,7 +11,7 @@ export namespace ee_economy {
         using Tag = ee::FirmIdentity; Tag tag;
 
         ee::RecipeIdentity productionRecipe;
-        ee::RecipeIdentity constructionRecipe;
+        //ee::RecipeIdentity constructionRecipe; TODO
         ee::StorageUsage storageCapacity;
         std::uint32_t constructionSpeed;
     };
@@ -49,9 +49,9 @@ export namespace ee_economy {
 
     struct FirmDefComponent { std::uint8_t id; };
     struct FirmBatchComponent {
-        std::uint32_t count;
-        float damage;
-        float efficiency;
+        std::uint32_t count = 0;
+        float damage = 0.0f;
+        float efficiency = 1.0f;
 
         ee::StorageSlot storageSlot;
     };

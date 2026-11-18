@@ -17,59 +17,98 @@ void ee_economy::FirmProduceStep(
     const FirmDefComponent &firm,
     const FirmBatchComponent &batch
 ) noexcept {
+    float incomeFactor = CalcFirmsIncomeFactor(batch);
+    if (incomeFactor <= 0.0f) return;
+    float outcomeFactor = CalcFirmsOutcomeFactor(batch);
+
     StoragePool &storages = context.storagePools[firm.id];
     const std::span<const ee::ResourceAmount> resources = storages.getResources(batch.storageSlot);
     const FirmDefinition &firmDef = context.firms.Get(firm.id);
     const ProductionRecipe &production = context.firms.getProduction(firm.id);
     const ProductionRecipe &recipe = context.recipes.Get(std::to_underlying(firmDef.productionRecipe));
 
-    float incomeFactor = CalcFirmsIncomeFactor(batch);
-    const float outcomeFactor = CalcFirmsOutcomeFactor(batch);
-    if (incomeFactor <= 0.0f) return;
+    const std::size_t inputCount = production.in.size();
+    const std::size_t outputCount = production.out.size();
 
+    // Limit 1: input supply. Early exit before touching any space math.
     float minSupplyRatio = std::numeric_limits<float>::max();
     for (const auto &[resource, count] : production.in) {
         minSupplyRatio = std::min(minSupplyRatio, static_cast<float>(resources[std::to_underlying(resource)]) / count);
     }
-    const float used = std::min(1.0f, minSupplyRatio / incomeFactor);
-    if (used <= 0.0f) return;
+    float productionScale = std::min(1.0f, minSupplyRatio / incomeFactor);
+    if (productionScale <= 0.0f) return;
 
-    incomeFactor *= used;
-    for (std::size_t i = 0; i < production.in.size(); i++) {
-        const auto &[resource, count] = production.in[i];
-        const Resource &resourceInfo = context.resouces.Get(std::to_underlying(recipe.in[i].resource));
+    // Hoisted so the compiler doesn't reload them after every opaque SetResource call.
+    const ee::StorageUsage totalCapacity = firmDef.storageCapacity * batch.count;
+    ee::StorageUsage usage = storages.getUsage(batch.storageSlot); // the only getUsage call
+
+    // Limit 2: storage space.
+    float consumedSpace = 0.0f;
+    for (std::size_t inputIndex = 0; inputIndex < inputCount; inputIndex++) {
+        const Resource &resourceInfo = context.resouces.Get(std::to_underlying(recipe.in[inputIndex].resource));
+        consumedSpace += static_cast<float>(production.in[inputIndex].count) * static_cast<float>(resourceInfo.size);
+    }
+    consumedSpace *= incomeFactor;
+
+    float producedSpace = 0.0f;
+    for (std::size_t outputIndex = 0; outputIndex < outputCount; outputIndex++) {
+        const Resource &resourceInfo = context.resouces.Get(std::to_underlying(recipe.out[outputIndex].resource));
+        producedSpace += static_cast<float>(production.out[outputIndex].count) * static_cast<float>(resourceInfo.size);
+    }
+    producedSpace *= outcomeFactor;
+
+    if (
+        const float netSpaceGrowth = producedSpace - consumedSpace;
+        netSpaceGrowth > 0.0f
+    ) {
+        const float freeSpaceBefore = usage < totalCapacity ? static_cast<float>(totalCapacity - usage) : 0.0f;
+        productionScale = std::min(productionScale, freeSpaceBefore / netSpaceGrowth);
+        if (productionScale <= 0.0f) return;
+    }
+
+    incomeFactor *= productionScale;
+    outcomeFactor *= productionScale;
+
+    for (std::size_t inputIndex = 0; inputIndex < inputCount; inputIndex++) {
+        const auto &[resource, count] = production.in[inputIndex];
+        const Resource &resourceInfo = context.resouces.Get(std::to_underlying(recipe.in[inputIndex].resource));
+
+        const ee::ResourceAmount current = resources[std::to_underlying(resource)];
+        const ee::ResourceAmount consumed = std::min(
+            current,
+            static_cast<ee::ResourceAmount>(count * incomeFactor + 0.5f)
+        );
 
         storages.SetResource(
             batch.storageSlot,
-            recipe.in[i].resource,
+            production.in[inputIndex].resource,
             resourceInfo.size,
-
-            resources[std::to_underlying(resource)] - std::min(
-                resources[std::to_underlying(resource)],
-                static_cast<ee::ResourceAmount>(count * incomeFactor + 0.5f)
-            )
+            current - consumed
         );
+        usage -= static_cast<ee::StorageUsage>(consumed) * static_cast<ee::StorageUsage>(resourceInfo.size);
     }
 
-    for (std::size_t i = 0; i < production.out.size(); i++) {
-        const auto &[resource, count] = production.out[i];
-        const Resource &resourceInfo = context.resouces.Get(std::to_underlying(recipe.out[i].resource));
-
-        const ee::StorageUsage freeSpace =
-            firmDef.storageCapacity * batch.count - storages.getUsage(batch.storageSlot);
+    for (std::size_t outputIndex = 0; outputIndex < outputCount; outputIndex++) {
+        const auto &[resource, count] = production.out[outputIndex];
+        const Resource &resourceInfo = context.resouces.Get(std::to_underlying(recipe.out[outputIndex].resource));
 
         ee::ResourceAmount toProduce = static_cast<ee::ResourceAmount>(count * outcomeFactor + 0.5f);
         if (resourceInfo.size > 0) {
-            const ee::ResourceAmount maxFit = static_cast<ee::ResourceAmount>(freeSpace / resourceInfo.size);
+            // Rounding safety net, using the tracked usage instead of calling getUsage again.
+            const ee::ResourceAmount maxFit = static_cast<ee::ResourceAmount>(
+                (totalCapacity - usage) / resourceInfo.size
+            );
             toProduce = std::min(toProduce, maxFit);
         }
+        if (toProduce == 0) return;
 
         storages.SetResource(
             batch.storageSlot,
-            recipe.out[i].resource,
+            production.out[outputIndex].resource,
             resourceInfo.size,
             resources[std::to_underlying(resource)] + toProduce
         );
+        usage += static_cast<ee::StorageUsage>(toProduce) * static_cast<ee::StorageUsage>(resourceInfo.size);
     }
 }
 
