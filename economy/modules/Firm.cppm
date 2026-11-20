@@ -41,7 +41,7 @@ export namespace ee_economy {
 
 }
 
-template<> struct ee_ecs::table_by_tag<ee::FirmIdentity>{ using type = ee_economy::FirmDefinitionTable; };
+template<> struct ee_ecs::table_by_identity<ee::FirmIdentity>{ using type = ee_economy::FirmDefinitionTable; };
 
 // ECS Components
 

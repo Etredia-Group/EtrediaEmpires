@@ -36,7 +36,7 @@ TEST(EconomyStoragePool, SetResources) {
     const std::span<const ee::ResourceAmount> resources1 = pool.getResources(slot1);
     const std::span<const ee::ResourceAmount> resources2 = pool.getResources(slot2);
 
-    pool.SetResource(slot1, static_cast<ee::ResourceIdentity>(1), 10, 100);
+    pool.SetResource(slot1, 1, 10, 100);
     ASSERT_EQ(resources1[0], 0);
     ASSERT_EQ(resources1[1], 100);
     ASSERT_EQ(resources2[0], 0);
@@ -44,7 +44,7 @@ TEST(EconomyStoragePool, SetResources) {
     ASSERT_EQ(pool.getUsage(slot1), 100 * 10);
     ASSERT_EQ(pool.getUsage(slot2), 0);
 
-    pool.SetResource(slot2, static_cast<ee::ResourceIdentity>(0), 255, 500);
+    pool.SetResource(slot2, 0, 255, 500);
     ASSERT_EQ(resources1[0], 0);
     ASSERT_EQ(resources1[1], 100);
     ASSERT_EQ(resources2[0], 500);
@@ -62,19 +62,19 @@ TEST(EconomyStoragePool, CreatePools) {
 
     recipes.Add({
         {
-            .tag = static_cast<ee_economy::ProductionRecipe::Tag>(100),
+            .tag = {.tag = 100},
             .in = {
-                {static_cast<ee::ResourceIdentity>(10)},
-                {static_cast<ee::ResourceIdentity>(11)}
+                {.resource = {.tag = 10}},
+                {.resource = {.tag = 11}}
             }, // 2 elements
             .out = {
-                {static_cast<ee::ResourceIdentity>(12)}
+                {.resource = {.tag = 12}}
             } // 1 element
         },
         {
-            .tag = static_cast<ee_economy::ProductionRecipe::Tag>(200),
+            .tag = {.tag = 200},
             .in = {
-                {static_cast<ee::ResourceIdentity>(0)}
+                {.resource = {.tag = 0}}
             }, // 1 element but same as shared
             .out = {} // 0 elements
         }
@@ -82,12 +82,12 @@ TEST(EconomyStoragePool, CreatePools) {
 
     firms.Add({
         {
-            .tag = static_cast<ee_economy::FirmDefinition::Tag>(0),
-            .productionRecipe = static_cast<ee_economy::ProductionRecipe::Tag>(100)
+            .tag = {.tag = 0},
+            .productionRecipe = {.tag = 100}
         },
         {
-            .tag = static_cast<ee_economy::FirmDefinition::Tag>(1),
-            .productionRecipe = static_cast<ee_economy::ProductionRecipe::Tag>(200)
+            .tag = {.tag = 1},
+            .productionRecipe = {.tag = 200}
         }
     });
 

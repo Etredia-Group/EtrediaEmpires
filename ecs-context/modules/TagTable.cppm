@@ -5,7 +5,7 @@ import aliases;
 
 export namespace ee_ecs {
 
-    template <typename T> concept IDefinition = requires { ee::ITag<typename T::Tag>; };
+    template <typename T> concept IDefinition = requires { ee::IIdentity<typename T::Tag>; };
 
     class TagTableBase {};
 
@@ -20,15 +20,15 @@ export namespace ee_ecs {
             entt::dense_set<ee::Tag> seen;
             seen.reserve(batch.size());
             for (const TDef &def : batch) {
-                if (defByTag.find(std::to_underlying(def.tag)) != defByTag.end()) return std::nullopt;
-                if (!seen.insert(std::to_underlying(def.tag)).second) return std::nullopt;
+                if (defByTag.find(def.tag.tag) != defByTag.end()) return std::nullopt;
+                if (!seen.insert(def.tag.tag).second) return std::nullopt;
             }
 
             const ee::Id first = static_cast<ee::Id>(definitions.size());
             definitions.reserve(definitions.size() + batch.size());
             defByTag.reserve(defByTag.size() + batch.size());
             for (TDef &def : batch) {
-                defByTag.try_emplace(std::to_underlying(def.tag), static_cast<ee::Id>(definitions.size()));
+                defByTag.try_emplace(def.tag.tag, static_cast<ee::Id>(definitions.size()));
                 definitions.push_back(std::move(def));
                 OnAdd(definitions.back());
             }
@@ -55,6 +55,6 @@ export namespace ee_ecs {
     };
 
     template <typename T> concept ITagTable = std::is_base_of_v<TagTableBase, T>;
-    template <ee::ITag T> struct table_by_tag;
-    template <ee::ITag T> using table_by_tag_t = table_by_tag<T>::type;
+    template <ee::IIdentity T> struct table_by_identity;
+    template <ee::IIdentity T> using table_by_identity_t = table_by_identity<T>::type;
 }

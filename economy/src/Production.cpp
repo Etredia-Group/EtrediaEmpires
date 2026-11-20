@@ -25,7 +25,7 @@ void ee_economy::FirmProduceStep(
     const std::span<const ee::ResourceAmount> resources = storages.getResources(batch.storageSlot);
     const FirmDefinition &firmDef = context.firms.Get(firm.id);
     const ProductionRecipe &production = context.firms.getProduction(firm.id);
-    const ProductionRecipe &recipe = context.recipes.Get(std::to_underlying(firmDef.productionRecipe));
+    const ProductionRecipe &recipe = context.recipes.Get(firmDef.productionRecipe.id);
 
     const std::size_t inputCount = production.in.size();
     const std::size_t outputCount = production.out.size();
@@ -33,7 +33,7 @@ void ee_economy::FirmProduceStep(
     // Limit 1: input supply. Early exit before touching any space math.
     float minSupplyRatio = std::numeric_limits<float>::max();
     for (const auto &[resource, count] : production.in) {
-        minSupplyRatio = std::min(minSupplyRatio, static_cast<float>(resources[std::to_underlying(resource)]) / count);
+        minSupplyRatio = std::min(minSupplyRatio, static_cast<float>(resources[resource.id]) / count);
     }
     float productionScale = std::min(1.0f, minSupplyRatio / incomeFactor);
     if (productionScale <= 0.0f) return;
@@ -45,14 +45,14 @@ void ee_economy::FirmProduceStep(
     // Limit 2: storage space.
     float consumedSpace = 0.0f;
     for (std::size_t inputIndex = 0; inputIndex < inputCount; inputIndex++) {
-        const Resource &resourceInfo = context.resouces.Get(std::to_underlying(recipe.in[inputIndex].resource));
+        const Resource &resourceInfo = context.resouces.Get(recipe.in[inputIndex].resource.id);
         consumedSpace += static_cast<float>(production.in[inputIndex].count) * static_cast<float>(resourceInfo.size);
     }
     consumedSpace *= incomeFactor;
 
     float producedSpace = 0.0f;
     for (std::size_t outputIndex = 0; outputIndex < outputCount; outputIndex++) {
-        const Resource &resourceInfo = context.resouces.Get(std::to_underlying(recipe.out[outputIndex].resource));
+        const Resource &resourceInfo = context.resouces.Get(recipe.out[outputIndex].resource.id);
         producedSpace += static_cast<float>(production.out[outputIndex].count) * static_cast<float>(resourceInfo.size);
     }
     producedSpace *= outcomeFactor;
@@ -71,9 +71,9 @@ void ee_economy::FirmProduceStep(
 
     for (std::size_t inputIndex = 0; inputIndex < inputCount; inputIndex++) {
         const auto &[resource, count] = production.in[inputIndex];
-        const Resource &resourceInfo = context.resouces.Get(std::to_underlying(recipe.in[inputIndex].resource));
+        const Resource &resourceInfo = context.resouces.Get(recipe.in[inputIndex].resource.id);
 
-        const ee::ResourceAmount current = resources[std::to_underlying(resource)];
+        const ee::ResourceAmount current = resources[resource.id];
         const ee::ResourceAmount consumed = std::min(
             current,
             static_cast<ee::ResourceAmount>(count * incomeFactor + 0.5f)
@@ -81,7 +81,7 @@ void ee_economy::FirmProduceStep(
 
         storages.SetResource(
             batch.storageSlot,
-            production.in[inputIndex].resource,
+            production.in[inputIndex].resource.id,
             resourceInfo.size,
             current - consumed
         );
@@ -90,7 +90,7 @@ void ee_economy::FirmProduceStep(
 
     for (std::size_t outputIndex = 0; outputIndex < outputCount; outputIndex++) {
         const auto &[resource, count] = production.out[outputIndex];
-        const Resource &resourceInfo = context.resouces.Get(std::to_underlying(recipe.out[outputIndex].resource));
+        const Resource &resourceInfo = context.resouces.Get(recipe.out[outputIndex].resource.id);
 
         ee::ResourceAmount toProduce = static_cast<ee::ResourceAmount>(count * outcomeFactor + 0.5f);
         if (resourceInfo.size > 0) {
@@ -104,9 +104,9 @@ void ee_economy::FirmProduceStep(
 
         storages.SetResource(
             batch.storageSlot,
-            production.out[outputIndex].resource,
+            production.out[outputIndex].resource.id,
             resourceInfo.size,
-            resources[std::to_underlying(resource)] + toProduce
+            resources[resource.id] + toProduce
         );
         usage += static_cast<ee::StorageUsage>(toProduce) * static_cast<ee::StorageUsage>(resourceInfo.size);
     }

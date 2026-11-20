@@ -21,7 +21,7 @@ ee::StorageUsage ee_economy::StoragePool::getUsage(const ee::StorageSlot slot) c
 
 void ee_economy::StoragePool::SetResource(
     const ee::StorageSlot slot,
-    const ee::ResourceIdentity resource,
+    const ee::ProductionLayoutIndex resource,
     const ee::ResourceSize resourceSize,
     const ee::ResourceAmount value
 ) noexcept {

@@ -30,5 +30,5 @@ export namespace ee_economy {
 
 }
 
-template<> struct ee_ecs::table_by_tag<ee::ResourceIdentity>{ using type = ee_economy::ResourceTable; };
-template<> struct ee_ecs::table_by_tag<ee::RecipeIdentity>{ using type = ee_economy::ProductionRecipeTable; };
+template<> struct ee_ecs::table_by_identity<ee::ResourceIdentity>{ using type = ee_economy::ResourceTable; };
+template<> struct ee_ecs::table_by_identity<ee::RecipeIdentity>{ using type = ee_economy::ProductionRecipeTable; };

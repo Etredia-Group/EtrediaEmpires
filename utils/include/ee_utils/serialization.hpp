@@ -22,6 +22,17 @@ namespace rfl {
         static TEnum to(const ReflType &value) noexcept { return static_cast<TEnum>(value); }
     };
 
+    template <typename TIdentity> concept IIdentityUnion = std::is_union_v<TIdentity> &&
+        std::is_integral_v<decltype(TIdentity::tag)> &&
+        std::is_integral_v<decltype(TIdentity::id)>;
+
+    template <IIdentityUnion TIdentity>
+    struct Reflector<TIdentity> {
+        using ReflType = decltype(TIdentity::id);
+        static ReflType from(const TIdentity &identity) noexcept { return identity.tag; }
+        static TIdentity to(const ReflType &value) noexcept { return TIdentity{.tag = value}; }
+    };
+
 }
 
 namespace rfl {

@@ -10,28 +10,28 @@ import Economy;
 
 struct EconomyFirm : testing::Test {
 
-    ee_economy::Resource resource1_1 { .tag = static_cast<ee_economy::Resource::Tag>(101), .size = 1 };
-    ee_economy::Resource resource1_2 { .tag = static_cast<ee_economy::Resource::Tag>(102), .size = 1 };
-    ee_economy::Resource resource2_1 { .tag = static_cast<ee_economy::Resource::Tag>(201), .size = 2 };
-    ee_economy::Resource resource3_1 { .tag = static_cast<ee_economy::Resource::Tag>(301), .size = 1 };
-    ee_economy::Resource resource3_2 { .tag = static_cast<ee_economy::Resource::Tag>(302), .size = 1 };
+    ee_economy::Resource resource1_1 { .tag = {.tag = 101}, .size = 1 };
+    ee_economy::Resource resource1_2 { .tag = {.tag = 102}, .size = 1 };
+    ee_economy::Resource resource2_1 { .tag = {.tag = 201}, .size = 2 };
+    ee_economy::Resource resource3_1 { .tag = {.tag = 301}, .size = 1 };
+    ee_economy::Resource resource3_2 { .tag = {.tag = 302}, .size = 1 };
 
     ee::ResourceLayout sharedResources;
 
     ee_economy::ProductionRecipe recipe_resource2_1 {
-        .tag = static_cast<ee_economy::ProductionRecipe::Tag>(100),
+        .tag = {.tag = 100},
         .in = {
-            {.resource = static_cast<ee_economy::Resource::Tag>(101), .count = 2},
-            {.resource = static_cast<ee_economy::Resource::Tag>(102), .count = 1}
+            {.resource = {.tag = 101}, .count = 2},
+            {.resource = {.tag = 102}, .count = 1}
         },
         .out = {
-            {.resource = static_cast<ee_economy::Resource::Tag>(201), .count = 3}
+            {.resource = {.tag = 201}, .count = 3}
         }
     };
 
     ee_economy::FirmDefinition firm_recipe_100 {
-        .tag = static_cast<ee_economy::FirmDefinition::Tag>(0),
-        .productionRecipe = static_cast<ee_economy::ProductionRecipe::Tag>(100),
+        .tag = {.tag = 0},
+        .productionRecipe = {.tag = 100},
         .storageCapacity = 10
     };
 
@@ -44,9 +44,9 @@ struct EconomyFirm : testing::Test {
         productionRecipeTable = &registry.ctx().emplace<ee_economy::ProductionRecipeTable>();
 
         std::vector resourcesList {
-            {static_cast<ee_economy::Resource::Tag>(0)}, // padding for layout test
-            {static_cast<ee_economy::Resource::Tag>(1)}, // padding for layout test
-            {static_cast<ee_economy::Resource::Tag>(2)}, // padding for layout test
+            {.tag = {.tag = 0}}, // padding for layout test
+            {.tag = {.tag = 1}}, // padding for layout test
+            {.tag = {.tag = 2}}, // padding for layout test
             resource1_1, resource1_2, resource2_1, resource3_1, resource3_2
         };
         resourceTable->Add(std::move(resourcesList));
@@ -87,10 +87,10 @@ TEST_F(EconomyFirm, CreateTable) {
     ASSERT_EQ(layout[4], 5);
 
     const ee_economy::ProductionRecipe production = table.getProduction(0);
-    ASSERT_EQ(production.tag, static_cast<ee::RecipeIdentity>(productionRecipeTable->FindId(100)));
-    ASSERT_EQ(production.in[0].resource, static_cast<ee::ResourceIdentity>(2));
-    ASSERT_EQ(production.in[1].resource, static_cast<ee::ResourceIdentity>(3));
-    ASSERT_EQ(production.out[0].resource, static_cast<ee::ResourceIdentity>(4));
+    ASSERT_EQ(production.tag.tag, productionRecipeTable->FindId(100));
+    ASSERT_EQ(production.in[0].resource.layoutIndex, 2);
+    ASSERT_EQ(production.in[1].resource.layoutIndex, 3);
+    ASSERT_EQ(production.out[0].resource.layoutIndex, 4);
 }
 
 TEST_F(EconomyFirm, Merge) {
@@ -118,7 +118,7 @@ TEST_F(EconomyFirm, Produce) {
 
     ee_ecs::Linker linker(registry);
     linker.Link(table);
-    ee_economy::StoragePools pools(table);
+    ee_economy::StoragePools &pools = registry.ctx().emplace<ee_economy::StoragePools>(table);
     ee_economy::StoragePool &storages = pools[0];
     const ee::StorageSlot storageSlot = storages.Allocate();
     const ee_economy::ProductionRecipe production = table.getProduction(0);
@@ -134,9 +134,12 @@ TEST_F(EconomyFirm, Produce) {
     registry.emplace<ee_economy::FirmBatchComponent>(e, batch);
 
     // TEST: Limit by storage capacity
-    storages.SetResource(storageSlot, production.in[0].resource, 1, 30'000); // Production: -15'000
-    storages.SetResource(storageSlot, production.in[1].resource, 1, 12'000); // Production: -7'500
-    storages.SetResource(storageSlot, production.out[0].resource, 2, 42'750); // Production: +22'500
+    // Production: -15'000
+    storages.SetResource(storageSlot, production.in[0].resource.layoutIndex, 1, 30'000);
+    // Production: -7'500
+    storages.SetResource(storageSlot, production.in[1].resource.layoutIndex, 1, 12'000);
+    // Production: +22'500
+    storages.SetResource(storageSlot, production.out[0].resource.layoutIndex, 2, 42'750);
 
     ee_economy::systems::FirmsProduce(registry);
     ASSERT_EQ(resources[0], 0);
@@ -147,9 +150,12 @@ TEST_F(EconomyFirm, Produce) {
     ASSERT_EQ(storages.getUsage(storageSlot), firm_recipe_100.storageCapacity * batch.count);
 
     // TEST: Limit by supply lack
-    storages.SetResource(storageSlot, production.in[0].resource, 1, 30'000); // Production: -12'000
-    storages.SetResource(storageSlot, production.in[1].resource, 1, 6'000); // Production: -6'000
-    storages.SetResource(storageSlot, production.out[0].resource, 2, 42'750); // Production: +18'000
+    // Production: -12'000
+    storages.SetResource(storageSlot, production.in[0].resource.layoutIndex, 1, 30'000);
+    // Production: -6'000
+    storages.SetResource(storageSlot, production.in[1].resource.layoutIndex, 1, 6'000);
+    // Production: +18'000
+    storages.SetResource(storageSlot, production.out[0].resource.layoutIndex, 2, 42'000);
 
     ee_economy::systems::FirmsProduce(registry);
     ASSERT_EQ(resources[0], 0);

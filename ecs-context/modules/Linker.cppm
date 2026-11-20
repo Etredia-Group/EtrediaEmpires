@@ -52,15 +52,15 @@ export namespace ee_ecs {
 
         template <typename T>
         void LinkField(T &field) {
-            if constexpr (ee::ITag<T>) {
-                using TableType = table_by_tag_t<T>;
+            if constexpr (ee::IIdentity<T>) {
+                using TableType = table_by_identity_t<T>;
 
                 TableType &table = registry.ctx().get<TableType>();
-                field = static_cast<T>(table.FindId(static_cast<const ee::Tag>(field)));
+                field.id = table.FindId(field.tag);
             }
             else if constexpr (IMap<T>) {
                 static_assert(
-                    !ee::ITag<typename T::key_type>,
+                    !ee::IIdentity<typename T::key_type>,
                     "Tag as a map key cannot be linked in place; rebuild the container instead."
                 );
                 for (auto &entry : field) {
