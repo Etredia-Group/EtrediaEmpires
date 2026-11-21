@@ -57,6 +57,12 @@ export namespace ee_economy {
     };
 
 }
+template<> auto ee_ecs::systems::FetchEntities<ee_economy::FirmDefComponent>(entt::registry &registry) {
+    return registry.group<ee_economy::FirmDefComponent, ee_economy::FirmBatchComponent>();
+}
+template<> auto ee_ecs::systems::FetchEntities<ee_economy::FirmBatchComponent>(entt::registry &registry) {
+    return FetchEntities<ee_economy::FirmDefComponent>(registry);
+}
 
 // ECS Component operations
 

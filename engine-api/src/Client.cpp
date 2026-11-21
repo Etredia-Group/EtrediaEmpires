@@ -9,7 +9,7 @@ ee_engine::Client::Client() : ThreadedWorker(L"Client", 0) {
 
 std::generator<float> ee_engine::Client::Init() const {
     if (Engine::renderer == nullptr || !Engine::renderer->isReady()) {
-        LOG(CRITICAL, "Renderer is not ready. Client cannot be created");
+        LOG(CRITICAL, L"Renderer is not ready. Client cannot be created");
         throw std::logic_error("Renderer is not ready");
     }
 

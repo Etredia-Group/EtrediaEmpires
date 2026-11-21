@@ -47,7 +47,7 @@ ee::StorageSlot ee_economy::StoragePool::Allocate() {
     }
 
     if (used == STORAGE_SLOT_INVALID) {
-        LOG(CRITICAL, "Resource storages overflow! %u slots.", STORAGE_SLOT_INVALID);
+        LOG(CRITICAL, L"Resource storages overflow! %u slots.", STORAGE_SLOT_INVALID);
         throw std::bad_alloc{};
     }
 

@@ -56,8 +56,8 @@ struct EconomyFirm : testing::Test {
         linker.Link(*productionRecipeTable);
 
         // Ids of resources 3.1 and 3.2
-        sharedResources.push_back(resourcesList.size() - 2);
-        sharedResources.push_back(resourcesList.size() - 1);
+        sharedResources.push_back(resourceTable->getSize() - 2);
+        sharedResources.push_back(resourceTable->getSize() - 1);
     }
 
     void TearDown() override {
@@ -121,7 +121,7 @@ TEST_F(EconomyFirm, Produce) {
     ee_economy::StoragePools &pools = registry.ctx().emplace<ee_economy::StoragePools>(table);
     ee_economy::StoragePool &storages = pools[0];
     const ee::StorageSlot storageSlot = storages.Allocate();
-    const ee_economy::ProductionRecipe production = table.getProduction(0);
+    const ee_economy::ProductionRecipe &production = table.getProduction(0);
     const std::span<const ee::ResourceAmount> resources = storages.getResources(storageSlot);
 
     ee_economy::FirmDefComponent def {.id = 0};

@@ -35,7 +35,7 @@ export namespace ee_ecs {
          * @param table instance of the table.
          */
         template <IDefinition TDef> void Link(TagTable<TDef> &table) {
-            LOG(INFO, "Linking %hs table.", typeid(TDef).name());
+            LOG(INFO, L"Linking %hs table.", typeid(TDef).name());
 
             std::span<TDef> definitions = table.GetAll();
             for (TDef &definition : definitions) {
@@ -44,7 +44,7 @@ export namespace ee_ecs {
             }
             table.OnLink();
 
-            LOG(INFO, "Linked %u definitions.", definitions.size());
+            LOG(INFO, L"Linked %zu definitions.", definitions.size());
         }
 
     private:

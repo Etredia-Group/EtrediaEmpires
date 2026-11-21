@@ -13,12 +13,12 @@ using path = std::filesystem::path;
 void IfNotExluded(const std::vector<path> &exluded, const path &a, const std::function<void()> &callback) {
     if (std::ranges::find(exluded, a) == exluded.end())
         callback();
-    else LOG(INFO, "SKIP EXCLUDED [%s]", a.c_str());
+    else LOG(INFO, L"SKIP EXCLUDED [%s]", a.c_str());
 }
 
 template <ee_assets::Asset TAsset>
 void CompileJson(const ee_sdk::JsonCompiler &compiler, const path &relative, const path &src, const path &out) {
-    LOG(INFO, "Start compiling %s...", relative.c_str());
+    LOG(INFO, L"Start compiling %s...", relative.c_str());
 
     std::filesystem::create_directories(out/relative);
     for (const std::filesystem::directory_entry &asset : std::filesystem::directory_iterator(src/relative)) {
@@ -30,14 +30,14 @@ void CompileJson(const ee_sdk::JsonCompiler &compiler, const path &relative, con
         compiler.Compile(*data);
         TAsset assetInstance{};
         if (glz::error_ctx error = glz::read_json(assetInstance, *data)) {
-            LOG(ERROR, "JSON schema mismatch: [%s]. Error: [%d]", asset.path().c_str(), error.ec);
+            LOG(ERROR, L"JSON schema mismatch: [%s]. Error: [%d]", asset.path().c_str(), error.ec);
         }
         ee_sdk::WriteAsset(out/relative/asset.path().stem().filename(), assetInstance);
     }
 }
 
 void CompileLocale(const ee_sdk::JsonCompiler &compiler, const path &relative, const path &src, const path &out) {
-    LOG(INFO, "Start compiling %s...", relative.c_str());
+    LOG(INFO, L"Start compiling %s...", relative.c_str());
 
     for (
         const std::filesystem::directory_entry &asset :
@@ -64,13 +64,13 @@ void CompileLocale(const ee_sdk::JsonCompiler &compiler, const path &relative, c
                 if (const std::optional<std::uint32_t> color = compiler.FindMapping(regionName)) {
                     locKey = *color;
 
-                    LOG(INFO, "COMPILED COLOR KEY: Replace string [%hs] with [0x%X] (%u) color.",
+                    LOG(INFO, L"COMPILED COLOR KEY: Replace string [%hs] with [0x%X] (%u) color.",
                         std::string(regionName).c_str(), *color, *color);
                 }
                 else {
                     locKey = std::string(regionName);
 
-                    LOG(ERROR, "No color mapping for region [%hs] in [%s]",
+                    LOG(ERROR, L"No color mapping for region [%hs] in [%s]",
                         std::string(regionName).c_str(), asset.path().c_str());
                 }
             }
@@ -83,7 +83,7 @@ void CompileLocale(const ee_sdk::JsonCompiler &compiler, const path &relative, c
 }
 
 void CompileMaps(const ee_sdk::MapMeshCompiler &compiler, const path &relative, const path &src, const path &out) {
-    LOG(INFO, "Start compiling %s...", relative.c_str());
+    LOG(INFO, L"Start compiling %s...", relative.c_str());
 
     std::filesystem::create_directories(out/relative);
     for (const std::filesystem::directory_entry &asset : std::filesystem::directory_iterator(src/relative)) {
@@ -100,7 +100,7 @@ void CompileMaps(const ee_sdk::MapMeshCompiler &compiler, const path &relative, 
 }
 
 void CompileSPIRV(const path &compiler, const path &relative, const path &src, const path &out) {
-    LOG(INFO, "Start compiling %s...", relative.c_str());
+    LOG(INFO, L"Start compiling %s...", relative.c_str());
 
     for (
         const std::filesystem::directory_entry &asset :
@@ -116,15 +116,15 @@ void CompileSPIRV(const path &compiler, const path &relative, const path &src, c
             asset.path().string(),
             (out/relative/shader).string()
         );
-        LOG(INFO, "Run [%hs]", cmd.c_str());
+        LOG(INFO, L"Run [%hs]", cmd.c_str());
 
         if (
             const std::int32_t result = std::system(cmd.c_str());
             result == 0
         ) {
-            LOG(INFO, "COMPILED SPIR-V SHADER: [%s]", (relative/shader).c_str());
+            LOG(INFO, L"COMPILED SPIR-V SHADER: [%s]", (relative/shader).c_str());
         }
-        else LOG(CRITICAL, "COMPILATION FAILED: [%s]. Result code: %d", (relative/shader).c_str(), result);
+        else LOG(CRITICAL, L"COMPILATION FAILED: [%s]. Result code: %d", (relative/shader).c_str(), result);
     }
 }
 
@@ -151,7 +151,7 @@ int main(const int argc, char **argv) {
             const cxxopts::ParseResult cmd = options.parse(argc, argv);
             cmd.contains("help")
         ) {
-            LOG(INFO, "\n%hs", options.help().c_str());
+            LOG(INFO, L"\n%hs", options.help().c_str());
         }
         else {
             const path &src = cmd["src"].as<path>();
@@ -189,7 +189,7 @@ int main(const int argc, char **argv) {
     }
     catch (const std::exception &e)
     {
-        LOG(CRITICAL, "%hs", e.what());
+        LOG(CRITICAL, L"%hs", e.what());
         status = 1;
     }
 

@@ -116,7 +116,7 @@ void ee_economy::systems::FirmsProduce(entt::registry &registry) {
     const FirmProduceContext ctx = ee_ecs::systems::FetchContext<FirmProduceContext>(registry);
 
     if (
-        const auto group = registry.group<const FirmDefComponent, const FirmBatchComponent>();
+        const auto group = ee_ecs::systems::FetchEntities<FirmDefComponent>(registry);
         group.size() < FirmProducePolicy::parallelThreshold
     ) {
         group.each([&](const FirmDefComponent &firm, const FirmBatchComponent &batch) {

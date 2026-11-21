@@ -55,7 +55,7 @@ export namespace ee_engine {
             if (Rml::Element *element = target->GetElementById(elementId)) {
                 element->AddEventListener(event, Allocate<UIEventListener>(std::move(action)));
             } else {
-                LOG(ERROR, "Failed to bind event: element [%hs] not found", std::string(elementId).c_str());
+                LOG(ERROR, L"Failed to bind event: element [%hs] not found", std::string(elementId).c_str());
             }
         }
     };

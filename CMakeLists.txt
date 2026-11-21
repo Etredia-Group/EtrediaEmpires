@@ -15,7 +15,7 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project (EtrediaEmpires LANGUAGES CXX)
+project (EtrediaEmpires LANGUAGES C CXX)
 
 add_subdirectory(sdk)
 
@@ -36,3 +36,4 @@ add_subdirectory(renderers/vulkan)
 
 add_subdirectory(engine)
 add_subdirectory(tests)
+add_subdirectory(benchmarks)

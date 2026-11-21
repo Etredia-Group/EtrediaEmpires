@@ -20,9 +20,9 @@ ee_magnum::BaseMaterial::BaseMaterial(const std::string& vertSrc, const std::str
     frag.addSource(fragSrc);
 
     if (!vert.compile())
-        LOG(CRITICAL, "Failed to compile vertex shader");
+        LOG(CRITICAL, L"Failed to compile vertex shader");
     if (!frag.compile())
-        LOG(CRITICAL, "Failed to compile fragment shader");
+        LOG(CRITICAL, L"Failed to compile fragment shader");
 
     attachShader(vert);
     attachShader(frag);

@@ -53,7 +53,7 @@ export namespace ee_utils {
 
         void ProcessCommand(TCommand& command) {
             if (command.type > MaxCmdTypeId || !commandsMapping[command.type]) {
-                LOG(WARNING, "Unhandled command. Type id: %d", command.type);
+                LOG(WARNING, L"Unhandled command. Type id: %d", command.type);
                 command.type = MaxCmdTypeId;
                 return;
             }
@@ -70,7 +70,7 @@ export namespace ee_utils {
 
         void Start() {
             if (isRunning.load()) {
-                LOG(CRITICAL, "Thread can be started only once before stop");
+                LOG(CRITICAL, L"Thread can be started only once before stop");
                 throw std::logic_error("Thread can be started only once before stop");
             }
 
@@ -84,7 +84,7 @@ export namespace ee_utils {
         void Shutdown() {
             if (isRunning.load())
                 thread.request_stop();
-            else LOG(WARNING, "Tried to shutdown stopped thread");
+            else LOG(WARNING, L"Tried to shutdown stopped thread");
         }
 
     protected:
@@ -115,7 +115,7 @@ export namespace ee_utils {
 
         void Threading() {
             Logger::RegisterThread(threadName);
-            LOG(INFO, "Thread started");
+            LOG(INFO, L"Thread started");
 
             Loop();
 
@@ -147,7 +147,7 @@ export namespace ee_utils {
 
         void ReleaseStop() {
             Release();
-            LOG(INFO, "Thread is released");
+            LOG(INFO, L"Thread is released");
             Logger::UnregisterThread();
             isRunning.store(false);
         }

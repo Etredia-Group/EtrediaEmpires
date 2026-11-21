@@ -49,7 +49,7 @@ void ee_engine::IRenderer::ResizeWindow(const int width, const int height) {
 
 void ee_engine::IRenderer::SetCamera(const CameraTransform& camera) {
     if (camera.zoom <= 0) {
-        LOG(WARNING, "Camera zoom cannot be zero or less!");
+        LOG(WARNING, L"Camera zoom cannot be zero or less!");
         return;
     }
 
@@ -100,12 +100,12 @@ glm::vec2 ee_engine::IRenderer::ScreenToWorld(const glm::vec2& screenPos) const 
 
 void ee_engine::IRenderer::UpdateRegionCmd(RendererCommand& command) {
     if (!regionsMapping.contains(command.region.id)) {
-        LOG(WARNING, "Updating unregistered region with id: %d", command.region.id);
+        LOG(WARNING, L"Updating unregistered region with id: %d", command.region.id);
         return;
     }
 
     if (command.region.id != command.region.data.regionId) {
-        LOG(ERROR, "Updating regions ID is not supported! Region: %d Changed ID: %d",
+        LOG(ERROR, L"Updating regions ID is not supported! Region: %d Changed ID: %d",
             command.region.id, command.region.data.regionId);
     }
 

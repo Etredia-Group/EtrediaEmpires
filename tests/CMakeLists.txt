@@ -11,6 +11,7 @@ find_package(GTest CONFIG REQUIRED)
 include(GoogleTest)
 
 add_executable_target(${EXE})
+set_target_properties(${EXE} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 target_link_libraries(${EXE} PRIVATE GTest::gtest_main)
 target_link_libraries(${EXE} PUBLIC utils)

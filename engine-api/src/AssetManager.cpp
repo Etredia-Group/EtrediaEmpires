@@ -64,20 +64,20 @@ void ee_engine::AssetManager::FinishLoadCapnprotoDeserialize(AssetLoadingEntry& 
 #if !defined(NDEBUG)
             LOG(
                 ERROR,
-                "Failed to read asset: [%s]. [%hs]",
+                L"Failed to read asset: [%s]. [%hs]",
                 loaded.file->debugPath.c_str(),
                 result.error().what().c_str()
             );
 #else
-            LOG(ERROR, "Failed to read asset: ID[%d]. [%hs]", loaded.file->id, result.error().what().c_str());
+            LOG(ERROR, L"Failed to read asset: ID[%d]. [%hs]", loaded.file->id, result.error().what().c_str());
 #endif
         }
     } catch (std::exception e) {
         Redirect(loaded.handle, Allocate<T>());
 #if !defined(NDEBUG)
-        LOG(ERROR, "Failed to read asset: [%s]. [%hs]", loaded.file->debugPath.c_str(), e.what());
+        LOG(ERROR, L"Failed to read asset: [%s]. [%hs]", loaded.file->debugPath.c_str(), e.what());
 #else
-        LOG(ERROR, "Failed to read asset: ID[%d]. [%hs]", loaded.file->id, e.what());
+        LOG(ERROR, L"Failed to read asset: ID[%d]. [%hs]", loaded.file->id, e.what());
 #endif
     }
 }

@@ -21,17 +21,17 @@ using namespace Math::Literals;
 ee_magnum::MagnumRenderer::MagnumRenderer(GLFWwindow *window) : IRenderer(window) {
     ValidateSupport();
 
-    LOG(INFO, "Renderer created");
+    LOG(INFO, L"Renderer created");
 }
 
 void ee_magnum::MagnumRenderer::Init() {
-    LOG(INFO, "GLSL version: %d", GL::Context::current().version());
+    LOG(INFO, L"GLSL version: %d", GL::Context::current().version());
 
     LoadShaders();
     LoadProvinces();
 
     _isReady = true;
-    LOG(INFO, "Renderer initialized");
+    LOG(INFO, L"Renderer initialized");
 }
 
 void ee_magnum::MagnumRenderer::Clear() {
@@ -66,7 +66,7 @@ void ee_magnum::MagnumRenderer::LoadShaders() {
                                                       shaders.fragProvinces->size
                                                   )) + '\0';
 
-    LOG(INFO, "Shaders loaded");
+    LOG(INFO, L"Shaders loaded");
 }
 
 void ee_magnum::MagnumRenderer::LoadProvinces() {
@@ -99,7 +99,7 @@ void ee_magnum::MagnumRenderer::LoadProvinces() {
         regionIndex += provs.size() * sizeof(ee_engine::ProvinceSSBO);
     }
 
-    LOG(INFO, "Registered %d province meshes in renderer", provinceMeshes.size());
+    LOG(INFO, L"Registered %d province meshes in renderer", provinceMeshes.size());
 
     provinceSSBO.setTargetHint(GL::Buffer::TargetHint::ShaderStorage);
     Containers::ArrayView provincesDataView(provincesData.data(), provincesData.size());

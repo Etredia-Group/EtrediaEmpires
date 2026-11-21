@@ -549,7 +549,7 @@ ee_vulkan::VulkanRenderer::VulkanRenderer(GLFWwindow *window) : IRenderer(window
     renderCommands.emplace(*context, MAX_FRAMES_IN_FLIGHT);
     syncManager.emplace(*context, MAX_FRAMES_IN_FLIGHT, TIMEOUT);
 
-    LOG(INFO, "Renderer created");
+    LOG(INFO, L"Renderer created");
 }
 
 ee_vulkan::VulkanRenderer::~VulkanRenderer() {}
@@ -600,12 +600,12 @@ bool ee_vulkan::VulkanRenderer::DrawBegin() {
             break;
 
         case vk::Result::eErrorOutOfDateKHR:
-            LOG(WARNING, "Swapchain needs to be recreated");
+            LOG(WARNING, L"Swapchain needs to be recreated");
             RecreateSwapchain();
             return false;
 
         default:
-            LOG(ERROR, "Failed to get next image index. Code: %d", result);
+            LOG(ERROR, L"Failed to get next image index. Code: %d", result);
             return false;
     }
     syncManager->WaitImageInFlight(currentFrame, imageIndex);
@@ -706,12 +706,12 @@ void ee_vulkan::VulkanRenderer::DrawEnd() {
 
         case vk::Result::eErrorOutOfDateKHR:
         case vk::Result::eSuboptimalKHR:
-            LOG(WARNING, "Swapchain needs to be recreated");
+            LOG(WARNING, L"Swapchain needs to be recreated");
             RecreateSwapchain();
             return;
 
         default:
-            LOG(ERROR, "Failed to get next image index. Code: %d", result);
+            LOG(ERROR, L"Failed to get next image index. Code: %d", result);
             break;
     }
 
@@ -1128,7 +1128,7 @@ std::generator<float> ee_vulkan::VulkanRenderer::LoadProvinces() {
 
     LoadMapTextures(raster.ids, coastField, provincesCount);
 
-    LOG(INFO, "Map loaded: %d provinces, raster %dx%d (%d map px per texel), coast field %dx%d.",
+    LOG(INFO, L"Map loaded: %d provinces, raster %dx%d (%d map px per texel), coast field %dx%d.",
         static_cast<int>(provincesCount),
         raster.size.x, raster.size.y, raster.texelSize,
         fieldSize.x, fieldSize.y

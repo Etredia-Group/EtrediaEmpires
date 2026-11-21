@@ -47,7 +47,7 @@ void vulkan_render::Command::Submit(const vk::raii::Queue &queue) const {
         vk::Result result = context.device.handle.waitForFences({fence}, true, std::numeric_limits<std::uint64_t>::max());
         result != vk::Result::eSuccess
     ) {
-        LOG(WARNING, "Command buffer submit timeout. Code: %d", result);
+        LOG(WARNING, L"Command buffer submit timeout. Code: %d", result);
     }
 }
 
@@ -62,7 +62,7 @@ vulkan_render::RenderCommands::RenderCommands(const Context &context, const std:
     graphicsBuffers = MakeBuffers(context, graphicsPool, maxFramesInFlight);
     transferBuffers = MakeBuffers(context, transferPool, maxFramesInFlight);
 
-    LOG(INFO, "Command buffers initialized.");
+    LOG(INFO, L"Command buffers initialized.");
 }
 
 void vulkan_render::RenderCommands::SubmitStagingBuffer(const BaseBuffer<BufferMode::STAGING_ACCESS> &buffer) const {
@@ -115,7 +115,7 @@ std::vector<vulkan_render::Command> vulkan_render::RenderCommands::MakeBuffers(
 vulkan_render::UserCommands::UserCommands(const Context &context, const std::uint32_t maxFramesInFlight) :
     pool(MakePool(context, context.physicalDevice.queueFamilies.graphics)) {
     buffers = MakeBuffers(context, pool, maxFramesInFlight);
-    LOG(INFO, "Command buffers initialized.");
+    LOG(INFO, L"Command buffers initialized.");
 }
 
 vk::raii::CommandPool vulkan_render::UserCommands::MakePool(const Context &context, const std::uint32_t queueFamily) {
@@ -162,7 +162,7 @@ vulkan_render::SyncManager::SyncManager(
         inFlightFences.push_back(context.device.handle.createFence({.flags = vk::FenceCreateFlagBits::eSignaled}));
     }
 
-    LOG(INFO, "Sync objects initialized.");
+    LOG(INFO, L"Sync objects initialized.");
 }
 
 void vulkan_render::SyncManager::WaitInFlightFence(const std::size_t currentFrame) {
@@ -170,7 +170,7 @@ void vulkan_render::SyncManager::WaitInFlightFence(const std::size_t currentFram
         vk::Result result = context.device.handle.waitForFences({inFlightFences[currentFrame]}, vk::True, TIMEOUT);
         result != vk::Result::eSuccess
     )
-        LOG(ERROR, "Waiting semaphore timeout. Code: %d", result);
+        LOG(ERROR, L"Waiting semaphore timeout. Code: %d", result);
 }
 void vulkan_render::SyncManager::WaitImageInFlight(const std::size_t currentFrame, const std::uint32_t imageIndex) {
     if (imagesInFlight[imageIndex] == nullptr) return;
@@ -178,7 +178,7 @@ void vulkan_render::SyncManager::WaitImageInFlight(const std::size_t currentFram
         vk::Result result = context.device.handle.waitForFences({imagesInFlight[imageIndex]}, vk::True, TIMEOUT);
         result != vk::Result::eSuccess
     )
-        LOG(ERROR, "Waiting semaphore timeout. Code: %d", result);
+        LOG(ERROR, L"Waiting semaphore timeout. Code: %d", result);
     imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 }
 

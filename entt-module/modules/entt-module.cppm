@@ -26,7 +26,6 @@ export namespace entt {
     using entt::type_hash;
     using entt::type_name;
     using entt::type_info;
-    using entt::identity;
     using entt::overloaded;
     using entt::y_combinator;
     using entt::std_sort;
@@ -35,8 +34,6 @@ export namespace entt {
 
     // ---- core: type traits ----
     using entt::choice_t;
-    using entt::type_identity;
-    using entt::type_identity_t;
     using entt::type_list;
     using entt::type_list_element;
     using entt::type_list_element_t;
@@ -165,11 +162,7 @@ export namespace entt {
     using entt::forward_as_any;
     using entt::type_id;
     using entt::enum_as_bitmask;
-    using entt::has_single_bit;
-    using entt::popcount;
-    using entt::next_power_of_two;
     using entt::fast_mod;
-    using entt::to_address;
     using entt::allocate_unique;
     using entt::uses_allocator_construction_args;
     using entt::make_obj_using_allocator;
@@ -219,7 +212,6 @@ export namespace entt {
     using entt::dot;
 
     // ---- meta ----
-    using entt::meta;
     using entt::resolve;
     using entt::meta_reset;
     using entt::forward_as_meta;
@@ -234,13 +226,13 @@ export namespace entt {
         using literals::operator""_hws;
     }
 
-    namespace internal {
-        using internal::operator==;
-        using internal::operator!=;
-        using internal::operator<;
-        using internal::operator>;
-        using internal::operator<=;
-        using internal::operator>=;
-        using internal::operator-;
-    }
+    // namespace internal {
+    //     using internal::operator==;
+    //     using internal::operator!=;
+    //     using internal::operator<;
+    //     using internal::operator>;
+    //     using internal::operator<=;
+    //     using internal::operator>=;
+    //     using internal::operator-;
+    // }
 }

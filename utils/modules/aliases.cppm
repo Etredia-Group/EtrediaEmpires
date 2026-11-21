@@ -1,6 +1,11 @@
 export module aliases;
 import std;
 
+export namespace ee_utils::execution {
+    constexpr auto par = std::execution::par;
+    constexpr auto par_unseq = std::execution::par_unseq;
+}
+
 export namespace ee {
     using Id = std::uint32_t;
     using RegionId = Id;

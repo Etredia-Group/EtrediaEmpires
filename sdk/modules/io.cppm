@@ -13,7 +13,7 @@ export namespace ee_sdk {
     std::optional<glz::json_t> ReadJson(const std::filesystem::path &assetPath) {
         std::ifstream fin(assetPath);
         if (!fin.is_open()) {
-            LOG(ERROR, "Could not open output file: [%s]", assetPath.c_str());
+            LOG(ERROR, L"Could not open output file: [%s]", assetPath.c_str());
             return std::nullopt;
         }
 
@@ -22,7 +22,7 @@ export namespace ee_sdk {
 
         glz::json_t data;
         if (glz::error_ctx error = glz::read_json(data, jsonStr)) {
-            LOG(ERROR, "Could not parse JSON: [%s]. Error: [%d]", assetPath.c_str(), error.ec);
+            LOG(ERROR, L"Could not parse JSON: [%s]. Error: [%d]", assetPath.c_str(), error.ec);
             return std::nullopt;
         }
 
@@ -32,7 +32,7 @@ export namespace ee_sdk {
     std::optional<std::vector<std::byte>> ReadBinary(const std::filesystem::path &assetPath) {
         std::ifstream fin(assetPath, std::ios::binary);
         if (!fin.is_open()) {
-            LOG(ERROR, "Could not open output file: [%s]", assetPath.c_str());
+            LOG(ERROR, L"Could not open output file: [%s]", assetPath.c_str());
             return std::nullopt;
         }
 
@@ -54,7 +54,7 @@ export namespace ee_sdk {
     void WriteAsset(const std::filesystem::path &assetPath, const TAsset &asset) {
         std::ofstream fout(assetPath, std::ios::binary);
         if (!fout.is_open()) {
-            LOG(ERROR, "Could not open input file: [%s]", assetPath.c_str());
+            LOG(ERROR, L"Could not open input file: [%s]", assetPath.c_str());
             return;
         }
 

@@ -96,7 +96,7 @@ vulkan_render::Pipeline::Pipeline(
     scissors(config.defaultScissors),
     descriptorPool(MakeDescriptorPool(config.descriptors, config.maxExtraDescriptorSets)),
     descriptorSets(MakeDescriptorSets()) {
-    LOG(INFO, "Pipeline created");
+    LOG(INFO, L"Pipeline created");
 }
 
 void vulkan_render::Pipeline::UpdateDescriptors(

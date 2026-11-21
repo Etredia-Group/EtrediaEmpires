@@ -203,7 +203,7 @@ export namespace vulkan_render {
             memory(std::move(from.memory)),
             format(from.format) {
             if (*view == nullptr) {
-                LOG(ERROR, "Corrupted render texture created, source data is not complete.");
+                LOG(ERROR, L"Corrupted render texture created, source data is not complete.");
             }
         }
 

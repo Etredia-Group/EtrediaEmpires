@@ -158,7 +158,7 @@ export namespace ee_sdk {
                 mesh.regions[colorToHex(color.r, color.g, color.b, true)] = outProvinces;
             }
 
-            LOG(INFO, "COMPILED MAPMESH: generated [%d] regions", mesh.regions.size());
+            LOG(INFO, L"COMPILED MAPMESH: generated [%d] regions", mesh.regions.size());
 
             return mesh;
         }

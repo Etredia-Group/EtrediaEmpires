@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     Logger::Init(P7_SINK P7_LOGS_PATH);
     Logger::RegisterThread(L"Main");
 
-    LOG(INFO, "Etredia Empires, v%d.%d.%d", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION);
+    LOG(INFO, L"Etredia Empires, v%d.%d.%d", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION);
 
     // Setup GLFW
     glfwInit();
@@ -29,8 +29,8 @@ int main(int argc, char **argv) {
     GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Etredia Empires", nullptr, nullptr);
 
     if (!window)
-        LOG(CRITICAL, "GLFW Window failed");
-    else LOG(INFO, "GLFW Window created");
+        LOG(CRITICAL, L"GLFW Window failed");
+    else LOG(INFO, L"GLFW Window created");
 
     glfwMakeContextCurrent(window);
     ee_engine::Engine::window = window;
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
     }
 
     // Free memory
-    LOG(INFO, "Exit...");
+    LOG(INFO, L"Exit...");
     ee_engine::Engine::Shutdown();
     Logger::UnregisterThread();
     Logger::Release();

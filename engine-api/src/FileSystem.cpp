@@ -22,7 +22,7 @@ ee_engine::NativeFileSystem::NativeFileSystem() {
         0
     );
     if (iocpHandle == nullptr) {
-        LOG(CRITICAL, "Failed to create IOCP. Error: %d", GetLastError());
+        LOG(CRITICAL, L"Failed to create IOCP. Error: %d", GetLastError());
     }
 }
 
@@ -60,7 +60,7 @@ ee_engine::FileHandle& ee_engine::NativeFileSystem::Open(const std::filesystem::
     );
 
     if (file == INVALID_HANDLE_VALUE) {
-        LOG(ERROR, "Failed to open file %s. Error: %d", path.c_str(), GetLastError());
+        LOG(ERROR, L"Failed to open file %s. Error: %d", path.c_str(), GetLastError());
         failedFiles.push_back(result);
         return *result;
     }
@@ -68,7 +68,7 @@ ee_engine::FileHandle& ee_engine::NativeFileSystem::Open(const std::filesystem::
     result->win32Handle = file;
     result->size = GetFileSize(file, nullptr);
     if (result->size == INVALID_FILE_SIZE)
-        LOG(ERROR, "Failed to get size of file %s. Error: %d", path.c_str(), GetLastError());
+        LOG(ERROR, L"Failed to get size of file %s. Error: %d", path.c_str(), GetLastError());
 
     if (
         CreateIoCompletionPort(
@@ -78,7 +78,7 @@ ee_engine::FileHandle& ee_engine::NativeFileSystem::Open(const std::filesystem::
             NULL
         ) == nullptr
     ) {
-        LOG(ERROR, "Failed to associate file with IOCP. Error: %d", GetLastError());
+        LOG(ERROR, L"Failed to associate file with IOCP. Error: %d", GetLastError());
     }
 
     if (freeFileSlots.size() > 0) {
@@ -109,9 +109,9 @@ void ee_engine::NativeFileSystem::ReadAsync(FileHandle& file, const std::uint32_
     if (!ReadFile(file.win32Handle, file.buffer, bufferSize, nullptr, &context->overlapped)) {
         if (DWORD error = GetLastError(); error != ERROR_IO_PENDING) {
 #ifndef NDEBUG
-            LOG(ERROR, "Failed to start reading file [%s]. Error: %d", file.debugPath.c_str(), error);
+            LOG(ERROR, L"Failed to start reading file [%s]. Error: %d", file.debugPath.c_str(), error);
 #else
-            LOG(ERROR, "Failed to start reading file [%d]. Error: %d", file.id, error);
+            LOG(ERROR, L"Failed to start reading file [%d]. Error: %d", file.id, error);
 #endif
             HandleChunk(context, 0, false);
         }
@@ -134,7 +134,7 @@ void ee_engine::NativeFileSystem::PollLoads() {
 
         if (!overlapped) { // No more ready files
             if (DWORD error = GetLastError(); !success && error != WAIT_TIMEOUT) {
-                LOG(ERROR, "Can not get files loading status. Error: %d", error);
+                LOG(ERROR, L"Can not get files loading status. Error: %d", error);
             }
             break;
         }
@@ -167,9 +167,9 @@ bool ee_engine::NativeFileSystem::HandleChunk(IOContext *context, const DWORD by
     if (!success) {
         if (const DWORD error = GetLastError(); error != ERROR_OPERATION_ABORTED) {
 #ifndef NDEBUG
-            LOG(ERROR, "IOCP read error [%s]. Error: %d", file.debugPath.c_str(), error);
+            LOG(ERROR, L"IOCP read error [%s]. Error: %d", file.debugPath.c_str(), error);
 #else
-            LOG(ERROR, "IOCP read error [%d]. Error: %d", file.id, error);
+            LOG(ERROR, L"IOCP read error [%d]. Error: %d", file.id, error);
 #endif
         }
 

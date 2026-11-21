@@ -13,34 +13,66 @@ module;
 export module utils:logger;
 import std;
 
-namespace logger {
-    /**
-     * Represents a wide-character string literal constructed from a narrow-character string literal.
-     * @tparam length number of characters in the string literal (including the null terminator).
-     */
-    template <std::size_t length>
-    struct wstring {
-        wchar_t content[length];
-        // ReSharper disable once CppNonExplicitConversionOperator
-        constexpr operator const wchar_t*() const { return content; }
+namespace logger::detail {
 
-        explicit constexpr wstring(const char (&str)[length]) : content{} {
-            for (std::size_t i = 0; i < length; i++)
-                content[i] = static_cast<wchar_t>(str[i]);
+
+    constexpr bool is_ident(const char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
+               (c >= 'A' && c <= 'Z') || c == '_' || c == '~';
+    }
+
+    constexpr std::string_view trim_right(std::string_view s) {
+        while (!s.empty() && s.back() == ' ') s.remove_suffix(1);
+        return s;
+    }
+
+    constexpr std::string_view extract_function_name(std::string_view full) {
+        // 1. Find '(' of parameters list, skipping "operator()" / "operator ()".
+        std::size_t paren = full.size();
+        for (std::size_t i = 0; i < full.size(); ++i) {
+            if (full[i] != '(') continue;
+            if (trim_right(full.substr(0, i)).ends_with("operator")) {
+                std::size_t j = full.find(')', i);
+                if (j == std::string_view::npos) break;
+                i = j;
+                continue;
+            }
+            paren = i;
+            break;
+        }
+
+        // 2. Everything before '(': "void __cdecl ns::A::foo<int>"
+        auto head = trim_right(full.substr(0, paren));
+
+        // 3. Cut template params <...> in the end.
+        if (!head.empty() && head.back() == '>') {
+            int depth = 0;
+            for (std::size_t i = head.size(); i-- > 0;) {
+                if (head[i] == '>') ++depth;
+                else if (head[i] == '<' && --depth == 0) {
+                    head = trim_right(head.substr(0, i));
+                    break;
+                }
+            }
+        }
+
+        // 4. Go back inside identifier.
+        std::size_t b = head.size();
+        while (b > 0 && is_ident(head[b - 1])) --b;
+        return head.substr(b);
+    }
+
+    struct fixed_name {
+        char data[255]{};
+        explicit constexpr fixed_name(const std::string_view s) {
+            const std::size_t n = s.size() < sizeof(data) - 1 ? s.size() : sizeof(data) - 1;
+            for (std::size_t i = 0; i < n; ++i) data[i] = s[i];
         }
     };
 
-    /**
-     * Expression that converts a narrow-character string literal to a wide-character string literal at compile time.
-     * @tparam length number of symbols in string.
-     * @param str narrow-character string literal to convert.
-     * @return wide-character string literal.
-     */
-    template <std::size_t length>
-    constexpr wstring<length> TM(const char (&str)[length]) {
-        return wstring<length>(str);
-    }
+}
 
+namespace logger {
     /**
      * Represents the severity level of a log message.
      */
@@ -79,7 +111,9 @@ namespace logger {
                     nullptr,
                     location.line(),
                     location.file_name(),
-                    location.function_name(),
+                    detail::fixed_name(
+                        detail::extract_function_name(location.function_name()).data()
+                    ).data,
                     L"Logger is alredy initialized"
                 );
                 return;
@@ -88,9 +122,9 @@ namespace logger {
             std::setvbuf(stdout, nullptr, _IONBF, 0);
             std::setvbuf(stderr, nullptr, _IONBF, 0);
 
-            P7_Set_Crash_Handler();
+            //TODO: P7_Set_Crash_Handler(); hides crash reason.
+            //Needs custom handler to ensure flush on crash!
             client = P7_Create_Client(options);
-            P7_Set_Crash_Handler();
             trace = P7_Create_Trace(client, L"TC 1");
 
             isReady = true;
@@ -103,6 +137,7 @@ namespace logger {
             if (!isReady) return;
             trace->Release();
             client->Release();
+            isReady = false;
         }
 
         /**
@@ -126,10 +161,8 @@ namespace logger {
 
         inline static bool isReady = false;
 
-        // Allows to use logger::LOG_WCHAR instead of logger::Logger::LOG_WCHAR for compatibility.
-        template <typename... Args> friend struct LOG_WCHAR;
         // Allows to use logger::LOG instead of logger::Logger::LOG for compatibility.
-        template <std::size_t length, typename... Args> friend struct LOG;
+        template <typename... Args> friend struct LOG;
     };
 
     /**
@@ -145,7 +178,7 @@ namespace logger {
      * @tparam Args types of the formatting arguments.
      */
     template <typename... Args>
-    struct LOG_WCHAR {
+    struct LOG {
         /**
          * Logs a formatted wide-character message.
          * @param level severity level of the log message.
@@ -153,19 +186,25 @@ namespace logger {
          * @param args formatting arguments corresponding to the format specifiers in the format string.
          * @param location source location info. Can be specified to report a different call site.
          */
-        LOG_WCHAR(
+        LOG(
             LogLevel level,
             const wchar_t *format,
             Args&&... args,
             const std::source_location& location = std::source_location::current()
         ) {
+#ifdef LOGGER_DISABLED
+            return;
+#endif
+
             Logger::trace->Trace(
                 0,
                 static_cast<eP7Trace_Level>(level),
                 nullptr,
                 location.line(),
                 location.file_name(),
-                "", //TODO: location.function_name(),
+                detail::fixed_name(
+                    detail::extract_function_name(location.function_name())
+                ).data,
                 format,
                 std::forward<Args>(args)...
             );
@@ -176,78 +215,20 @@ namespace logger {
         }
     };
 
-    //TODO: use fixed buffer size for convertion and std::string_view for format line
-    // because having length as template parameter blows up specializations.
     /**
-     * Function-like utility type for ASCII-only formatted logging.
-     * @note Non-ASCII characters may be converted incorrectly due to simple
-     * byte-to-wchar_t casting. Use logger::LOG_WCHAR for non-ASCII or Unicode literals.
-     *
-     * This type is intended to be used as a temporary object.
-     * Logging is performed in the constructor, and the object itself
-     * is not meant to be stored.
-     *
-     * Template argument deduction guides allow usage without explicitly
-     * specifying template parameters.
-     *
-     * @tparam length number of characters in the format string literal (including the null terminator).
-     * @tparam Args types of the formatting arguments.
-     */
-    template <std::size_t length, typename... Args>
-    struct LOG {
-        /**
-         * Logs a formatted narrow-character message.
-         * @param level severity level of the log message.
-         * @param format narrow-character format string literal.
-         * @param args formatting arguments corresponding to the format specifiers in the format string.
-         * @param location source location info. Can be specified to report a different call site.
-         */
-        LOG(
-            LogLevel level,
-            const char (&format)[length],
-            Args&&... args,
-            const std::source_location& location = std::source_location::current()
-        ) {
-            Logger::trace->Trace(
-                0,
-                static_cast<eP7Trace_Level>(level),
-                nullptr,
-                location.line(),
-                location.file_name(),
-                "", //TODO: location.function_name(),
-                TM(format),
-                std::forward<Args>(args)...
-            );
-
-            if (level == ERROR || level == CRITICAL) {
-                Logger::client->Flush();
-            }
-        }
-    };
-
-    /**
-     * Deduction guide for LOG_WCHAR.
+     * Deduction guide for LOG.
      *
      * Enables deduction of the formatting argument types,
      * allowing usage without explicit template arguments.
      */
     template <typename... Args>
-    LOG_WCHAR(LogLevel, const wchar_t *, Args&&...) -> LOG_WCHAR<Args...>;
-    /**
-     * Deduction guide for LOG.
-     *
-     * Enables deduction of the string literal length and formatting
-     * argument types, allowing usage without explicit template arguments.
-     */
-    template <std::size_t length, typename... Args>
-    LOG(LogLevel, const char (&)[length], Args&&...) -> LOG<length, Args...>;
+    LOG(LogLevel, const wchar_t *, Args&&...) -> LOG<Args...>;
 }
 
 /**
  * Export to global namespace for compatibility
  */
 export using logger::Logger;
-export using logger::LOG_WCHAR;
 export using logger::LOG;
 export using logger::LogLevel::TRACE;
 export using logger::LogLevel::DEBUG;

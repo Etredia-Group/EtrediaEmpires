@@ -84,7 +84,7 @@ void ee_engine::UI::StoreController(UIBaseController *controller) {
     if (controllers.size() <= id) controllers.resize(id + 1, nullptr);
 
     if (controllers[id]) {
-        LOG(WARNING, "UI Controller [%hs] already registered", typeid(T).name());
+        LOG(WARNING, L"UI Controller [%hs] already registered", typeid(T).name());
         Deallocate(controller);
         return;
     }

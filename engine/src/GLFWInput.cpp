@@ -67,7 +67,7 @@ GLFWInput::GLFWInput(const ee_engine::InputHandlers &handlers) : IInput(handlers
         }
     });
 
-    LOG(INFO, "Input mappings initialized.");
+    LOG(INFO, L"Input mappings initialized.");
 }
 
 void GLFWInput::Poll() {

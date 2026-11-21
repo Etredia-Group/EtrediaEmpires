@@ -49,7 +49,7 @@ vulkan_render::Swapchain vulkan_render::ResourcesFactory::CreateSwapchain(const 
     Swapchain swapchain {
         .handle = context.device.handle.createSwapchainKHR(swapchainCreateInfo)
     };
-    LOG(INFO, "Swapchain is created");
+    LOG(INFO, L"Swapchain is created");
 
     SetupFrames(context, swapchain, surface);
 
@@ -61,7 +61,7 @@ void vulkan_render::ResourcesFactory::SetupFrames(const Context &context, Swapch
     swapchain.frameViews.clear();
 
     swapchain.frames = swapchain.handle.getImages();
-    LOG(INFO, "Frames are ready");
+    LOG(INFO, L"Frames are ready");
 
     swapchain.frameViews.reserve(swapchain.frames.size());
     for (size_t i = 0; i < swapchain.frames.size(); i++)
@@ -87,7 +87,7 @@ void vulkan_render::ResourcesFactory::SetupFrames(const Context &context, Swapch
 
         swapchain.frameViews.push_back(context.device.handle.createImageView(frameViewInfo));
     }
-    LOG(INFO, "Frame views are ready.");
+    LOG(INFO, L"Frame views are ready.");
 }
 
 vulkan_render::RenderTexture vulkan_render::DataFactory::CreateRenderTexture(

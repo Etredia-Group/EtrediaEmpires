@@ -3,6 +3,7 @@ import :Resources;
 import :Firm;
 import :StoragePool;
 import entt;
+import aliases;
 import EcsContext;
 import std;
 
@@ -29,8 +30,7 @@ namespace ee_ecs::systems {
 }
 
 namespace ee_economy::systems {
-    //TODO
-    struct FirmProducePolicy final : ee_ecs::systems::SystemPolicy<20'000, std::execution::par_unseq>{};
+    struct FirmProducePolicy final : ee_ecs::systems::SystemPolicy<4'000, ee_utils::execution::par_unseq>{};
 }
 
 export namespace ee_economy::systems {

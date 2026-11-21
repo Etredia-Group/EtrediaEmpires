@@ -167,7 +167,7 @@ export namespace vulkan_render {
                 sourceStage = vk::PipelineStageFlagBits::eTransfer;
                 destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
             } else {
-                LOG(ERROR, "Unsupported layout transition: %d -> %d.", from, to);
+                LOG(ERROR, L"Unsupported layout transition: %d -> %d.", from, to);
                 return;
             }
 

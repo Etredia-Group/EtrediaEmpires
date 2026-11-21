@@ -14,7 +14,7 @@ import utils;
 
 ee_network::Lobby::Lobby() {
     if (SteamDatagramErrMsg error; !GameNetworkingSockets_Init(nullptr, error)) {
-        LOG(CRITICAL, "Failed to initialize GameNetworkingSockets. %s", error);
+        LOG(CRITICAL, L"Failed to initialize GameNetworkingSockets. %s", error);
         return;
     }
 
@@ -41,7 +41,7 @@ void ee_network::Lobby::Poll() {
 
 bool ee_network::Lobby::ASSERT_CONNECTED(std::source_location location) const {
     if (!isConnected) {
-        LOG(WARNING, "Failed: No connection.", location);
+        LOG(WARNING, L"Failed: No connection.", location);
     }
     return isConnected;
 }
@@ -60,7 +60,7 @@ ee_network::LobbyServer::~LobbyServer() {
         steam->CloseListenSocket(server);
         steam->DestroyPollGroup(pollGroup);
 
-        LOG(INFO, "Server is closed.");
+        LOG(INFO, L"Server is closed.");
     }
 }
 
@@ -90,7 +90,7 @@ void ee_network::LobbyServer::OnStatusChanged(const SteamNetConnectionStatusChan
                 const EResult result = self->steam->AcceptConnection(event->m_hConn);
                 result != k_EResultOK
             ) {
-                LOG(WARNING, "Failed to accept client connection from [%hs]. Code: [%d].",
+                LOG(WARNING, L"Failed to accept client connection from [%hs]. Code: [%d].",
                     AddressToString(event->m_info.m_addrRemote).c_str(), result);
 
                 self->steam->CloseConnection(
@@ -102,7 +102,7 @@ void ee_network::LobbyServer::OnStatusChanged(const SteamNetConnectionStatusChan
             }
 
             self->steam->SetConnectionPollGroup(event->m_hConn, self->pollGroup);
-            LOG(INFO, "Connecting to [%hs].", AddressToString(event->m_info.m_addrRemote).c_str());
+            LOG(INFO, L"Connecting to [%hs].", AddressToString(event->m_info.m_addrRemote).c_str());
             break;
         }
 
@@ -110,7 +110,7 @@ void ee_network::LobbyServer::OnStatusChanged(const SteamNetConnectionStatusChan
         {
             std::string address = AddressToString(event->m_info.m_addrRemote);
             self->clients.emplace(event->m_hConn, address);
-            LOG(INFO, "Connected to [%hs].", address.c_str());
+            LOG(INFO, L"Connected to [%hs].", address.c_str());
             break;
         }
 
@@ -124,7 +124,7 @@ void ee_network::LobbyServer::OnStatusChanged(const SteamNetConnectionStatusChan
                 nullptr,
                 false
             );
-            LOG(INFO, "Free closed connection [%hs].", self->clients[event->m_hConn].c_str());
+            LOG(INFO, L"Free closed connection [%hs].", self->clients[event->m_hConn].c_str());
             break;
         }
 
@@ -156,15 +156,15 @@ void ee_network::LobbyServer::Create(const std::uint16_t port) {
     pollGroup = steam->CreatePollGroup();
 
     isConnected = true;
-    LOG(INFO,"Server started: [%hs].", AddressToString(address).c_str());
+    LOG(INFO, L"Server started: [%hs].", AddressToString(address).c_str());
 }
 
 void ee_network::LobbyServer::Broadcast(const PacketBase &packet, SendFlags flags) {
-    LOG(ERROR, "NOT IMPLEMENTED!"); // TODO: use steam->SendMessages for optimal broadcasting
+    LOG(ERROR, L"NOT IMPLEMENTED!"); // TODO: use steam->SendMessages for optimal broadcasting
 }
 
 void ee_network::LobbyClient::Connect(const char *addressStr) {
-    LOG(INFO, "Connecting to server [%hs].", addressStr);
+    LOG(INFO, L"Connecting to server [%hs].", addressStr);
     SteamNetworkingIPAddr address; address.Clear(); address.ParseString(addressStr);
 
     MakeConfig();
@@ -187,7 +187,7 @@ void ee_network::LobbyClient::Disconnect() {
     );
     isConnected = false;
 
-    LOG(INFO, "Disconnected from [%hs].", endpointAddress.c_str());
+    LOG(INFO, L"Disconnected from [%hs].", endpointAddress.c_str());
     endpointAddress = "";
     connection = k_HSteamNetConnection_Invalid;
 }
@@ -204,7 +204,7 @@ void ee_network::LobbyClient::Send(const PacketBase &packet, SendFlags flags) co
     );
 
 #ifndef NDEBUG
-    LOG(INFO, "Send packet to [%hs]. Code: %d.", endpointAddress.c_str(), result);
+    LOG(INFO, L"Send packet to [%hs]. Code: %d.", endpointAddress.c_str(), result);
 #endif
 }
 
@@ -231,7 +231,7 @@ void ee_network::LobbyClient::OnStatusChanged(const SteamNetConnectionStatusChan
         case k_ESteamNetworkingConnectionState_Connected:
         {
             self->isConnected = true;
-            LOG(INFO, "Connected to [%hs].", self->endpointAddress.c_str());
+            LOG(INFO, L"Connected to [%hs].", self->endpointAddress.c_str());
             break;
         }
 
@@ -246,7 +246,7 @@ void ee_network::LobbyClient::OnStatusChanged(const SteamNetConnectionStatusChan
                 false
             );
             self->connection = k_HSteamNetConnection_Invalid;
-            LOG(INFO, "Free closed connection [%hs].", self->endpointAddress.c_str());
+            LOG(INFO, L"Free closed connection [%hs].", self->endpointAddress.c_str());
             break;
         }
 

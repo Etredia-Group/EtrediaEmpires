@@ -1,5 +1,4 @@
 module Economy;
-import std;
 
 ee_economy::FirmDefinitionTable::FirmDefinitionTable(
     entt::registry &registry,

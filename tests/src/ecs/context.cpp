@@ -32,6 +32,7 @@ struct B {
 
 struct TableA : ee_ecs::TagTable<A> {
     std::uint32_t count = 0;
+protected:
     void OnAdd(const A &definition) override {count++;}
 };
 template<> struct ee_ecs::table_by_identity<ee::TestIdentity> {using type = TableA;};
@@ -80,14 +81,14 @@ TEST(EcsContext, TagTableAddMultiple) {
 TEST(EcsContext, LinkTagTables) {
     entt::registry registry;
 
-    TableA &tableA = registry.ctx().emplace<TableA>();;
+    TableA &tableA = registry.ctx().emplace<TableA>();
     tableA.Add({
         A{.tag = {.tag = 789}},
         A{.tag = {.tag = 456}},
         A{.tag = {.tag = 123}},
     });
 
-    TableB &tableB = registry.ctx().emplace<TableB>();;
+    TableB &tableB = registry.ctx().emplace<TableB>();
     tableB.Add({
         B{
             .tag = {.tag = 100},

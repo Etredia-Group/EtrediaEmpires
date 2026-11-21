@@ -135,16 +135,16 @@ export namespace ee_rml {
         bool LogMessage(const Rml::Log::Type type, const Rml::String &message) override {
             switch (type) {
                 case Rml::Log::LT_ERROR:
-                    LOG(ERROR, "RmlUi. %hs", message.c_str());
+                    LOG(ERROR, L"RmlUi. %hs", message.c_str());
                     break;
                 case Rml::Log::LT_ASSERT:
-                    LOG(CRITICAL, "RmlUi. %hs", message.c_str());
+                    LOG(CRITICAL, L"RmlUi. %hs", message.c_str());
                     break;
                 case Rml::Log::LT_WARNING:
-                    LOG(WARNING, "RmlUi. %hs", message.c_str());
+                    LOG(WARNING, L"RmlUi. %hs", message.c_str());
                     break;
                 case Rml::Log::LT_INFO:
-                    LOG(INFO, "RmlUi. %hs", message.c_str());
+                    LOG(INFO, L"RmlUi. %hs", message.c_str());
                     break;
                 case Rml::Log::LT_DEBUG:
                     LOG(DEBUG, "RmlUi. %hs", message.c_str());

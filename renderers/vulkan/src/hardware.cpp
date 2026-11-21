@@ -24,14 +24,14 @@ void vulkan_render::Context::SetupPhysicalDevice(
     // Find physical devices
     const std::vector<vk::raii::PhysicalDevice> devices = vulkan.enumeratePhysicalDevices();
     if (devices.size() == 0) {
-        LOG(CRITICAL, "No devices with Vulkan support found!");
+        LOG(CRITICAL, L"No devices with Vulkan support found!");
         return;
     }
-    LOG(INFO, "Found %zu Vulkan compatible physical devices.", devices.size());
+    LOG(INFO, L"Found %zu Vulkan compatible physical devices.", devices.size());
 
     if (devices.empty())
     {
-        LOG(CRITICAL, "No compatible physical devices found.");
+        LOG(CRITICAL, L"No compatible physical devices found.");
     }
 
     // Filter and select device
@@ -176,7 +176,7 @@ void vulkan_render::Context::SetupPhysicalDevice(
     
     surfaceCapabilities.capabilities = physicalDevice.handle.getSurfaceCapabilitiesKHR(surface.handle);
 
-    LOG(INFO, "%hs is selected for render with %d priority score", physicalDeviceCapabilities.properties.deviceName, bestPriority);
+    LOG(INFO, L"%hs is selected for render with %d priority score", physicalDeviceCapabilities.properties.deviceName, bestPriority);
 
     physicalDevice.memory.properties = physicalDevice.handle.getMemoryProperties();
 }
@@ -210,13 +210,13 @@ void vulkan_render::Context::SetupLogicalDevice(const std::vector<const char*> &
         .ppEnabledExtensionNames = extensions.data(),
     };
     device.handle = physicalDevice.handle.createDevice(deviceInfo);
-    LOG(INFO, "Logical device is created.");
+    LOG(INFO, L"Logical device is created.");
 
     // Save queues descriptor
     device.transfer = device.handle.getQueue(physicalDevice.queueFamilies.transfer, 0);
     device.graphics = device.handle.getQueue(physicalDevice.queueFamilies.graphics, 0);
     device.present = device.handle.getQueue(physicalDevice.queueFamilies.present, 0);
-    LOG(INFO, "Queues registered.");
+    LOG(INFO, L"Queues registered.");
 }
 
 std::optional<std::uint32_t> vulkan_render::Context::FindMemoryType(const vk::MemoryRequirements &requirements, const vk::MemoryPropertyFlags &flags) {
@@ -233,7 +233,7 @@ std::optional<std::uint32_t> vulkan_render::Context::FindMemoryType(const vk::Me
         }
     }
     if (!memoryType.has_value()) {
-        LOG(CRITICAL, "Failed to find GPU memory with requirements %d and flags %d", requirements.memoryTypeBits, flags);
+        LOG(CRITICAL, L"Failed to find GPU memory with requirements %d and flags %d", requirements.memoryTypeBits, flags);
     }
 
     return memoryType;
@@ -255,7 +255,7 @@ std::optional<vk::raii::DeviceMemory> vulkan_render::Context::AllocateMemory(
         }
     }
     if (!memoryTypeId.has_value()) {
-        LOG(CRITICAL, "Failed to find suitable GPU memory. Flags: %d", memoryFlags);
+        LOG(CRITICAL, L"Failed to find suitable GPU memory. Flags: %d", memoryFlags);
         return std::nullopt;
     }
 

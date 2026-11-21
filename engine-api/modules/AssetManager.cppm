@@ -169,7 +169,7 @@ export namespace ee_engine
             const AssetInfo& asset = activeAssets[handle.slot];
             AssetAddress *address = asset.resourceAddress.load(std::memory_order_relaxed);
             if (address == nullptr) {
-                LOG(WARNING, "Attempt to redirect empty handle");
+                LOG(WARNING, L"Attempt to redirect empty handle");
                 return;
             }
 
@@ -246,7 +246,7 @@ export namespace ee_engine
         template <ee_assets::Asset T> static const AssetOperations* OperationsFor();
 
         void LoadCmd(AssetStreamCommand& command) {
-            LOG(INFO, "LOAD command: [%hs]", command.targetPath.generic_u8string().c_str());
+            LOG(INFO, L"LOAD command: [%hs]", command.targetPath.generic_u8string().c_str());
 
             /* TODO: process path to select FS */
 
@@ -333,7 +333,7 @@ export namespace ee_engine
 
                     entry.fileOwner->Close(*entry.file);
 #ifndef NDEBUG
-                    LOG(INFO, "Asset loaded: [%hs]", entry.file->debugPath.generic_u8string().c_str());
+                    LOG(INFO, L"Asset loaded: [%hs]", entry.file->debugPath.generic_u8string().c_str());
 #endif
                     entry.file = nullptr;
                     asset.isReady.store(true);

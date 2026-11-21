@@ -4,7 +4,8 @@ import std;
 
 export namespace ee_ecs::systems {
 
-    template <typename T> T FetchContext(entt::registry &registry) = delete;
+    template <typename TComponent> auto FetchEntities(entt::registry &registry) = delete;
+    template <typename TSystemContext> TSystemContext FetchContext(entt::registry &registry) = delete;
 
     /**
      *

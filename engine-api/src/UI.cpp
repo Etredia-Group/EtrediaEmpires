@@ -48,7 +48,7 @@ void ee_engine::UI::SwitchScene(const std::string &asset) {
     Rml::ElementDocument *scene = FindOrLoadDocument(asset);
 
     if (!scene) {
-        LOG(ERROR, "Failed to load scene [%hs]", asset.c_str());
+        LOG(ERROR, L"Failed to load scene [%hs]", asset.c_str());
         return;
     }
 
@@ -61,14 +61,14 @@ void ee_engine::UI::SwitchScene(const std::string &asset) {
 
     currentDocument.document->Show();
 
-    LOG(INFO, "Scene [%hs] loaded.", asset.c_str());
+    LOG(INFO, L"Scene [%hs] loaded.", asset.c_str());
 }
 
 Rml::ElementDocument* ee_engine::UI::Popup(const std::string &asset, const bool isDraggable) {
     Rml::ElementDocument *popup = FindOrLoadDocument(asset);
 
     if (!popup) {
-        LOG(ERROR, "Failed to load popup [%hs]", asset.c_str());
+        LOG(ERROR, L"Failed to load popup [%hs]", asset.c_str());
         return nullptr;
     }
 

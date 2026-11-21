@@ -84,7 +84,7 @@ export namespace ee_sdk {
             const std::filesystem::path linkPath = value.get_string();
             const auto linkPath8 = linkPath.generic_u8string();
             std::uint32_t hash = HashData(linkPath8.data() + 1, linkPath8.size() - 1);
-            LOG(INFO, "COMPILED HASH [key:%hs]: Replace string [%s] with [%u] hash.",
+            LOG(INFO, L"COMPILED HASH [key:%hs]: Replace string [%s] with [%u] hash.",
                 key.c_str(), linkPath.c_str(), hash);
             value = hash;
         }
@@ -95,7 +95,7 @@ export namespace ee_sdk {
             if (!NeedsCompileMapping(value_string)) return;
 
             if (const std::optional<std::uint32_t> toValue = FindMapping(value_string)) {
-                LOG(INFO, "COMPILED MAPPING [key:%hs]: Replace string [%hs] with [0x%X] (%u) value",
+                LOG(INFO, L"COMPILED MAPPING [key:%hs]: Replace string [%hs] with [0x%X] (%u) value",
                     key.c_str(),
                     value_string.c_str(),
                     *toValue,
@@ -121,7 +121,7 @@ export namespace ee_sdk {
 
             hex = colorToHex(r, g, b, true);
 
-            LOG(INFO, "COMPILED COLOR [key:%hs]: Replace string [%hs] with 0x[%X] (RGB %u, %u, %u) color",
+            LOG(INFO, L"COMPILED COLOR [key:%hs]: Replace string [%hs] with 0x[%X] (RGB %u, %u, %u) color",
                 key.c_str(), colorStr, hex, r, g, b);
             value = hex;
         }
